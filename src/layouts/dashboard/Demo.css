@@ -1,0 +1,311 @@
+.dashboard-container {
+  padding-top: 50px;
+  /* padding-left: 20px; */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.charts-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+.orders-container {
+  width: 105.5%;
+  margin-left: -21px;
+}
+
+/* Individual chart item styling */
+.chart-item {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 30%;
+  min-width: 250px;
+  flex: 1 1 30%;
+}
+
+/* Responsive styles for tablet devices (iPad) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .dashboard-container {
+    padding-top: 30px;
+    gap: 18px;
+  }
+
+  .orders-container {
+    width: 103%;
+    margin-left: 0;
+  }
+
+  .charts-container {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .chart-item {
+    width: 48%;
+    min-width: 200px;
+    flex: 1 1 48%;
+    padding: 18px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+  }
+}
+
+/* Responsive styles for mobile devices */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding-top: 20px;
+    gap: 15px;
+  }
+
+   .orders-container {
+    width: 110%;
+    margin-left: -20px;
+  }
+
+  .charts-container {
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .chart-item {
+    width: 100%;
+    min-width: unset;
+    flex: 1 1 100%;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding-top: 10px;
+    gap: 10px;
+  }
+
+  .chart-item {
+    padding: 12px;
+  }
+}
+
+/* Heading styling for each chart */
+.chart-item h3 {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #333;
+}
+.recharts-tooltip-wrapper {
+  font-size: 10px !important; /* Reduce font size */
+}
+
+/* Style for status cards */
+.status-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  margin: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.status-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #444;
+}
+
+/* Specific color styling for status labels */
+.status-label.gray {
+  color: gray;
+}
+.status-label.green {
+  color: green;
+}
+.status-label.blue {
+  color: blue;
+}
+.status-label.darkgreen {
+  color: darkgreen;
+}
+.status-label.red {
+  color: red;
+}
+.status-label.orange {
+  color: orange;
+}
+.status-label.purple {
+  color: purple;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* Responsive card grid */
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  .card-title {
+    font-size: 14px;
+  }
+
+  .card-value {
+    font-size: 16px;
+  }
+
+  .icon {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+}
+
+/* Main Data Cards */
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+  color: #333;
+  cursor: pointer;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Background Colors */
+.green {
+  background-color: #d1fae5;
+}
+.blue {
+  background-color: #bfdbfe;
+}
+.yellow {
+  background-color: #fef9c3;
+}
+.lightgreen {
+  background-color: #bbf7d0;
+}
+.red {
+  background-color: #fecaca;
+}
+.purple {
+  background-color: #e9d5ff;
+}
+.indigo {
+  background-color: #c7d2fe;
+}
+
+/* Card Text */
+.card-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: "black";
+}
+
+.card-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Status Cards */
+.status-card {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.status-card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-label {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.status-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.icon {
+  font-size: 30px;
+  color: #444;
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Text Colors */
+.gray {
+  color: #6b7280;
+}
+.green {
+  color: #065f46;
+}
+.blue {
+  color: #2563eb;
+}
+.darkgreen {
+  color: #064e3b;
+}
+.red {
+  color: #dc2626;
+}
+.orange {
+  color: #ea580c;
+}
+.purple {
+  color: #7c3aed;
+}

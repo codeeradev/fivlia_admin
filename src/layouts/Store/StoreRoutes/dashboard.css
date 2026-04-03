@@ -1,0 +1,412 @@
+/* Dashboard Container */
+.dashboard-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Charts Container */
+.charts-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Individual chart item styling */
+.chart-item {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 30%;
+  border: 1px solid #e2e8f0;
+}
+
+/* Heading styling for each chart */
+.chart-item h3 {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.recharts-tooltip-wrapper {
+  font-size: 12px !important;
+}
+
+/* Card Grid - Main Stats Cards */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+/* Main Data Cards */
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  color: #374151;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Background Colors - Simple and clean */
+.green { 
+  background: #f0fdf4;
+  border-left: 3px solid #22c55e;
+}
+
+.blue { 
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.yellow { 
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+}
+
+.lightgreen { 
+  background: #f0fdf4;
+  border-left: 3px solid #16a34a;
+}
+
+.red { 
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+}
+
+.purple { 
+  background: #faf5ff;
+  border-left: 3px solid #8b5cf6;
+}
+
+.indigo { 
+  background: #eef2ff;
+  border-left: 3px solid #6366f1;
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.icon {
+  font-size: 28px;
+  color: #6b7280;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Card Text */
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Status Cards Grid */
+.status-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 18px;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+}
+
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-label {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Status Label Colors - Simple badges */
+.status-label.gray { 
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.status-label.green { 
+  color: #065f46;
+  background: #d1fae5;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.status-label.blue { 
+  color: #1e40af;
+  background: #dbeafe;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.status-label.darkgreen { 
+  color: #064e3b;
+  background: #bbf7d0;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.status-label.red { 
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.status-label.orange { 
+  color: #ea580c;
+  background: #fed7aa;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.status-label.purple { 
+  color: #7c3aed;
+  background: #e9d5ff;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+/* Recent Orders Section */
+.recent-orders-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.recent-orders-header {
+  margin-bottom: 20px;
+}
+
+.recent-orders-header h3 {
+  margin: 0;
+  color: #374151;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recent-orders-header p {
+  margin: 5px 0 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.view-all-link {
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #3b82f6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+}
+
+.view-all-link:hover {
+  color: #1e40af;
+  background: #dbeafe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+  }
+  
+  .card {
+    padding: 18px;
+  }
+  
+  .card-value {
+    font-size: 22px;
+  }
+  
+  .icon {
+    font-size: 24px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 15px;
+    gap: 15px;
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .card {
+    padding: 15px;
+  }
+  
+  .card-header {
+    gap: 12px;
+  }
+  
+  .icon {
+    font-size: 22px;
+    padding: 8px;
+  }
+  
+  .card-title {
+    font-size: 13px;
+  }
+  
+  .card-value {
+    font-size: 20px;
+  }
+  
+  .status-card {
+    padding: 15px;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .status-label {
+    font-size: 13px;
+  }
+  
+  .status-value {
+    font-size: 18px;
+  }
+  
+  .recent-orders-section {
+    padding: 15px;
+  }
+  
+  .recent-orders-header h3 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 10px;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .icon {
+    font-size: 20px;
+    padding: 6px;
+  }
+  
+  .card-title {
+    font-size: 12px;
+  }
+  
+  .card-value {
+    font-size: 18px;
+  }
+  
+  .status-card {
+    padding: 12px;
+  }
+  
+  .status-label {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .status-value {
+    font-size: 16px;
+  }
+}
+
+/* Simple fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.card, .status-card, .recent-orders-section {
+  animation: fadeIn 0.5s ease-out;
+}
+  

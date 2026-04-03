@@ -1,0 +1,143 @@
+.store-container {
+  width: 90%;
+  max-width: 800px;
+  margin: 20px auto;
+  border: 2px solid black;
+  border-radius: 10px;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.store-header {
+  font-size: 20px;
+  font-weight: bold;
+  border-bottom: 2px solid black;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.store-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.store-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 50px;
+  justify-content: space-between;
+}
+
+.store-input {
+  flex: 1 1 45%;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-input input,
+.store-input select,
+.store-input textarea {
+  padding: 10px;
+  border-radius: 5px;
+  border: 2px solid #ccc;
+  font-size: 14px;
+  width: 100%;
+  background-color: white;
+}
+
+.store-input img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+.store-input label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+
+.store-input input,
+.store-input select,
+.store-input textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* AddStore.css */
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+
+@media (max-width: 768px) {
+  .store-container {
+    width: 95%;
+    margin: 15px auto;
+    padding: 15px;
+  }
+
+  .store-header {
+    font-size: 18px;
+  }
+
+  .store-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .store-input {
+    flex: 1 1 100%;
+  }
+
+  .store-form {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .store-container {
+    width: 98%;
+    margin: 10px auto;
+    padding: 12px;
+  }
+
+  .store-header {
+    font-size: 16px;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+  }
+
+  .store-row {
+    gap: 15px;
+  }
+
+  .store-input img {
+    max-height: 250px;
+  }
+}
