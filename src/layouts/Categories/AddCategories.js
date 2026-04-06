@@ -23,6 +23,8 @@ const AddCategories = () => {
   const [attributeArray, setAttributeArray] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterData, setFilterData] = useState([]);
+  const [categoryTypes, setCategoryTypes] = useState([]);
+  const [typeId, setTypeId] = useState("");
   const navigate = useNavigate();
 
   const [controller] = useMaterialUIController();
@@ -77,7 +79,9 @@ const AddCategories = () => {
           ? existingFilter.selected.filter((id) => id !== valueId)
           : [...existingFilter.selected, valueId];
 
-        return prev.map((f) => (f._id === filterId ? { ...f, selected: updatedSelected } : f));
+        return prev.map((f) =>
+          f._id === filterId ? { ...f, selected: updatedSelected } : f
+        );
       } else {
         const selectedFilterObj = filterTypes.find((f) => f._id === filterId);
         return [
@@ -159,7 +163,9 @@ const AddCategories = () => {
         const result = data.data;
 
         setMainCategories(result.result);
-        const allSubCategories = result.result.flatMap((cat) => cat.subcat || []);
+        const allSubCategories = result.result.flatMap(
+          (cat) => cat.subcat || []
+        );
         setSubCategories(allSubCategories);
       } catch (err) {
         console.log(err);
@@ -202,6 +208,20 @@ const AddCategories = () => {
     };
     fetchBrands();
   }, []);
+
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setCategoryTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching category types:", err);
+        showAlert("error", "Failed to load category types");
+      }
+    };
+
+    fetchTypes();
+  }, []);
   // Set attributes for Main Category
   useEffect(() => {
     if (type === "Main Category") {
@@ -227,6 +247,14 @@ const AddCategories = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
+    if (type === "Main Category" && !typeId) {
+      showAlert(
+        "warning",
+        "Please select a category type before adding the category."
+      );
+      return;
+    }
+
     if (
       !name ||
       !description ||
@@ -250,13 +278,16 @@ const AddCategories = () => {
     if (type === "Sub Sub-Category") {
       formData.append("subCategoryId", subCategory);
     }
+    if (type === "Main Category" && typeId) {
+      formData.append("typeId", typeId);
+    }
     formData.append("attribute", JSON.stringify(attributeArray || []));
     formData.append("filter", JSON.stringify(allFilters || [])); // Send [{ _id, selected: [valueId1, valueId2] }]
 
     // Main Category Add
     if (type === "Main Category") {
       try {
-        const response = await post(ENDPOINTS.ADD_MAIN_CATEGORY, formData)
+        const response = await post(ENDPOINTS.ADD_MAIN_CATEGORY, formData);
         if (response.status === 201) {
           showAlert("success", "Category Added Successfully");
           navigate("/categories");
@@ -266,6 +297,10 @@ const AddCategories = () => {
         }
       } catch (err) {
         console.error("Error while submitting:", err);
+        showAlert(
+          "error",
+          err?.response?.data?.message || "Failed to add category"
+        );
       }
     }
     // Add Sub Category
@@ -280,6 +315,10 @@ const AddCategories = () => {
         }
       } catch (err) {
         console.log(err);
+        showAlert(
+          "error",
+          err?.response?.data?.message || "Failed to add sub category"
+        );
       }
     }
     // Add Sub Sub-Category
@@ -294,6 +333,10 @@ const AddCategories = () => {
         }
       } catch (err) {
         console.log(err);
+        showAlert(
+          "error",
+          err?.response?.data?.message || "Failed to add sub sub-category"
+        );
       }
     }
 
@@ -303,6 +346,7 @@ const AddCategories = () => {
     setImage(null);
     setImagePreview(null);
     setType("");
+    setTypeId("");
     setMainCategoryId("");
     setSubCategory("");
     setAttributeArray([]);
@@ -423,7 +467,12 @@ const AddCategories = () => {
               placeholder="Enter Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              style={{ width: "100%", height: "100px", borderRadius: "10px", padding: "5px" }}
+              style={{
+                width: "100%",
+                height: "100px",
+                borderRadius: "10px",
+                padding: "5px",
+              }}
             />
           </div>
         </div>
@@ -456,6 +505,38 @@ const AddCategories = () => {
             </select>
           </div>
         </div>
+
+        {type === "Main Category" && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              marginBottom: "30px",
+            }}
+          >
+            <div>
+              <label style={{ fontWeight: "500" }}>Category Type</label>
+            </div>
+            <div style={{ width: "60%" }}>
+              <select
+                value={typeId}
+                onChange={(e) => setTypeId(e.target.value)}
+                style={{
+                  marginLeft: "30px",
+                  backgroundColor: "white",
+                  border: "1px solid black",
+                }}
+              >
+                <option value="">-- Select Category Type --</option>
+                {categoryTypes.map((typeItem) => (
+                  <option key={typeItem._id} value={typeItem._id}>
+                    {typeItem.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Main Category (only for Sub Category) */}
         {type === "Sub Category" && (
@@ -539,7 +620,10 @@ const AddCategories = () => {
               <div className="input-container">
                 <label>
                   Select Filter (Type)
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -595,7 +679,11 @@ const AddCategories = () => {
                         placeholder="Enter Filter Name"
                         value={filterName}
                         onChange={(e) => setFilterName(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
                       <div
                         style={{
@@ -605,7 +693,9 @@ const AddCategories = () => {
                         }}
                       >
                         <Button onClick={handleFilter}>Save</Button>
-                        <Button onClick={() => setFilterPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setFilterPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -620,7 +710,8 @@ const AddCategories = () => {
                 >
                   {allFilters.map((filter) => {
                     const filterName =
-                      filterTypes.find((f) => f._id === filter._id)?.Filter_name || "Unnamed";
+                      filterTypes.find((f) => f._id === filter._id)
+                        ?.Filter_name || "Unnamed";
                     return (
                       <div
                         key={filter._id}
@@ -656,7 +747,10 @@ const AddCategories = () => {
               <div className="input-container">
                 <label>
                   Select Filter Value
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <div style={{ position: "relative" }}>
                   <button
@@ -672,9 +766,11 @@ const AddCategories = () => {
                     }}
                     onClick={() => setFilterDropdown(!filterDropdown)}
                   >
-                    {allFilters.find((f) => f._id === selectedFilter)?.selected.length > 0
+                    {allFilters.find((f) => f._id === selectedFilter)?.selected
+                      .length > 0
                       ? `${
-                          allFilters.find((f) => f._id === selectedFilter).selected.length
+                          allFilters.find((f) => f._id === selectedFilter)
+                            .selected.length
                         } value(s) selected`
                       : "--Select Filter Value--"}
                   </button>
@@ -710,7 +806,9 @@ const AddCategories = () => {
                                 .find((f) => f._id === selectedFilter)
                                 ?.selected.includes(value._id) || false
                             }
-                            onChange={() => handleFilterValueToggle(selectedFilter, value._id)}
+                            onChange={() =>
+                              handleFilterValueToggle(selectedFilter, value._id)
+                            }
                             style={{ marginRight: "8px" }}
                           />
                           <span>{value.name}</span>
@@ -761,7 +859,11 @@ const AddCategories = () => {
                         placeholder="Enter filter value"
                         value={addFilterValue}
                         onChange={(e) => setAddFilterValue(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
                       <div
                         style={{
@@ -771,7 +873,9 @@ const AddCategories = () => {
                         }}
                       >
                         <Button onClick={handleFilterType}>Save</Button>
-                        <Button onClick={() => setShowFilterDropdown(false)}>Cancel</Button>
+                        <Button onClick={() => setShowFilterDropdown(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -791,7 +895,9 @@ const AddCategories = () => {
             >
               {allFilters.map((filter) =>
                 (filter.selected || []).map((valueId, index) => {
-                  const filterObj = filterTypes.find((f) => f._id === filter._id);
+                  const filterObj = filterTypes.find(
+                    (f) => f._id === filter._id
+                  );
                   const isBrandFilter = filterObj?.Filter_name === "Brand";
 
                   const value = isBrandFilter
@@ -808,11 +914,14 @@ const AddCategories = () => {
                       }
                     >
                       <span>
-                        {filterObj?.Filter_name || "Unnamed"}: {value?.name || value?.brandName}
+                        {filterObj?.Filter_name || "Unnamed"}:{" "}
+                        {value?.name || value?.brandName}
                       </span>
                       <span
                         style={{ cursor: "pointer", marginLeft: "5px" }}
-                        onClick={() => handleFilterValueToggle(filter._id, valueId)}
+                        onClick={() =>
+                          handleFilterValueToggle(filter._id, valueId)
+                        }
                       >
                         ×
                       </span>
@@ -862,7 +971,8 @@ const AddCategories = () => {
                   }}
                   title={zone}
                 >
-                  {attribute.find((attr) => attr._id === zone)?.Attribute_name || zone}
+                  {attribute.find((attr) => attr._id === zone)
+                    ?.Attribute_name || zone}
                   <button
                     onClick={() => handleTagRemove(zone)}
                     style={{

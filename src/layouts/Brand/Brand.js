@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import MDBox from "components/MDBox";
 import { useMaterialUIController } from "context";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { Button } from "@mui/material";
 import { post, get } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
@@ -12,26 +11,63 @@ function AddBrand() {
   const [controller] = useMaterialUIController();
   const { miniSidenav } = controller;
   const navigate = useNavigate();
-  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [featured, setFeatured] = useState(false); // New state for featured
+  const [typeId, setTypeId] = useState("");
+  const [brandTypes, setBrandTypes] = useState([]);
+
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setBrandTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching brand types:", err);
+        showAlert("error", "Failed to load types");
+      }
+    };
+
+    fetchTypes();
+  }, []);
 
   const ImagePreview = (e) => {
     const file = e.target.files[0];
+    setImageFile(file || null);
+
     if (file) {
-      setImage(URL.createObjectURL(file));
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(null);
     }
   };
 
   const handleBrands = async () => {
     try {
+      if (!name.trim()) {
+        showAlert("warning", "Please enter a brand name before continuing.");
+        return;
+      }
+
+      if (!imageFile) {
+        showAlert("warning", "Please upload a brand image before continuing.");
+        return;
+      }
+
+      if (!typeId) {
+        showAlert("warning", "Please select a type before adding the brand.");
+        return;
+      }
+
       showAlert("loading", "Creating brand...");
       const formData = new FormData();
-      formData.append("brandName", name);
+      formData.append("brandName", name.trim());
       formData.append("description", description);
-      formData.append("image", document.querySelector('input[type="file"]').files[0]);
+      formData.append("image", imageFile);
       formData.append("featured", featured.toString()); // Added featured field
+      formData.append("typeId", typeId);
 
       await post(ENDPOINTS.ADD_BRAND, formData);
 
@@ -39,7 +75,7 @@ function AddBrand() {
       navigate(-1);
     } catch (err) {
       console.error(err);
-      showAlert("error", "Failed to add brand");
+      showAlert("error", err?.response?.data?.message || "Failed to add brand");
     }
   };
 
@@ -56,13 +92,24 @@ function AddBrand() {
         }}
       >
         <h2
-          style={{ textAlign: "center", marginBottom: "30px", fontWeight: "bold", color: "green" }}
+          style={{
+            textAlign: "center",
+            marginBottom: "30px",
+            fontWeight: "bold",
+            color: "green",
+          }}
         >
           ADD NEW BRAND
         </h2>
 
         {/* Brand Name */}
-        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <label style={{ fontWeight: "500" }}>Brand Name</label>
           </div>
@@ -106,9 +153,9 @@ function AddBrand() {
                 backgroundColor: "white",
               }}
             />
-            {image && (
+            {imagePreview && (
               <img
-                src={image}
+                src={imagePreview}
                 alt="preview"
                 style={{
                   width: "130px",
@@ -121,8 +168,44 @@ function AddBrand() {
           </div>
         </div>
 
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
+          <div>
+            <label style={{ fontWeight: "500" }}>Type</label>
+          </div>
+          <div style={{ width: "58%" }}>
+            <select
+              value={typeId}
+              onChange={(e) => setTypeId(e.target.value)}
+              style={{
+                border: "1px solid black",
+                backgroundColor: "white",
+                width: "100%",
+              }}
+            >
+              <option value="">-- Select Type --</option>
+              {brandTypes.map((typeItem) => (
+                <option key={typeItem._id} value={typeItem._id}>
+                  {typeItem.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Description */}
-        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <label style={{ fontWeight: "500" }}>Description</label>
           </div>
@@ -143,7 +226,13 @@ function AddBrand() {
         </div>
 
         {/* Is Featured */}
-        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <label style={{ fontWeight: "500" }}>Is Featured</label>
           </div>

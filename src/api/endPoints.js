@@ -1,6 +1,6 @@
-export const API_BASE_URL = "https://api.fivlia.com";
+// export const API_BASE_URL = "https://api.fivlia.com";
 // export const API_BASE_URL = "https://api.fivlia.in";
-// export const API_BASE_URL = "http://localhost:8080";
+export const API_BASE_URL = "http://localhost:8080";
 // export const API_BASE_URL = "https://api.fivlia.co.in";
 
 // Define all endpoints here
@@ -91,6 +91,7 @@ export const ENDPOINTS = {
 
   GET_ALL_STORE: "/getAllStore",
   EDIT_STORE: "/storeEdit",
+  GET_TYPE: "/get-types",
   CREATE_STORE: "/createStore",
   GENERATE_KEY: "/generateKey",
   EDIT_CATEGORY: "/editCat",

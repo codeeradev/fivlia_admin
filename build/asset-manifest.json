@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.c22980f0.css",
-    "main.js": "/static/js/main.10c7a5b2.js",
-    "static/js/52.a61ff023.chunk.js": "/static/js/52.a61ff023.chunk.js",
-    "static/js/82.fcd53fa1.chunk.js": "/static/js/82.fcd53fa1.chunk.js",
-    "static/js/239.2b05af89.chunk.js": "/static/js/239.2b05af89.chunk.js",
+    "main.css": "/static/css/main.a1335000.css",
+    "main.js": "/static/js/main.c70d7123.js",
+    "static/js/52.b05ab203.chunk.js": "/static/js/52.b05ab203.chunk.js",
+    "static/js/82.e52238d5.chunk.js": "/static/js/82.e52238d5.chunk.js",
+    "static/js/265.299b17df.chunk.js": "/static/js/265.299b17df.chunk.js",
     "static/media/home-decor-3.jpg": "/static/media/home-decor-3.74d13fcbd3c631fc7908.jpg",
     "static/media/home-decor-2.jpg": "/static/media/home-decor-2.b4e5397c9846645ba275.jpg",
     "static/media/home-decor-1.jpg": "/static/media/home-decor-1.05e218fd495ccc65c99d.jpg",
@@ -34,7 +34,7 @@
     "index.html": "/index.html"
   },
   "entrypoints": [
-    "static/css/main.c22980f0.css",
-    "static/js/main.10c7a5b2.js"
+    "static/css/main.a1335000.css",
+    "static/js/main.c70d7123.js"
   ]
 }

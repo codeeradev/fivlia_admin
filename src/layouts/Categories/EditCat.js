@@ -8,11 +8,70 @@ import { toast } from "react-toastify";
 
 import { showAlert } from "components/commonFunction/alertsLoader";
 
-// common API helpers (from your provided common file)
-import { getAllFilters, getAllAttributes, getAllBrands } from "components/commonApi/commonApi";
-// put and ENDPOINTS for editing since product.api doesn't export editMainCategory
-import { put } from "api/apiClient";
+import {
+  getAllFilters,
+  getAllAttributes,
+  getAllBrands,
+} from "components/commonApi/commonApi";
+import { get, post, put } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
+
+const getImagePreviewUrl = (imageName) =>
+  imageName ? `${process.env.REACT_APP_IMAGE_LINK}${imageName}` : null;
+
+const getCategoryTypeId = (categoryItem) => {
+  if (!categoryItem?.typeId) {
+    return "";
+  }
+
+  return typeof categoryItem.typeId === "object"
+    ? categoryItem.typeId._id || ""
+    : categoryItem.typeId;
+};
+
+const getSelectedAttributeIds = (categoryAttributes, availableAttributes) => {
+  if (!Array.isArray(categoryAttributes)) {
+    return [];
+  }
+
+  return categoryAttributes
+    .map((attributeValue) => {
+      if (!attributeValue) {
+        return null;
+      }
+
+      if (typeof attributeValue === "object") {
+        return attributeValue._id || attributeValue.id || null;
+      }
+
+      const matchedAttribute = availableAttributes.find(
+        (attributeItem) =>
+          attributeItem._id === attributeValue ||
+          attributeItem.Attribute_name === attributeValue
+      );
+
+      return matchedAttribute?._id || attributeValue;
+    })
+    .filter(Boolean);
+};
+
+const getSelectedFilterIds = (categoryFilters) => {
+  if (!Array.isArray(categoryFilters)) {
+    return [];
+  }
+
+  return categoryFilters.flatMap((filterItem) =>
+    Array.isArray(filterItem?.selected)
+      ? filterItem.selected
+          .map((selectedValue) =>
+            typeof selectedValue === "object"
+              ? selectedValue._id || selectedValue.id
+              : selectedValue
+          )
+          .filter(Boolean)
+      : []
+  );
+};
 
 const EditCategory = () => {
   const [name, setCategoryName] = useState("");
@@ -29,9 +88,10 @@ const EditCategory = () => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filterName, setFilterName] = useState("");
   const [addFilterValue, setAddFilterValue] = useState("");
-  const [allBrands, setAllBrands] = useState([]);
   const [allAttributes, setAllAttributes] = useState([]);
   const [selectedAttributes, setSelectedAttributes] = useState([]);
+  const [categoryTypes, setCategoryTypes] = useState([]);
+  const [typeId, setTypeId] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,15 +99,29 @@ const EditCategory = () => {
   const { miniSidenav } = controller;
 
   const category = location.state;
+  const activeFilter = allFilters.find(
+    (filterItem) => filterItem._id === selectedFilter
+  );
+  const activeFilterSelectedCount = selectedFilter
+    ? selectedFilterArray.filter((valueId) =>
+        activeFilter?.Filter?.some(
+          (filterValue) => String(filterValue._id) === String(valueId)
+        )
+      ).length
+    : 0;
 
   useEffect(() => {
     if (category) {
-      setId(category._id);
-      setCategoryName(category.name);
+      setId(category._id || "");
+      setCategoryName(category.name || "");
       setDescription(category.description || "");
-      setImagePreview(`${process.env.REACT_APP_IMAGE_LINK}${category.image}` || null);
+      setTypeId(getCategoryTypeId(category));
+      setImagePreview(getImagePreviewUrl(category.image));
+    } else {
+      showAlert("error", "Category data not found");
+      navigate(-1);
     }
-  }, [category]);
+  }, [category, navigate]);
 
   useEffect(() => {
     const getFilters = async () => {
@@ -76,12 +150,25 @@ const EditCategory = () => {
   }, []);
 
   useEffect(() => {
+    const getTypes = async () => {
+      try {
+        const result = await get(ENDPOINTS.GET_TYPE);
+        setCategoryTypes(result.data || []);
+      } catch (err) {
+        console.log(err);
+        showAlert("error", "Error fetching category types");
+      }
+    };
+
+    getTypes();
+  }, []);
+
+  useEffect(() => {
     const getBrands = async () => {
       try {
         const res = await getAllBrands(); // Adjust if your route is different
         if (res.status === 200) {
           const data = res.data;
-          setAllBrands(data.allBrands);
           setAllFilters((prev) => [
             ...prev,
             {
@@ -103,33 +190,24 @@ const EditCategory = () => {
   }, []);
 
   useEffect(() => {
-    if (!category || allFilters.length === 0) return;
+    if (!category) return;
 
-    // Map attribute names to their _id values
-    const initialAttributes = Array.isArray(category.attribute)
-      ? category.attribute
-          .map((attrName) => {
-            const attr = allAttributes.find((a) => a.Attribute_name === attrName);
-            return attr ? attr._id : null;
-          })
-          .filter(Boolean)
-      : [];
-    setSelectedAttributes(initialAttributes);
+    setSelectedAttributes(
+      getSelectedAttributeIds(category.attribute, allAttributes)
+    );
 
-    // Initialize selected filter values from category
-    const initialSelectedFilters = Array.isArray(category.filter)
-      ? category.filter.reduce((acc, f) => {
-          const matchedFilter = allFilters.find(
-            (af) => af._id === f._id || af.Filter_name === f.Filter_name
-          );
-          if (matchedFilter) {
-            acc.push(...(f.selected || []).map((val) => val._id.toString()));
-          }
-          return acc;
-        }, [])
-      : [];
-
+    const initialSelectedFilters = getSelectedFilterIds(category.filter);
     setSelectedFilterArray(initialSelectedFilters);
+
+    const initialFilterId = category.filter?.[0]?._id || "";
+    setSelectedFilter(initialFilterId);
+
+    if (initialFilterId) {
+      const selectedFilterObj = allFilters.find(
+        (filterItem) => filterItem._id === initialFilterId
+      );
+      setFilterValues(selectedFilterObj?.Filter || []);
+    }
   }, [category, allFilters, allAttributes]);
 
   const handleImageChange = (e) => {
@@ -140,7 +218,7 @@ const EditCategory = () => {
       reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     } else {
-      setImagePreview(category.image || null);
+      setImagePreview(getImagePreviewUrl(category?.image));
     }
   };
 
@@ -154,13 +232,17 @@ const EditCategory = () => {
 
   const handleFilterValueToggle = (valueId) => {
     setSelectedFilterArray((prev) =>
-      prev.includes(valueId) ? prev.filter((id) => id !== valueId) : [...prev, valueId]
+      prev.some((id) => String(id) === String(valueId))
+        ? prev.filter((id) => String(id) !== String(valueId))
+        : [...prev, valueId]
     );
   };
 
   const handleFilter = async () => {
     try {
-      const result = await put(ENDPOINTS.ADD_FILTER, { Filter_name: filterName });
+      const result = await post(ENDPOINTS.ADD_FILTER, {
+        Filter_name: filterName,
+      });
       showAlert("success", "Filter Added Successfully");
       setFilterPopup(false);
       setFilterName("");
@@ -179,18 +261,20 @@ const EditCategory = () => {
     }
 
     try {
-const result = await put(ENDPOINTS?.ADD_FILTER, {
+      const result = await post(ENDPOINTS.ADD_FILTER, {
         _id: selectedFilter,
         Filter: [{ name: addFilterValue }],
       });
       showAlert("success", "Filter Value Added Successfully");
-        setShowFilterDropdown(false);
-        setAddFilterValue("");
-        const updatedFilter = await result.data;
-        setAllFilters((prev) =>
-          prev.map((f) => (f._id === selectedFilter ? { ...f, Filter: updatedFilter.Filter } : f))
-        );
-        setFilterValues(updatedFilter.Filter);
+      setShowFilterDropdown(false);
+      setAddFilterValue("");
+      const updatedFilter = result.data;
+      setAllFilters((prev) =>
+        prev.map((f) =>
+          f._id === selectedFilter ? { ...f, Filter: updatedFilter.Filter } : f
+        )
+      );
+      setFilterValues(updatedFilter.Filter || []);
     } catch (err) {
       console.log(err);
       showAlert("error", "Error adding filter value");
@@ -198,7 +282,9 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
   };
 
   const handleRemoveFilterValue = (valueId) => {
-    setSelectedFilterArray((prev) => prev.filter((v) => v !== valueId));
+    setSelectedFilterArray((prev) =>
+      prev.filter((v) => String(v) !== String(valueId))
+    );
   };
 
   const handleAttributeSelect = (e) => {
@@ -213,26 +299,26 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
+    if (!id || !name.trim()) {
       showAlert("error", "Please enter a valid name.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("id", id);
-    formData.append("name", name);
+    formData.append("name", name.trim());
     formData.append("description", description);
+    if (typeId) {
+      formData.append("typeId", typeId);
+    }
     if (image) {
       formData.append("image", image);
     }
 
     const filterData = allFilters
       .map((f) => {
-        const isBrand = f.Filter_name === "Brand";
-
-        const matchedIds = isBrand
-          ? selectedFilterArray.filter((valId) => allBrands.some((b) => b._id === valId))
-          : selectedFilterArray.filter((valId) => f.Filter.some((val) => val._id === valId));
+        const matchedIds = selectedFilterArray.filter((valId) =>
+          (f.Filter || []).some((val) => String(val._id) === String(valId))
+        );
 
         if (matchedIds.length === 0) return null;
 
@@ -248,10 +334,9 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
 
     try {
       showAlert("loading", "Updating category...");
-      const res = await put(ENDPOINTS.EDIT_CATEGORY, formData);
+      const res = await put(`${ENDPOINTS.EDIT_CATEGORY}/${id}`, formData);
       const data = res?.data ?? res;
 
-      // success detection: if your API wraps responses differently adapt this check
       if (res && (res.status === 200 || data?.success || data?.message)) {
         showAlert("success", "Category updated successfully!");
         navigate(-1);
@@ -259,10 +344,12 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
         const errMsg = data?.message || `Failed to update category`;
         showAlert("error", errMsg);
       }
-
     } catch (err) {
       console.error("Error updating category:", err);
-      showAlert("error", "Error updating category");
+      showAlert(
+        "error",
+        err?.response?.data?.message || "Error updating category"
+      );
     }
   };
 
@@ -277,10 +364,20 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
           borderRadius: "10px",
         }}
       >
-        <h2 style={{ textAlign: "center", color: "green", marginBottom: "30px" }}>EDIT CATEGORY</h2>
+        <h2
+          style={{ textAlign: "center", color: "green", marginBottom: "30px" }}
+        >
+          EDIT CATEGORY
+        </h2>
 
         {/* Category Name */}
-        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <label style={{ fontWeight: "500" }}>Category Name</label>
           </div>
@@ -346,7 +443,13 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
         </div>
 
         {/* Description */}
-        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <label style={{ fontWeight: "500" }}>Description</label>
           </div>
@@ -366,18 +469,65 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
           </div>
         </div>
 
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
+          <div>
+            <label style={{ fontWeight: "500" }}>Type</label>
+          </div>
+          <div style={{ width: "59%", marginLeft: "45px" }}>
+            <select
+              value={typeId}
+              onChange={(e) => setTypeId(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "5px",
+                border: "1px solid black",
+                backgroundColor: "white",
+              }}
+            >
+              <option value="">-- Select Type --</option>
+              {categoryTypes.map((typeItem) => (
+                <option key={typeItem._id} value={typeItem._id}>
+                  {typeItem.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Filter System */}
-        <div className="filter-type" id="filter-type" style={{ margin: "0 38px" }}>
-          <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+        <div
+          className="filter-type"
+          id="filter-type"
+          style={{ margin: "0 38px" }}
+        >
+          <span
+            style={{
+              marginLeft: "20px",
+              fontWeight: "bold",
+              marginBottom: "10px",
+            }}
+          >
             Filters & Types
           </span>
           <div
             className="row-section"
-            style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              marginBottom: "20px",
+            }}
           >
             <div className="input-container" style={{ width: "45%" }}>
               <label style={{ fontWeight: "500" }}>
-                Select Filter (Type) <span style={{ marginLeft: "5px", marginTop: "10px" }}>*</span>
+                Select Filter (Type){" "}
+                <span style={{ marginLeft: "5px", marginTop: "10px" }}>*</span>
               </label>
               <select
                 className="input-field"
@@ -445,7 +595,13 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
                         border: "1px solid black",
                       }}
                     />
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "10px",
+                      }}
+                    >
                       <Button
                         onClick={handleFilter}
                         style={{ backgroundColor: "#00c853", color: "white" }}
@@ -465,7 +621,8 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
             </div>
             <div className="input-container" style={{ width: "45%" }}>
               <label style={{ fontWeight: "500" }}>
-                Select Filter Value <span style={{ marginLeft: "5px", marginTop: "10px" }}>*</span>
+                Select Filter Value{" "}
+                <span style={{ marginLeft: "5px", marginTop: "10px" }}>*</span>
               </label>
               <div style={{ position: "relative" }}>
                 <button
@@ -481,8 +638,8 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
                   }}
                   onClick={() => setFilterDropdown(!filterDropdown)}
                 >
-                  {selectedFilterArray.length > 0
-                    ? `${selectedFilterArray.length} value(s) selected`
+                  {activeFilterSelectedCount > 0
+                    ? `${activeFilterSelectedCount} value(s) selected`
                     : "--Select Filter Value--"}
                 </button>
                 {filterDropdown && (
@@ -512,7 +669,10 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
                       >
                         <input
                           type="checkbox"
-                          checked={selectedFilterArray.includes(value._id)}
+                          checked={selectedFilterArray.some(
+                            (selectedValueId) =>
+                              String(selectedValueId) === String(value._id)
+                          )}
                           onChange={() => handleFilterValueToggle(value._id)}
                           style={{ marginRight: "8px" }}
                         />
@@ -569,7 +729,13 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
                         border: "1px solid black",
                       }}
                     />
-                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "10px",
+                      }}
+                    >
                       <Button
                         onClick={handleFilterType}
                         style={{ backgroundColor: "#00c853", color: "white" }}
@@ -604,7 +770,9 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
             }}
           >
             {selectedFilterArray.map((valueId, index) => {
-              const value = allFilters.flatMap((f) => f.Filter).find((v) => v._id === valueId);
+              const value = allFilters
+                .flatMap((f) => f.Filter || [])
+                .find((v) => String(v._id) === String(valueId));
 
               return value ? (
                 <div
@@ -639,7 +807,13 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
         </div>
 
         {/* Attribute Dropdown */}
-        <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <label style={{ fontWeight: "500" }}>Select Attribute</label>
           </div>
@@ -724,7 +898,13 @@ const result = await put(ENDPOINTS?.ADD_FILTER, {
         )}
 
         {/* Submit and Back Buttons */}
-        <div style={{ textAlign: "center", marginTop: "30px", marginBottom: "20px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "30px",
+            marginBottom: "20px",
+          }}
+        >
           <Button
             onClick={handleSubmit}
             style={{
