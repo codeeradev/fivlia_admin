@@ -39,7 +39,7 @@ function BrandTable() {
       try {
         showAlert("loading", "Loading brands...");
 
-        const res = await get(ENDPOINTS.GET_BRANDS);
+        const res = await get(`${ENDPOINTS.GET_BRANDS}?admin=true`);
         const data = res.data;
         // Use allBrands from the API response
         setBrands(data.allBrands || []);

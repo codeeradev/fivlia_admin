@@ -11,8 +11,16 @@ import { showAlert } from "components/commonFunction/alertsLoader";
 import { getMainCategories, getAllZones } from "components/commonApi/commonApi";
 
 // Shared api client & endpoints
-import { post, put } from "api/apiClient";
+import { get, post, put } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
+
+const getStoreTypeId = (store) => {
+  if (!store?.typeId) {
+    return "";
+  }
+
+  return typeof store.typeId === "object" ? store.typeId._id || "" : store.typeId;
+};
 
 function AddStore() {
   const [controller] = useMaterialUIController();
@@ -44,6 +52,8 @@ function AddStore() {
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
+  const [typeId, setTypeId] = useState("");
+  const [storeTypes, setStoreTypes] = useState([]);
   const [cities, setCities] = useState([]);
   const [availableZones, setAvailableZones] = useState([]);
   const [mainCategories, setMainCategories] = useState([]);
@@ -75,6 +85,7 @@ function AddStore() {
       setPhone(storedetails.store.PhoneNumber);
       setEmail(storedetails.store.email || "");
       setPassword(storedetails.store.password);
+      setTypeId(getStoreTypeId(storedetails.store));
       setSelectedCity(storedetails.store.city?._id);
       setSelectedZone(zoneIds);
       setLatitude(storedetails.store.Latitude);
@@ -122,23 +133,37 @@ function AddStore() {
       }
     };
 
+    const fetchTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setStoreTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching store types:", err);
+        showAlert("error", "Failed to load types");
+      }
+    };
+
     getMainCategory();
     fetchCities();
+    fetchTypes();
   }, []);
 
   useEffect(() => {
-    if (selectedCity) {
-      const cityObj = cities.find((c) => c._id === selectedCity);
-      if (cityObj && Array.isArray(cityObj.zones)) {
-        setAvailableZones(cityObj.zones);
-      } else {
-        setAvailableZones([]);
-      }
-      setSelectedZone([]);
-    } else {
+    if (!selectedCity) {
       setAvailableZones([]);
       setSelectedZone([]);
+      return;
     }
+
+    const cityObj = cities.find((c) => c._id === selectedCity);
+    if (!cityObj || !Array.isArray(cityObj.zones)) {
+      return;
+    }
+
+    setAvailableZones(cityObj.zones);
+    setSelectedZone((prev) =>
+      prev.filter((zoneId) => cityObj.zones.some((zone) => zone._id === zoneId))
+    );
   }, [selectedCity, cities]);
 
   const handleMapClick = (e) => {
@@ -211,6 +236,11 @@ function AddStore() {
       return;
     }
 
+    if (!typeId) {
+      showAlert("warning", "Please select a type");
+      return;
+    }
+
     if (isAuthorized && selectedCategory.length === 0) {
       showAlert("warning", "Please select at least one category for authorized store");
       return;
@@ -229,6 +259,7 @@ function AddStore() {
       formData.append("PhoneNumber", phone);
       formData.append("email", email);
       formData.append("password", password);
+      formData.append("typeId", typeId);
       formData.append("city", selectedCity);
       formData.append("zone", JSON.stringify(selectedZone));
       formData.append("Latitude", latitude);
@@ -349,6 +380,22 @@ function AddStore() {
                 value={enrollmentId}
                 onChange={(e) => setEnrollmentId(e.target.value)}
               />
+            </div>
+
+            <div className="store-input">
+              <label>Type</label>
+              <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+                <option value="">---Select Type---</option>
+                {storeTypes.length > 0 ? (
+                  storeTypes.map((typeItem) => (
+                    <option key={typeItem._id} value={typeItem._id}>
+                      {typeItem.name}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Loading types...</option>
+                )}
+              </select>
             </div>
           </div>
 
