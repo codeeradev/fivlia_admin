@@ -29,7 +29,10 @@ function Product() {
   const [colorError, setColorError] = useState("");
   const [activeVariant, setActiveVariant] = useState("");
   const [filterdropdown, setFilterDropdown] = useState(false);
-  const [returnProduct, setReturnProduct] = useState({ title: "No Return", image: null });
+  const [returnProduct, setReturnProduct] = useState({
+    title: "No Return",
+    image: null,
+  });
   const returnImageInputRef = useRef(null);
   const [allFilters, setAllFilters] = useState([]);
 
@@ -229,7 +232,11 @@ function Product() {
           const sectionHeight = rect.height;
 
           // Consider a section active if its top is near the viewport top and it's at least partially visible
-          if (top <= 150 && top > -sectionHeight && Math.abs(top) < Math.abs(closestTop)) {
+          if (
+            top <= 150 &&
+            top > -sectionHeight &&
+            Math.abs(top) < Math.abs(closestTop)
+          ) {
             current = id;
             closestTop = top;
           }
@@ -282,9 +289,14 @@ function Product() {
         showAlert("success", "Filter value added");
         setShowFilterDropdown(false);
         setAddFilterValue("");
-        const selectedFilterObj = filtertype.find((filter) => filter._id === selectedFilter);
+        const selectedFilterObj = filtertype.find(
+          (filter) => filter._id === selectedFilter,
+        );
         if (selectedFilterObj) {
-          setFilterValues([...selectedFilterObj.Filter, { name: addFilterValue, _id: "new_id" }]);
+          setFilterValues([
+            ...selectedFilterObj.Filter,
+            { name: addFilterValue, _id: "new_id" },
+          ]);
         }
       } else {
         showAlert("error", "Something Went Wrong");
@@ -359,7 +371,9 @@ function Product() {
   };
 
   const handleImageRemove = (indexToRemove) => {
-    setSelectedImages((prevImages) => prevImages.filter((_, index) => index !== indexToRemove));
+    setSelectedImages((prevImages) =>
+      prevImages.filter((_, index) => index !== indexToRemove),
+    );
     // If removing the first image (thumbnail), clear thumbnail
     if (indexToRemove === 0 && selectedImages.length > 0) {
       setThumbnailImage(null);
@@ -387,7 +401,8 @@ function Product() {
     if (variantName && selectedAttr) {
       const isDuplicate = attributeValue.some(
         (item) =>
-          item.variantName === variantName && item.attributeName === selectedAttr.Attribute_name
+          item.variantName === variantName &&
+          item.attributeName === selectedAttr.Attribute_name,
       );
       if (!isDuplicate) {
         const newAttributeValue = [
@@ -407,25 +422,34 @@ function Product() {
   };
 
   const handleDeleteVariant = async (id, variantName) => {
-    if (!window.confirm(`Are you sure you want to delete the variant "${variantName}"?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the variant "${variantName}"?`,
+      )
+    ) {
       return;
     }
 
     try {
       showAlert("loading", "Deleting variant...");
-      const result = await fetch(`https://node-m8jb.onrender.com/deleteVarient/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
+      const result = await fetch(
+        `https://node-m8jb.onrender.com/deleteVarient/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (result.status === 200) {
         showAlert("success", "Variant deleted");
         const attr = await getAllAttributes();
         setAttribute(attr.data);
 
-        setAttributeValue((prev) => prev.filter((item) => item.variantName !== variantName));
+        setAttributeValue((prev) =>
+          prev.filter((item) => item.variantName !== variantName),
+        );
         setShowVariantDropdown(false);
       } else {
         showAlert("error", "Error deleting variant");
@@ -451,18 +475,26 @@ function Product() {
     setAttributeData("");
 
     if (updatedCategories.length > 0) {
-      const selectedCats = categories.filter((cat) => updatedCategories.includes(cat._id));
+      const selectedCats = categories.filter((cat) =>
+        updatedCategories.includes(cat._id),
+      );
       const allSubCats = [
         ...new Set(
-          selectedCats.flatMap((cat) => cat.subcat || []).map((sub) => JSON.stringify(sub))
+          selectedCats
+            .flatMap((cat) => cat.subcat || [])
+            .map((sub) => JSON.stringify(sub)),
         ),
       ].map((sub) => JSON.parse(sub));
       setSubCategories(allSubCats);
 
-      const allAttributes = [...new Set(selectedCats.flatMap((cat) => cat.attribute || []))];
+      const allAttributes = [
+        ...new Set(selectedCats.flatMap((cat) => cat.attribute || [])),
+      ];
       setFilteredAttributes(allAttributes);
 
-      const allFilterType = [...new Set(selectedCats.flatMap((cat) => cat.filter || []))];
+      const allFilterType = [
+        ...new Set(selectedCats.flatMap((cat) => cat.filter || [])),
+      ];
       setNewfilterType(allFilterType);
     } else {
       setSubCategories([]);
@@ -478,7 +510,9 @@ function Product() {
     if (file) {
       const validImageTypes = ["image/jpeg", "image/png", "image/jpg"];
       if (!validImageTypes.includes(file.type)) {
-        setError("Please upload a valid image (JPEG, PNG, JPG) for return policy");
+        setError(
+          "Please upload a valid image (JPEG, PNG, JPG) for return policy",
+        );
         setReturnProduct((prev) => ({ ...prev, image: null }));
         return;
       }
@@ -507,15 +541,22 @@ function Product() {
     setCategory(updatedCategories);
 
     if (updatedCategories.length > 0) {
-      const selectedCats = categories.filter((cat) => updatedCategories.includes(cat._id));
+      const selectedCats = categories.filter((cat) =>
+        updatedCategories.includes(cat._id),
+      );
       const allSubCats = selectedCats
         .flatMap((cat) => cat.subcat || [])
-        .filter((sub, index, self) => index === self.findIndex((s) => s._id === sub._id));
+        .filter(
+          (sub, index, self) =>
+            index === self.findIndex((s) => s._id === sub._id),
+        );
       setSubCategories(allSubCats);
 
       const allAttributes = selectedCats
         .flatMap((cat) => cat.attribute || [])
-        .filter((attr, index, self) => index === self.findIndex((a) => a === attr));
+        .filter(
+          (attr, index, self) => index === self.findIndex((a) => a === attr),
+        );
       setFilteredAttributes(allAttributes);
     } else {
       setSubCategories([]);
@@ -539,15 +580,25 @@ function Product() {
     const selectedSub = subCategories.find((sub) => sub._id === selectedId);
     if (selectedSub) {
       setSubsubCategories(selectedSub.subsubcat || []);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(
-        selectedSub.attribute?.length > 0 ? selectedSub.attribute : combinedAttributes
+        selectedSub.attribute?.length > 0
+          ? selectedSub.attribute
+          : combinedAttributes,
       );
     } else {
       setSubsubCategories([]);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(combinedAttributes);
     }
   };
@@ -558,24 +609,36 @@ function Product() {
     setAttributeValue([]);
     setAttributeData("");
 
-    const selectedSubSub = subsubCategories.find((subsub) => subsub._id === selectedId);
+    const selectedSubSub = subsubCategories.find(
+      (subsub) => subsub._id === selectedId,
+    );
     if (selectedSubSub) {
       const selectedSub = subCategories.find((sub) => sub._id === subCategory);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(
         selectedSubSub.attribute?.length > 0
           ? selectedSubSub.attribute
           : selectedSub?.attribute?.length > 0
           ? selectedSub.attribute
-          : combinedAttributes
+          : combinedAttributes,
       );
     } else {
       const selectedSub = subCategories.find((sub) => sub._id === subCategory);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(
-        selectedSub?.attribute?.length > 0 ? selectedSub.attribute : combinedAttributes
+        selectedSub?.attribute?.length > 0
+          ? selectedSub.attribute
+          : combinedAttributes,
       );
     }
   };
@@ -585,7 +648,8 @@ function Product() {
     if (section) {
       // Scroll to the section with an offset to account for headers
       const offset = 80; // Adjust based on your header height
-      const topPos = section.getBoundingClientRect().top + window.pageYOffset - offset;
+      const topPos =
+        section.getBoundingClientRect().top + window.pageYOffset - offset;
       window.scrollTo({ top: topPos, behavior: "smooth" });
       setActiveSection(id); // Manually set the active section
     }
@@ -603,10 +667,14 @@ function Product() {
         showAlert("success", "Filter added successfully");
         setFilterPopup(false);
         setFilterName("");
-        const selectedCats = categories.filter((cat) => category.includes(cat._id));
+        const selectedCats = categories.filter((cat) =>
+          category.includes(cat._id),
+        );
         const allFilterType = selectedCats
           .flatMap((cat) => cat.filter || [])
-          .filter((fil, index, self) => index === self.findIndex((a) => a === fil));
+          .filter(
+            (fil, index, self) => index === self.findIndex((a) => a === fil),
+          );
         setFilterTypes(allFilterType);
       } else {
         showAlert("error", "Error adding filter");
@@ -628,9 +696,12 @@ function Product() {
     try {
       showAlert("loading", "Adding attribute...");
 
-      const result = await patch(`${ENDPOINTS.UPDATE_ATTRIBUTE}/${selectedCategoryId}`, {
-        attribute: addAttribute,
-      });
+      const result = await patch(
+        `${ENDPOINTS.UPDATE_ATTRIBUTE}/${selectedCategoryId}`,
+        {
+          attribute: addAttribute,
+        },
+      );
 
       if (result.status === 200) {
         showAlert("success", "Attribute added successfully");
@@ -819,7 +890,7 @@ function Product() {
 
   const addColor = () => {
     const hasColorVariant = attributeValue.some(
-      (item) => item.attributeName.toLowerCase() === "color"
+      (item) => item.attributeName.toLowerCase() === "color",
     );
     if (!hasColorVariant) {
       setColorError("Please select a color variant first.");
@@ -839,7 +910,7 @@ function Product() {
         }));
       } else {
         const colorVariants = attributeValue.filter(
-          (item) => item.attributeName.toLowerCase() === "color"
+          (item) => item.attributeName.toLowerCase() === "color",
         );
         if (colorVariants.length > 0) {
           const latestColorVariant = colorVariants[colorVariants.length - 1];
@@ -870,8 +941,11 @@ function Product() {
     setActiveVariant(variantName);
   };
 
-  const selectedAttribute = attribute.find((attr) => attr._id === attributedata);
-  const isColorAttribute = selectedAttribute?.Attribute_name?.toLowerCase() === "color";
+  const selectedAttribute = attribute.find(
+    (attr) => attr._id === attributedata,
+  );
+  const isColorAttribute =
+    selectedAttribute?.Attribute_name?.toLowerCase() === "color";
 
   const handleFeatureToggle = (event) => {
     setIsFeatured(event.target.checked);
@@ -900,7 +974,7 @@ function Product() {
           : [...existingFilter.selected, valueId];
 
         return prev.map((f) =>
-          f._id === selectedFilter ? { ...f, selected: updatedSelected } : f
+          f._id === selectedFilter ? { ...f, selected: updatedSelected } : f,
         );
       } else {
         return [...prev, { _id: selectedFilter, selected: [valueId] }];
@@ -916,9 +990,11 @@ function Product() {
 
     showAlert("loading", "Saving product...");
 
-    const hasVariantImage = attributeValue.some((item) => variantImages[item.variantName]?.file);
+    const hasVariantImage = attributeValue.some(
+      (item) => variantImages[item.variantName]?.file,
+    );
     if (attributeValue.length > 0 && !hasVariantImage) {
-      showAlert("error","At least one variant must have an image.");
+      showAlert("error", "At least one variant must have an image.");
       return;
     }
     const formData = new FormData();
@@ -940,7 +1016,10 @@ function Product() {
     }
 
     if (returnProduct.title) {
-      formData.append("returnProduct", JSON.stringify({ title: returnProduct.title }));
+      formData.append(
+        "returnProduct",
+        JSON.stringify({ title: returnProduct.title }),
+      );
     }
 
     if (returnProduct.image) {
@@ -974,8 +1053,12 @@ function Product() {
             city: [{ _id: city._id, name: city.city }],
             zone: zones
               .map((zoneAddress) => {
-                const zoneObj = city.zones.find((z) => z.address === zoneAddress);
-                return zoneObj ? { _id: zoneObj._id, name: zoneObj.address } : null;
+                const zoneObj = city.zones.find(
+                  (z) => z.address === zoneAddress,
+                );
+                return zoneObj
+                  ? { _id: zoneObj._id, name: zoneObj.address }
+                  : null;
               })
               .filter((zone) => zone !== null),
           };
@@ -986,15 +1069,23 @@ function Product() {
       });
     }
 
-    if (city && zone.length > 0 && !selectedCities.some((c) => c._id === city)) {
+    if (
+      city &&
+      zone.length > 0 &&
+      !selectedCities.some((c) => c._id === city)
+    ) {
       const selectedCity = citydata.find((item) => item._id === city);
       if (selectedCity) {
         const locationEntry = {
           city: [{ _id: selectedCity._id, name: selectedCity.city }],
           zone: zone
             .map((zoneAddress) => {
-              const zoneObj = selectedCity.zones.find((z) => z.address === zoneAddress);
-              return zoneObj ? { _id: zoneObj._id, name: zoneObj.address } : null;
+              const zoneObj = selectedCity.zones.find(
+                (z) => z.address === zoneAddress,
+              );
+              return zoneObj
+                ? { _id: zoneObj._id, name: zoneObj.address }
+                : null;
             })
             .filter((zone) => zone !== null),
         };
@@ -1023,13 +1114,17 @@ function Product() {
           variantValue: item.variantName + unitname,
           attributeName: item.attributeName,
           imageKey: `var${index + 1}`,
-          ...(item.attributeName.toLowerCase() === "color" && colorHexCodes[item.variantName]
+          ...(item.attributeName.toLowerCase() === "color" &&
+          colorHexCodes[item.variantName]
             ? { hexCode: colorHexCodes[item.variantName] }
             : {}),
         }));
       for (const variant of variants) {
         if (variant.sell_price > variant.mrp) {
-          showAlert("error",`Selling Price for variant "${variant.variantValue}" cannot be greater than MRP.`);
+          showAlert(
+            "error",
+            `Selling Price for variant "${variant.variantValue}" cannot be greater than MRP.`,
+          );
           return null;
         }
       }
@@ -1039,7 +1134,10 @@ function Product() {
         .filter((item) => variantPrices[item.variantName])
         .forEach((item, index) => {
           if (variantImages[item.variantName]?.file) {
-            formData.append(`var${index + 1}`, variantImages[item.variantName].file);
+            formData.append(
+              `var${index + 1}`,
+              variantImages[item.variantName].file,
+            );
           }
         });
     }
@@ -1077,13 +1175,23 @@ function Product() {
 
           {/* Basic Information */}
           <div className="background" id="basicinfo">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "20px",
+              }}
+            >
               Basic Information
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  Product Name <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Product Name{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -1096,7 +1204,11 @@ function Product() {
               </div>
               <div className="input-container">
                 <label>
-                  Description <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Description{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <textarea
                   placeholder="Enter Product Description"
@@ -1121,7 +1233,11 @@ function Product() {
               </div>
               <div className="input-container">
                 <label>
-                  Type <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Type{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -1141,17 +1257,44 @@ function Product() {
             <div className="row-section">
               <div className="input-container">
                 <label>Feature Product</label>
-                <Switch checked={isFeatured} onChange={handleFeatureToggle} color="primary" />
-                <div style={{ fontWeight: "bold", color: isFeatured ? "green" : "gray" }}>
-                  {isFeatured ? "✅ Featured Product" : "❌ Not Featured Product"}
+                <Switch
+                  checked={isFeatured}
+                  onChange={handleFeatureToggle}
+                  color="primary"
+                />
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    color: isFeatured ? "green" : "gray",
+                  }}
+                >
+                  {isFeatured
+                    ? "✅ Featured Product"
+                    : "❌ Not Featured Product"}
                 </div>
               </div>
               <div className="input-container">
                 <label>
-                  Return Policy <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Return Policy{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={returnProduct.title === "No Return"}
@@ -1160,7 +1303,13 @@ function Product() {
                     />
                     No Return
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={returnProduct.title === "No Exchange"}
@@ -1169,7 +1318,13 @@ function Product() {
                     />
                     No Exchange
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={returnProduct.title === "3 Day Return"}
@@ -1188,11 +1343,17 @@ function Product() {
                       style={{ marginTop: "8px" }}
                     />
                     {returnProduct.image && (
-                      <div style={{ marginTop: "10px", display: "flex", alignItems: "center" }}>
+                      <div
+                        style={{
+                          marginTop: "10px",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
                         <img
-                          src={`${process.env.REACT_APP_IMAGE_LINK}${URL.createObjectURL(
-                            returnProduct.image
-                          )}`}
+                          src={`${
+                            process.env.REACT_APP_IMAGE_LINK
+                          }${URL.createObjectURL(returnProduct.image)}`}
                           alt="Return Policy Preview"
                           style={{
                             width: "50px",
@@ -1228,9 +1389,16 @@ function Product() {
               <div className="input-container">
                 <label>
                   Is this a food product?{" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <Switch checked={isFood} onChange={() => setIsFood(!isFood)} color="primary" />
+                <Switch
+                  checked={isFood}
+                  onChange={() => setIsFood(!isFood)}
+                  color="primary"
+                />
               </div>
             </div>
 
@@ -1238,10 +1406,18 @@ function Product() {
               <div className="row-section">
                 <div className="input-container">
                   <label>
-                    Select Type <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                    Select Type{" "}
+                    <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                      {" "}
+                      *
+                    </span>
                   </label>
                   <label>
-                    <input type="checkbox" checked={isVeg} onChange={() => setIsVeg(!isVeg)} />
+                    <input
+                      type="checkbox"
+                      checked={isVeg}
+                      onChange={() => setIsVeg(!isVeg)}
+                    />
                     Veg
                   </label>
                   <label>
@@ -1258,14 +1434,24 @@ function Product() {
           </div>
           {/* Image Upload */}
           <div className="background" id="imagesection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Images
             </span>
             <div className="row-section">
               <div style={{ display: "flex", flexDirection: "row" }}>
                 <div>
                   <label>
-                    Product Images <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                    Product Images{" "}
+                    <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                      {" "}
+                      *
+                    </span>
                   </label>
                   <input
                     type="file"
@@ -1276,7 +1462,9 @@ function Product() {
                     style={{ backgroundColor: "white" }}
                     disabled={selectedImages.length >= 4}
                   />
-                  {error && <p style={{ color: "red", fontSize: "12px" }}>{error}</p>}
+                  {error && (
+                    <p style={{ color: "red", fontSize: "12px" }}>{error}</p>
+                  )}
                 </div>
                 <div
                   style={{
@@ -1317,12 +1505,19 @@ function Product() {
 
           {/* Category Selection */}
           <div className="background" id="category-section">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Category Selection
             </span>
             <div className="row-section" style={{ flexDirection: "column" }}>
               <label>
-                Select Category <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                Select Category{" "}
+                <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
               </label>
               <div style={{ position: "relative" }}>
                 <button
@@ -1387,7 +1582,14 @@ function Product() {
               {category.length > 0 && (
                 <div style={{ marginTop: "10px" }}>
                   <label>Selected Categories</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      marginTop: "10px",
+                    }}
+                  >
                     {category.map((catId) => {
                       const cat = categories.find((c) => c._id === catId);
                       return cat ? (
@@ -1406,7 +1608,11 @@ function Product() {
                           title={`Click to remove ${cat.name}`}
                         >
                           {cat.name}
-                          <span style={{ marginLeft: "5px", cursor: "pointer" }}>×</span>
+                          <span
+                            style={{ marginLeft: "5px", cursor: "pointer" }}
+                          >
+                            ×
+                          </span>
                         </div>
                       ) : null;
                     })}
@@ -1454,7 +1660,9 @@ function Product() {
 
           {/* City & Zone */}
           <div className="background" id="citysection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold" }}>City & Zones</span>
+            <span style={{ marginLeft: "20px", fontWeight: "bold" }}>
+              City & Zones
+            </span>
             <div
               style={{
                 marginLeft: "20px",
@@ -1465,9 +1673,17 @@ function Product() {
             >
               <div className="input-container" style={{ width: "100%" }}>
                 <label>
-                  Select City <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Select City{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <select className="input-field" value={city} onChange={handleCityChange}>
+                <select
+                  className="input-field"
+                  value={city}
+                  onChange={handleCityChange}
+                >
                   <option value="">--Select City--</option>
                   {citydata.map((item) => (
                     <option key={item._id} value={item._id}>
@@ -1484,8 +1700,16 @@ function Product() {
                 <label>Selected Cities and Zones</label>
                 {selectedCities.map((city) => (
                   <div key={city._id} style={{ marginBottom: "20px" }}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
-                      <span style={{ fontWeight: "bold", marginRight: "10px" }}>{city.city}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <span style={{ fontWeight: "bold", marginRight: "10px" }}>
+                        {city.city}
+                      </span>
                       <button
                         onClick={() => handleRemoveCity(city._id)}
                         style={{
@@ -1526,11 +1750,17 @@ function Product() {
                               display: "inline-flex",
                               alignItems: "center",
                             }}
-                            onClick={() => handleRemoveZoneFromCity(city._id, zoneAddress)}
+                            onClick={() =>
+                              handleRemoveZoneFromCity(city._id, zoneAddress)
+                            }
                             title={`Click to remove ${zoneAddress}`}
                           >
                             {getDisplayZoneAddress(zoneAddress)}
-                            <span style={{ marginLeft: "5px", cursor: "pointer" }}>×</span>
+                            <span
+                              style={{ marginLeft: "5px", cursor: "pointer" }}
+                            >
+                              ×
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1543,15 +1773,28 @@ function Product() {
 
           {/* Unit Section */}
           <div className="background" id="unit-section">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Units & Brands
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  Select Units <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Select Units{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <select className="input-field" onChange={(e) => setUnitName(e.target.value)}>
+                <select
+                  className="input-field"
+                  onChange={(e) => setUnitName(e.target.value)}
+                >
                   <option value="">--Select Units--</option>
                   {unitsData.map((item) => (
                     <option key={item._id} value={item.unitname}>
@@ -1601,11 +1844,23 @@ function Product() {
                         placeholder="Enter Unit Name"
                         value={addUnit}
                         onChange={(e) => setAddUnit(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleUnitData}>Save</Button>
-                        <Button onClick={() => setShowUnitPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setShowUnitPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1617,7 +1872,9 @@ function Product() {
                 <select
                   className="input-field"
                   onChange={(e) => {
-                    const selected = brands.find((item) => item._id === e.target.value);
+                    const selected = brands.find(
+                      (item) => item._id === e.target.value,
+                    );
                     setSelectedBrand(selected);
                   }}
                 >
@@ -1675,7 +1932,11 @@ function Product() {
                         type="text"
                         placeholder="Enter Brand Name"
                         value={addBrand}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                         onChange={(e) => setBrand(e.target.value)}
                       />
 
@@ -1684,7 +1945,11 @@ function Product() {
                         accept="image/jpeg,image/png,image/jpg"
                         ref={brandImageInputRef}
                         onChange={handleBrandImage}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
                       {brandImage && (
                         <p style={{ fontSize: "12px", marginBottom: "10px" }}>
@@ -1692,7 +1957,13 @@ function Product() {
                         </p>
                       )}
                       {brandImageError && (
-                        <p style={{ color: "red", fontSize: "12px", marginBottom: "10px" }}>
+                        <p
+                          style={{
+                            color: "red",
+                            fontSize: "12px",
+                            marginBottom: "10px",
+                          }}
+                        >
                           {brandImageError}
                         </p>
                       )}
@@ -1708,7 +1979,13 @@ function Product() {
                           borderRadius: "10px",
                         }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleBrand}>Save</Button>
                         <Button
                           onClick={() => {
@@ -1733,14 +2010,23 @@ function Product() {
 
           {/* Attributes */}
           <div className="background" id="attributes">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Attributes & Variants
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
                   Select Attribute (Filter){" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -1748,14 +2034,11 @@ function Product() {
                   onChange={(e) => setAttributeData(e.target.value)}
                 >
                   <option value="">--Select Attribute--</option>
-                  {filteredAttributes.map((attr) => {
-                    const attributeObj = attribute.find((a) => a.Attribute_name === attr);
-                    return attributeObj ? (
-                      <option key={attributeObj._id} value={attributeObj._id}>
-                        {attributeObj.Attribute_name}
-                      </option>
-                    ) : null;
-                  })}
+                  {attribute.map((attr) => (
+                    <option key={attr._id} value={attr._id}>
+                      {attr.Attribute_name}
+                    </option>
+                  ))}
                 </select>
 
                 <h3
@@ -1799,11 +2082,23 @@ function Product() {
                         placeholder="Enter attribute"
                         value={addAttribute}
                         onChange={(e) => setAddattribute(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleAttribute}>Save</Button>
-                        <Button onClick={() => setShowPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setShowPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1813,7 +2108,10 @@ function Product() {
               <div className="input-container">
                 <label>
                   Select Variant (Filter Variant){" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <div style={{ position: "relative" }}>
                   <button
@@ -1832,7 +2130,9 @@ function Product() {
                     {attributeValue.length > 0 && attributedata
                       ? attributeValue
                           .filter(
-                            (item) => item.attributeName === selectedAttribute?.Attribute_name
+                            (item) =>
+                              item.attributeName ===
+                              selectedAttribute?.Attribute_name,
                           )
                           .map((item) => item.variantName)
                           .join(", ") || "--Select Attribute Value--"
@@ -1868,13 +2168,17 @@ function Product() {
                             }}
                           >
                             <span
-                              onClick={() => handleAttributeValueChange(variant.name)}
+                              onClick={() =>
+                                handleAttributeValueChange(variant.name)
+                              }
                               style={{ flex: 1 }}
                             >
                               {variant.name + unitname}
                             </span>
                             <button
-                              onClick={() => handleDeleteVariant(variant._id, variant.name)}
+                              onClick={() =>
+                                handleDeleteVariant(variant._id, variant.name)
+                              }
                               style={{
                                 background: "red",
                                 color: "white",
@@ -1933,11 +2237,23 @@ function Product() {
                         placeholder="Enter variant value"
                         value={addVarient}
                         onChange={(e) => setAddVarient(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleVarient}>Save</Button>
-                        <Button onClick={() => setShowVariantPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setShowVariantPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1963,7 +2279,9 @@ function Product() {
                     className="input-field"
                     value={variantMrps[item.variantName] || ""}
                     style={{ backgroundColor: "white", marginBottom: "10px" }}
-                    onChange={(e) => handleMrpChange(item.variantName, e.target.value)}
+                    onChange={(e) =>
+                      handleMrpChange(item.variantName, e.target.value)
+                    }
                   />
                   <input
                     type="text"
@@ -1971,25 +2289,40 @@ function Product() {
                     className="input-field"
                     value={variantPrices[item.variantName] || ""}
                     style={{ backgroundColor: "white", marginBottom: "10px" }}
-                    onChange={(e) => handlePriceChange(item.variantName, e.target.value)}
+                    onChange={(e) =>
+                      handlePriceChange(item.variantName, e.target.value)
+                    }
                   />
                   {item.attributeName.toLowerCase() === "color" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                      }}
+                    >
                       <input
                         type="text"
                         placeholder="Hex Code"
                         className="input-field"
                         value={colorHexCodes[item.variantName] || ""}
-                        style={{ backgroundColor: "white", marginBottom: "10px" }}
+                        style={{
+                          backgroundColor: "white",
+                          marginBottom: "10px",
+                        }}
                         onClick={() => handleHexCodeClick(item.variantName)}
-                        onChange={(e) => handleHexCodeChange(item.variantName, e.target.value)}
+                        onChange={(e) =>
+                          handleHexCodeChange(item.variantName, e.target.value)
+                        }
                       />
                     </div>
                   )}
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleVariantImageChange(item.variantName, e)}
+                    onChange={(e) =>
+                      handleVariantImageChange(item.variantName, e)
+                    }
                     style={{ marginBottom: "10px" }}
                   />
                   {variantImages[item.variantName]?.preview && (
@@ -2012,7 +2345,10 @@ function Product() {
             </div>
 
             {isColorAttribute && (
-              <div className="input-container" style={{ width: "100%", padding: "20px" }}>
+              <div
+                className="input-container"
+                style={{ width: "100%", padding: "20px" }}
+              >
                 <label>Select Colors (Global)</label>
                 <div
                   style={{
@@ -2026,7 +2362,12 @@ function Product() {
                     type="color"
                     value={currentColor}
                     onChange={(e) => setCurrentColor(e.target.value)}
-                    style={{ width: "100%", height: "40px", border: "none", cursor: "pointer" }}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
                   />
                   <button
                     onClick={addColor}
@@ -2043,7 +2384,13 @@ function Product() {
                   </button>
                 </div>
                 {colorError && (
-                  <p style={{ color: "red", fontSize: "12px", marginBottom: "10px" }}>
+                  <p
+                    style={{
+                      color: "red",
+                      fontSize: "12px",
+                      marginBottom: "10px",
+                    }}
+                  >
                     {colorError}
                   </p>
                 )}
@@ -2101,14 +2448,23 @@ function Product() {
 
           {/* Filter & Types */}
           <div className="background" id="filter-type">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Filters & Types
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
                   Select Filter (Type){" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -2164,19 +2520,39 @@ function Product() {
                         placeholder="Enter Filter Name"
                         value={filterName}
                         onChange={(e) => setFilterName(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleFilter}>Save</Button>
-                        <Button onClick={() => setFilterPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setFilterPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
                 )}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "10px",
+                    marginTop: "10px",
+                  }}
+                >
                   {allFilters.map((filter) => {
                     const filterName =
-                      filtertype.find((f) => f._id === filter._id)?.Filter_name || "Unnamed";
+                      filtertype.find((f) => f._id === filter._id)
+                        ?.Filter_name || "Unnamed";
                     return (
                       <div
                         key={filter._id}
@@ -2212,7 +2588,10 @@ function Product() {
               <div className="input-container">
                 <label>
                   Select Filter Value{" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <div style={{ position: "relative" }}>
                   <button
@@ -2315,11 +2694,23 @@ function Product() {
                         placeholder="Enter filter value"
                         value={addFilterValue}
                         onChange={(e) => setAddFilterValue(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleFilterType}>Save</Button>
-                        <Button onClick={() => setShowFilterDropdown(false)}>Cancel</Button>
+                        <Button onClick={() => setShowFilterDropdown(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -2366,13 +2757,23 @@ function Product() {
 
           {/* Tax Section */}
           <div className="background" id="taxsection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Product Taxes
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  GST <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  GST{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -2391,11 +2792,20 @@ function Product() {
           </div>
 
           <div
-            style={{ display: "flex", gap: "30px", alignItems: "center", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              gap: "30px",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <Button
               variant="contained"
-              style={{ backgroundColor: "#00c853", color: "white", fontSize: "15px" }}
+              style={{
+                backgroundColor: "#00c853",
+                color: "white",
+                fontSize: "15px",
+              }}
               onClick={handelProduct}
             >
               SAVE
@@ -2403,7 +2813,11 @@ function Product() {
 
             <Button
               variant="contained"
-              style={{ backgroundColor: "#00c853", color: "white", fontSize: "15px" }}
+              style={{
+                backgroundColor: "#00c853",
+                color: "white",
+                fontSize: "15px",
+              }}
               onClick={() => navigate(-1)}
             >
               BACK
@@ -2427,7 +2841,8 @@ function Product() {
               {index < array.length - 1 && (
                 <div
                   className={`dashed-line ${
-                    activeSection === item.id || array[index + 1].id === activeSection
+                    activeSection === item.id ||
+                    array[index + 1].id === activeSection
                       ? "active"
                       : ""
                   }`}
@@ -2442,8 +2857,14 @@ function Product() {
                   handleSidenavClick(item.id);
                 }}
               >
-                <span className={`dot ${activeSection === item.id ? "active" : ""}`}></span>
-                <h5 className={`label-text ${activeSection === item.id ? "active" : ""}`}>
+                <span
+                  className={`dot ${activeSection === item.id ? "active" : ""}`}
+                ></span>
+                <h5
+                  className={`label-text ${
+                    activeSection === item.id ? "active" : ""
+                  }`}
+                >
                   {item.label}
                 </h5>
               </a>
