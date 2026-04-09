@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Switch } from "@mui/material";
 import * as XLSX from "xlsx";
 import { showAlert } from "components/commonFunction/alertsLoader";
-import { get, post, put } from "../../api/apiClient";
+import { get, put } from "../../api/apiClient";
 import { ENDPOINTS } from "../../api/endPoints";
 import { getMainCategories } from "components/commonApi/commonApi";
 
@@ -30,11 +30,11 @@ function Categories() {
   const [controller] = useMaterialUIController();
   const { miniSidenav } = controller;
   const navigate = useNavigate();
-
   const [entriesToShow, setEntriesToShow] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setMainCategories] = useState([]);
+  const [categoryTypes, setCategoryTypes] = useState([]);
 
   useEffect(() => {
     const getMainCategory = async () => {
@@ -49,10 +49,38 @@ function Categories() {
     getMainCategory();
   }, []);
 
+  useEffect(() => {
+    const fetchCategoryTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setCategoryTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching category types:", err);
+      }
+    };
+
+    fetchCategoryTypes();
+  }, []);
+
+  const getCategoryTypeName = (typeValue) => {
+    if (!typeValue) {
+      return "-";
+    }
+
+    if (typeof typeValue === "object") {
+      return typeValue.name || typeValue.typeName || "-";
+    }
+
+    return categoryTypes.find((typeItem) => typeItem._id === typeValue)?.name || "-";
+  };
+
   const filteredCategories = categories.filter((item) => {
     const search = searchTerm.toLowerCase();
+    const typeName = getCategoryTypeName(item.typeId).toLowerCase();
+
     return (
       item.name.toLowerCase().includes(search) ||
+      typeName.includes(search) ||
       String(item.items || "100")
         .toLowerCase()
         .includes(search) ||
@@ -278,7 +306,7 @@ function Categories() {
                 type="text"
                 value={searchTerm}
                 onChange={handleSearchChange}
-                placeholder="Search by name, items, public..."
+                placeholder="Search by name, type, items, public..."
                 style={{
                   padding: "5px",
                   borderRadius: "20px",
@@ -307,6 +335,7 @@ function Categories() {
                 <tr>
                   <th style={{ ...headerCell, width: "10%" }}>Sr. No</th>
                   <th style={headerCell}>Category Name</th>
+                  <th style={{ ...headerCell, width: "15%" }}>Category Type</th>
                   <th style={{ ...headerCell, width: "15%" }}>Category Code</th>
                   <th style={{ ...headerCell, width: "15%" }}>Sub Categories</th>
                   <th style={headerCell}>Items</th>
@@ -332,6 +361,9 @@ function Categories() {
                         />
                         <span>{item.name}</span>
                       </div>
+                    </td>
+                    <td style={{ ...bodyCell, textAlign: "center" }}>
+                      {getCategoryTypeName(item.typeId)}
                     </td>
                     <td style={{ ...bodyCell, textAlign: "center" }}>{item.categoryId}</td>
                     <td

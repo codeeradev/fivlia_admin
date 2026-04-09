@@ -11,6 +11,30 @@ import { showAlert } from "components/commonFunction/alertsLoader";
 import { get, post, patch } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
 
+const getSelectedTypeId = (item) => {
+  if (!item?.typeId) {
+    return "";
+  }
+
+  if (typeof item.typeId === "string") {
+    return item.typeId;
+  }
+
+  if (typeof item.typeId === "object") {
+    if (typeof item.typeId.$oid === "string") {
+      return item.typeId.$oid;
+    }
+
+    if (item.typeId._id) {
+      return typeof item.typeId._id === "object" && typeof item.typeId._id.$oid === "string"
+        ? item.typeId._id.$oid
+        : item.typeId._id;
+    }
+  }
+
+  return "";
+};
+
 function EditProduct() {
   const [controller] = useMaterialUIController();
   const { miniSidenav } = controller;
@@ -96,6 +120,8 @@ function EditProduct() {
   const [isVeg, setIsVeg] = useState(false);
   const [isNonVeg, setIsNonVeg] = useState(false);
   const [originalFilterData, setOriginalFilterData] = useState([]);
+  const [typeId, setTypeId] = useState("");
+  const [productTypes, setProductTypes] = useState([]);
 
   const maxSize = 500 * 1024; // 500KB
 
@@ -762,6 +788,16 @@ function EditProduct() {
     }
   };
 
+  const fetchTypes = async () => {
+    try {
+      const res = await get(ENDPOINTS.GET_TYPE);
+      setProductTypes(res.data || []);
+    } catch (err) {
+      console.error("Error fetching product types:", err);
+      showAlert("error", "Failed to load types");
+    }
+  };
+
   const setData = (data) => {
     if (!data) {
       alert("No product data provided.");
@@ -775,6 +811,7 @@ function EditProduct() {
     setRibbon(data.ribbon || "");
     setMrp(data.mrp || "");
     setSellingPrice(data.sell_price || "");
+    setTypeId(getSelectedTypeId(data));
     setStatus(data.online_visible || true);
     setIsFeatured(data.feature_product || false);
     setThumbnailImage(data.productThumbnailUrl || null);
@@ -984,6 +1021,7 @@ function EditProduct() {
     getTax();
     fetchAttribute();
     getUnits();
+    fetchTypes();
     fetchFullProduct(location.state.id);
 
     const handleScroll = () => {
@@ -1002,6 +1040,11 @@ function EditProduct() {
   }, []);
 
   const handelProduct = async () => {
+    if (!typeId) {
+      showAlert("warning", "Please select a type.");
+      return;
+    }
+
     showAlert("loading", "Updating product...");
     
     const formData = new FormData();
@@ -1010,6 +1053,7 @@ function EditProduct() {
     formData.append("description", description);
     formData.append("ribbon", ribbon || "");
     formData.append("feature_product", isFeatured);
+    formData.append("typeId", typeId);
     formData.append("unit", unitname);
     formData.append("tax", cgst);
     formData.append("online_visible", true);
@@ -1259,6 +1303,24 @@ function EditProduct() {
                   style={{ backgroundColor: "white" }}
                   onChange={(e) => setRibbon(e.target.value)}
                 />
+              </div>
+              <div className="input-container">
+                <label>
+                  Type <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                </label>
+                <select
+                  className="input-field"
+                  value={typeId}
+                  onChange={(e) => setTypeId(e.target.value)}
+                  style={{ backgroundColor: "white" }}
+                >
+                  <option value="">---Select Type---</option>
+                  {productTypes.map((typeItem) => (
+                    <option key={typeItem._id} value={typeItem._id}>
+                      {typeItem.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="row-section">

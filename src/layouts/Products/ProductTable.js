@@ -84,10 +84,70 @@ function ProductTable() {
   const [csvFile, setCsvFile] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [bulkUploadedImages, setBulkUploadedImages] = useState(null);
+  const [productTypes, setProductTypes] = useState([]);
+  const [productTypeCache, setProductTypeCache] = useState({});
 
   useEffect(() => {
     fetchProducts();
   }, [searchQuery, entries, selectedCity, selectedCategory, currentPage]);
+
+  useEffect(() => {
+    const fetchProductTypes = async () => {
+      try {
+        const resp = await get(ENDPOINTS.GET_TYPE);
+        setProductTypes(resp.data || []);
+      } catch (err) {
+        console.error("Error fetching product types:", err);
+      }
+    };
+
+    fetchProductTypes();
+  }, []);
+
+  const getNormalizedId = (value) => {
+    if (!value) {
+      return "";
+    }
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (typeof value === "object") {
+      if (typeof value.$oid === "string") {
+        return value.$oid;
+      }
+
+      if (value._id) {
+        return getNormalizedId(value._id);
+      }
+    }
+
+    return "";
+  };
+
+  const getTypeName = (typeValue) => {
+    if (!typeValue) {
+      return "N/A";
+    }
+
+    if (typeof typeValue === "object") {
+      if (typeValue.name) {
+        return typeValue.name;
+      }
+    }
+
+    const normalizedTypeId = getNormalizedId(typeValue);
+    if (!normalizedTypeId) {
+      return "N/A";
+    }
+
+    return (
+      productTypes.find((typeItem) => getNormalizedId(typeItem?._id) === normalizedTypeId)?.name ||
+      "N/A"
+    );
+
+  };
 
   const handleMenuOpen = (event, index) => {
     setAnchorEl(event.currentTarget);
@@ -153,16 +213,57 @@ function ProductTable() {
 
       const resp = await get(`${ENDPOINTS.GET_PRODUCTS}${query}`);
       const res = resp.data;
+      const products = res.Product || [];
 
-      setData(res.Product || []);
+      const productsWithCachedType = products.map((item) => ({
+        ...item,
+        typeId: item.typeId || productTypeCache[item._id] || "",
+      }));
+
+      setData(productsWithCachedType);
       setTotalItems(res.count || 0);
       setTotalPages(res.totalPages || 1);
 
-      const initialPublicStatus = (res.Product || []).reduce((acc, cur) => {
+      const initialPublicStatus = products.reduce((acc, cur) => {
         acc[cur._id] = cur.status === true;
         return acc;
       }, {});
       setPublicStatus(initialPublicStatus);
+
+      const productsNeedingType = productsWithCachedType.filter((item) => !item.typeId && item._id);
+
+      if (productsNeedingType.length === 0) {
+        return;
+      }
+
+      const typeResults = await Promise.allSettled(
+        productsNeedingType.map(async (item) => {
+          const detailResp = await get(`${ENDPOINTS.GET_PRODUCTS}?id=${item._id}`);
+          return {
+            productId: item._id,
+            typeId: detailResp.data?.Product?.typeId || "",
+          };
+        })
+      );
+
+      const fetchedTypeMap = typeResults.reduce((acc, result) => {
+        if (result.status === "fulfilled" && result.value?.productId && result.value?.typeId) {
+          acc[result.value.productId] = result.value.typeId;
+        }
+        return acc;
+      }, {});
+
+      if (Object.keys(fetchedTypeMap).length === 0) {
+        return;
+      }
+
+      setProductTypeCache((prev) => ({ ...prev, ...fetchedTypeMap }));
+      setData((prev) =>
+        prev.map((item) => ({
+          ...item,
+          typeId: item.typeId || fetchedTypeMap[item._id] || "",
+        }))
+      );
     } catch (err) {
       console.error("Error fetching products:", err);
     }
@@ -214,6 +315,7 @@ function ProductTable() {
         return {
           "Sr. No": (currentPage - 1) * entries + index + 1,
           Product: item.productName,
+          Type: getTypeName(item.typeId),
           ImageURL: item.productThumbnailUrl,
           SKU: item.sku,
           City: item.location?.map((loc) => loc.city?.[0]?.name || "N/A").join(", ") || "N/A",
@@ -239,11 +341,22 @@ function ProductTable() {
       doc.setFontSize(12);
       doc.text("Product List", 14, 15);
 
-      const columns = ["Sr. No", "Product", "SKU", "City", "Zone", "Price", "Categories", "Public"];
+      const columns = [
+        "Sr. No",
+        "Product",
+        "Type",
+        "SKU",
+        "City",
+        "Zone",
+        "Price",
+        "Categories",
+        "Public",
+      ];
 
       const rows = exportData.map((row) => [
         row["Sr. No"],
         row["Product"],
+        row["Type"],
         row["SKU"],
         row["City"],
         row["Zone"],
@@ -773,6 +886,7 @@ function ProductTable() {
               <tr>
                 <th style={{ ...headerCell, minWidth: "80px" }}>Sr. No</th>
                 <th style={{ ...headerCell, minWidth: 250 }}>Product Name</th>
+                <th style={headerCell}>Type</th>
                 <th style={headerCell}>SKU</th>
                 <th style={{ ...headerCell, width: "130px" }}>City</th>
                 <th style={headerCell}>Zone</th>
@@ -811,6 +925,7 @@ function ProductTable() {
                         />
                         <span style={{ fontWeight: "500" }}>{item.productName}</span>
                       </td>
+                      <td style={bodyCell}>{getTypeName(item.typeId)}</td>
                       <td style={bodyCell}>{item.sku}</td>
                       <td style={bodyCell}>
                         <div

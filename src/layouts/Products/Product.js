@@ -115,10 +115,24 @@ function Product() {
   const [isFood, setIsFood] = useState(false);
   const [isVeg, setIsVeg] = useState(false);
   const [isNonVeg, setIsNonVeg] = useState(false);
+  const [typeId, setTypeId] = useState("");
+  const [productTypes, setProductTypes] = useState([]);
 
   const maxSize = 500 * 1024; // 500KB
 
   useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setProductTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching product types:", err);
+        showAlert("error", "Failed to load types");
+      }
+    };
+
+    fetchTypes();
+
     const fetchFilters = async () => {
       try {
         const res = await getAllFilters();
@@ -895,6 +909,11 @@ function Product() {
   };
 
   const handelProduct = async () => {
+    if (!typeId) {
+      showAlert("warning", "Please select a type.");
+      return;
+    }
+
     showAlert("loading", "Saving product...");
 
     const hasVariantImage = attributeValue.some((item) => variantImages[item.variantName]?.file);
@@ -909,6 +928,7 @@ function Product() {
     formData.append("mrp", mrp);
     formData.append("sell_price", sellingprice);
     formData.append("feature_product", isFeatured);
+    formData.append("typeId", typeId);
 
     if (isFood) {
       if (isVeg) {
@@ -1098,6 +1118,24 @@ function Product() {
                   style={{ backgroundColor: "white" }}
                   onChange={(e) => setRibbon(e.target.value)}
                 />
+              </div>
+              <div className="input-container">
+                <label>
+                  Type <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                </label>
+                <select
+                  className="input-field"
+                  value={typeId}
+                  onChange={(e) => setTypeId(e.target.value)}
+                  style={{ backgroundColor: "white" }}
+                >
+                  <option value="">---Select Type---</option>
+                  {productTypes.map((typeItem) => (
+                    <option key={typeItem._id} value={typeItem._id}>
+                      {typeItem.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="row-section">
