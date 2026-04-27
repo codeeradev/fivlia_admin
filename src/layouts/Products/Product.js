@@ -28,6 +28,7 @@ function Product() {
   const [colorHexCodes, setColorHexCodes] = useState({});
   const [colorError, setColorError] = useState("");
   const [activeVariant, setActiveVariant] = useState("");
+  const [productType, setProductType] = useState("");
   const [filterdropdown, setFilterDropdown] = useState(false);
   const [returnProduct, setReturnProduct] = useState({
     title: "No Return",
@@ -997,6 +998,12 @@ function Product() {
       showAlert("error", "At least one variant must have an image.");
       return;
     }
+
+    if (!productType) {
+      showAlert("warning", "Please select product type.");
+      return;
+    }
+    
     const formData = new FormData();
     formData.append("productName", name);
     formData.append("description", description);
@@ -1005,6 +1012,7 @@ function Product() {
     formData.append("sell_price", sellingprice);
     formData.append("feature_product", isFeatured);
     formData.append("typeId", typeId);
+    formData.append("productType", productType);
 
     if (isFood) {
       if (isVeg) {
@@ -1253,6 +1261,20 @@ function Product() {
                   ))}
                 </select>
               </div>
+            </div>
+            <div className="input-container">
+              <label>Product Type *</label>
+              <select
+                className="input-field"
+                value={productType}
+                onChange={(e) => setProductType(e.target.value)}
+                style={{ backgroundColor: "white" }}
+              >
+                <option value="">--Select Product Type--</option>
+                <option value="gym">Gym</option>
+                <option value="healthy">Healthy</option>
+                <option value="snacks">Snacks</option>
+              </select>
             </div>
             <div className="row-section">
               <div className="input-container">

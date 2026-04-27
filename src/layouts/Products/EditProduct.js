@@ -26,7 +26,8 @@ const getSelectedTypeId = (item) => {
     }
 
     if (item.typeId._id) {
-      return typeof item.typeId._id === "object" && typeof item.typeId._id.$oid === "string"
+      return typeof item.typeId._id === "object" &&
+        typeof item.typeId._id.$oid === "string"
         ? item.typeId._id.$oid
         : item.typeId._id;
     }
@@ -48,12 +49,21 @@ function EditProduct() {
   const [filterValues, setFilterValues] = useState([]);
   const [selectedFilterValue, setSelectedFilterValue] = useState("");
   const [variantImages, setVariantImages] = useState({}); // Added for variant image handling
-  const [returnProduct, setReturnProduct] = useState({ title: "", image: null });
+  const [returnProduct, setReturnProduct] = useState({
+    title: "",
+    image: null,
+  });
   const returnImageInputRef = useRef(null);
   const [originalProduct, setOriginalProduct] = useState(null);
   const thumbnailInputRef = useRef(null); // Added for thumbnail handling
 
-  const sectionIds = ["basicinfo", "imagesection", "category-section", "citysection", "taxsection"];
+  const sectionIds = [
+    "basicinfo",
+    "imagesection",
+    "category-section",
+    "citysection",
+    "taxsection",
+  ];
 
   // State declarations
   const [categories, setCategories] = useState([]);
@@ -122,6 +132,7 @@ function EditProduct() {
   const [originalFilterData, setOriginalFilterData] = useState([]);
   const [typeId, setTypeId] = useState("");
   const [productTypes, setProductTypes] = useState([]);
+  const [productType, setProductType] = useState("");
 
   const maxSize = 500 * 1024; // 500KB
 
@@ -169,7 +180,9 @@ function EditProduct() {
 
     setSelectedValuesByFilter((prev) => {
       const existingValues = prev[filterTypeName] || [];
-      const alreadyExists = existingValues.some((val) => val._id === selectedOption._id);
+      const alreadyExists = existingValues.some(
+        (val) => val._id === selectedOption._id,
+      );
       if (alreadyExists) return prev;
 
       return {
@@ -239,7 +252,9 @@ function EditProduct() {
   };
 
   const handleImageRemove = (indexToRemove) => {
-    setSelectedImages((prevImages) => prevImages.filter((_, index) => index !== indexToRemove));
+    setSelectedImages((prevImages) =>
+      prevImages.filter((_, index) => index !== indexToRemove),
+    );
     // If removing the first image (thumbnail), clear thumbnail
     if (indexToRemove === 0 && selectedImages.length > 0) {
       setThumbnailImage(null);
@@ -264,7 +279,8 @@ function EditProduct() {
     if (variantName && selectedAttr) {
       const isDuplicate = attributeValue.some(
         (item) =>
-          item.variantName === variantName && item.attributeName === selectedAttr.Attribute_name
+          item.variantName === variantName &&
+          item.attributeName === selectedAttr.Attribute_name,
       );
 
       if (!isDuplicate) {
@@ -286,20 +302,33 @@ function EditProduct() {
   };
 
   const handleDeleteVariant = async (id, variantName) => {
-    if (!window.confirm(`Are you sure you want to delete the variant "${variantName}"?`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the variant "${variantName}"?`,
+      )
+    )
+      return;
     try {
-      const result = await fetch(`https://node-m8jb.onrender.com/deleteVarient/${id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+      const result = await fetch(
+        `https://node-m8jb.onrender.com/deleteVarient/${id}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
       const responseBody = await result.json();
       if (result.status === 200) {
         alert("Variant Deleted Successfully");
         const res = await get(ENDPOINTS.GET_ATTRIBUTES);
         setAttribute(res.data);
-        setAttributeValue((prev) => prev.filter((item) => item.variantName !== variantName));
+        setAttributeValue((prev) =>
+          prev.filter((item) => item.variantName !== variantName),
+        );
       } else {
-        alert(responseBody.message || `Failed to delete variant (Status: ${result.status})`);
+        alert(
+          responseBody.message ||
+            `Failed to delete variant (Status: ${result.status})`,
+        );
       }
     } catch (err) {
       console.error("Error deleting variant:", err);
@@ -311,14 +340,21 @@ function EditProduct() {
     const updatedCategories = category.filter((id) => id !== categoryId);
     setCategory(updatedCategories);
     if (updatedCategories.length > 0) {
-      const selectedCats = categories.filter((cat) => updatedCategories.includes(cat._id));
+      const selectedCats = categories.filter((cat) =>
+        updatedCategories.includes(cat._id),
+      );
       const allSubCats = selectedCats
         .flatMap((cat) => cat.subcat || [])
-        .filter((sub, index, self) => index === self.findIndex((s) => s._id === sub._id));
+        .filter(
+          (sub, index, self) =>
+            index === self.findIndex((s) => s._id === sub._id),
+        );
       setSubCategories(allSubCats);
       const allAttributes = selectedCats
         .flatMap((cat) => cat.attribute || [])
-        .filter((attr, index, self) => index === self.findIndex((a) => a === attr));
+        .filter(
+          (attr, index, self) => index === self.findIndex((a) => a === attr),
+        );
       setFilteredAttributes(allAttributes);
     } else {
       setSubCategories([]);
@@ -339,15 +375,25 @@ function EditProduct() {
     const selectedSub = subCategories.find((sub) => sub._id === selectedId);
     if (selectedSub) {
       setSubsubCategories(selectedSub.subsubcat || []);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(
-        selectedSub.attribute?.length > 0 ? selectedSub.attribute : combinedAttributes
+        selectedSub.attribute?.length > 0
+          ? selectedSub.attribute
+          : combinedAttributes,
       );
     } else {
       setSubsubCategories([]);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(combinedAttributes);
     }
   };
@@ -358,24 +404,36 @@ function EditProduct() {
     setAttributeValue([]);
     setAttributeData("");
 
-    const selectedSubSub = subsubCategories.find((subsub) => subsub._id === selectedId);
+    const selectedSubSub = subsubCategories.find(
+      (subsub) => subsub._id === selectedId,
+    );
     if (selectedSubSub) {
       const selectedSub = subCategories.find((sub) => sub._id === subCategory);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(
         selectedSubSub.attribute?.length > 0
           ? selectedSubSub.attribute
           : selectedSub?.attribute?.length > 0
           ? selectedSub.attribute
-          : combinedAttributes
+          : combinedAttributes,
       );
     } else {
       const selectedSub = subCategories.find((sub) => sub._id === subCategory);
-      const selectedCats = categories.filter((cat) => category.includes(cat._id));
-      const combinedAttributes = selectedCats.flatMap((cat) => cat.attribute || []);
+      const selectedCats = categories.filter((cat) =>
+        category.includes(cat._id),
+      );
+      const combinedAttributes = selectedCats.flatMap(
+        (cat) => cat.attribute || [],
+      );
       setFilteredAttributes(
-        selectedSub?.attribute?.length > 0 ? selectedSub.attribute : combinedAttributes
+        selectedSub?.attribute?.length > 0
+          ? selectedSub.attribute
+          : combinedAttributes,
       );
     }
   };
@@ -390,9 +448,12 @@ function EditProduct() {
       return;
     }
     try {
-      const result = await patch(`${ENDPOINTS.UPDATE_ATTRIBUTE}/${category[0]}`, {
-        attribute: addAttribute,
-      });
+      const result = await patch(
+        `${ENDPOINTS.UPDATE_ATTRIBUTE}/${category[0]}`,
+        {
+          attribute: addAttribute,
+        },
+      );
       if (result.status === 200) {
         alert("Attribute Added Successfully");
         setShowPopup(false);
@@ -400,7 +461,10 @@ function EditProduct() {
         const res = await get(ENDPOINTS.GET_ATTRIBUTES);
         setAttribute(res.data);
       } else {
-        alert(result.data?.message || `Failed to add attribute (Status: ${result.status})`);
+        alert(
+          result.data?.message ||
+            `Failed to add attribute (Status: ${result.status})`,
+        );
       }
     } catch (err) {
       console.error("Error adding attribute:", err);
@@ -418,11 +482,14 @@ function EditProduct() {
       return;
     }
     try {
-      const result = await fetch(`https://node-m8jb.onrender.com/addvarient/${attributedata}`, {
-        method: "PUT",
-        body: JSON.stringify({ name: addVarient }),
-        headers: { "Content-Type": "application/json" },
-      });
+      const result = await fetch(
+        `https://node-m8jb.onrender.com/addvarient/${attributedata}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ name: addVarient }),
+          headers: { "Content-Type": "application/json" },
+        },
+      );
       const responseBody = await result.json();
       if (result.status === 200) {
         alert("Variant Added Successfully");
@@ -431,7 +498,10 @@ function EditProduct() {
         const res = await get(ENDPOINTS.GET_ATTRIBUTES);
         setAttribute(res.data);
       } else {
-        alert(responseBody.message || `Failed to add variant (Status: ${result.status})`);
+        alert(
+          responseBody.message ||
+            `Failed to add variant (Status: ${result.status})`,
+        );
       }
     } catch (err) {
       console.error("Error adding variant:", err);
@@ -512,7 +582,9 @@ function EditProduct() {
     if (selectedCity) {
       const cityZonesList = selectedCity.zones || [];
       setZones(cityZonesList);
-      const allZoneAddresses = [...new Set(cityZonesList.map((zone) => zone.address))];
+      const allZoneAddresses = [
+        ...new Set(cityZonesList.map((zone) => zone.address)),
+      ];
       setZone(allZoneAddresses);
 
       if (!selectedCities.some((c) => c._id === cityId)) {
@@ -555,7 +627,9 @@ function EditProduct() {
     if (file) {
       const validImageTypes = ["image/jpeg", "image/png", "image/jpg"];
       if (!validImageTypes.includes(file.type)) {
-        setError("Please upload a valid image (JPEG, PNG, JPG) for return policy");
+        setError(
+          "Please upload a valid image (JPEG, PNG, JPG) for return policy",
+        );
         setReturnProduct((prev) => ({ ...prev, image: null }));
         return;
       }
@@ -597,7 +671,7 @@ function EditProduct() {
 
   const addColor = () => {
     const hasColorVariant = attributeValue.some(
-      (item) => item.attributeName.toLowerCase() === "color"
+      (item) => item.attributeName.toLowerCase() === "color",
     );
     if (!hasColorVariant) {
       setColorError("Please select a color variant first.");
@@ -609,14 +683,20 @@ function EditProduct() {
       const newColors = [...colors, { hex: currentColor, name }];
       setColors(newColors);
       if (activeVariant) {
-        setColorHexCodes((prev) => ({ ...prev, [activeVariant]: currentColor }));
+        setColorHexCodes((prev) => ({
+          ...prev,
+          [activeVariant]: currentColor,
+        }));
       } else {
         const colorVariants = attributeValue.filter(
-          (item) => item.attributeName.toLowerCase() === "color"
+          (item) => item.attributeName.toLowerCase() === "color",
         );
         if (colorVariants.length > 0) {
           const latestColorVariant = colorVariants[colorVariants.length - 1];
-          setColorHexCodes((prev) => ({ ...prev, [latestColorVariant.variantName]: currentColor }));
+          setColorHexCodes((prev) => ({
+            ...prev,
+            [latestColorVariant.variantName]: currentColor,
+          }));
           setActiveVariant(latestColorVariant.variantName);
         }
       }
@@ -645,8 +725,10 @@ function EditProduct() {
   const handleRemoveVariant = (variantIdToRemove, variantNameToRemove) => {
     setAttributeValue((prev) =>
       prev.filter(
-        (item) => item._id !== variantIdToRemove || item.variantName !== variantNameToRemove
-      )
+        (item) =>
+          item._id !== variantIdToRemove ||
+          item.variantName !== variantNameToRemove,
+      ),
     );
   };
 
@@ -666,7 +748,9 @@ function EditProduct() {
   useEffect(() => {
     const GetFilterData = async () => {
       try {
-        const reset = await fetch(`https://node-m8jb.onrender.com/getfilter/${filterTypeName}`);
+        const reset = await fetch(
+          `https://node-m8jb.onrender.com/getfilter/${filterTypeName}`,
+        );
         if (reset.status === 200) {
           const data = await reset.json();
           setSingleFilterData(data.result?.Filter || []);
@@ -689,7 +773,7 @@ function EditProduct() {
       }
       try {
         const result = await fetch(
-          `https://node-m8jb.onrender.com/getcategorybyid/${selecetdcategory}`
+          `https://node-m8jb.onrender.com/getcategorybyid/${selecetdcategory}`,
         );
         if (result.status === 200) {
           const data = await result.json();
@@ -709,7 +793,7 @@ function EditProduct() {
 
           if (filterTypeName) {
             const filterRes = await fetch(
-              `https://node-m8jb.onrender.com/getfilter/${filterTypeName}`
+              `https://node-m8jb.onrender.com/getfilter/${filterTypeName}`,
             );
             if (filterRes.status === 200) {
               const filterData = await filterRes.json();
@@ -812,12 +896,15 @@ function EditProduct() {
     setMrp(data.mrp || "");
     setSellingPrice(data.sell_price || "");
     setTypeId(getSelectedTypeId(data));
+    setProductType(data.productType || "");
     setStatus(data.online_visible || true);
     setIsFeatured(data.feature_product || false);
     setThumbnailImage(data.productThumbnailUrl || null);
     setPreview(data.productThumbnailUrl || null);
 
-    setSelectedImages(data.productImageUrl?.map((url) => ({ file: null, newfiles: url })) || []);
+    setSelectedImages(
+      data.productImageUrl?.map((url) => ({ file: null, newfiles: url })) || [],
+    );
 
     const categoryIds = data.category?.map((cat) => cat._id) || [];
     setCategory(categoryIds);
@@ -832,11 +919,15 @@ function EditProduct() {
 
     const cityMap = new Map();
     data.location?.forEach((loc) => {
-      const cityArray = Array.isArray(loc.city) ? loc.city : [loc.city].filter(Boolean);
+      const cityArray = Array.isArray(loc.city)
+        ? loc.city
+        : [loc.city].filter(Boolean);
       cityArray.forEach((cityItem) => {
         const cityId = cityItem?._id;
         const cityName = cityItem?.name;
-        const zoneObj = Array.isArray(loc.zone) ? loc.zone : [loc.zone].filter(Boolean);
+        const zoneObj = Array.isArray(loc.zone)
+          ? loc.zone
+          : [loc.zone].filter(Boolean);
 
         if (cityId && cityName) {
           if (!cityMap.has(cityId)) {
@@ -856,7 +947,9 @@ function EditProduct() {
       });
     });
 
-    const cities = Array.from(cityMap.values()).filter((c) => c.zones.length > 0);
+    const cities = Array.from(cityMap.values()).filter(
+      (c) => c.zones.length > 0,
+    );
     const zonesMap = {};
     cities.forEach((city) => {
       zonesMap[city._id] = city.zones.map((z) => z.address);
@@ -920,13 +1013,16 @@ function EditProduct() {
       setVariantImages(newVariantImages);
 
       const colorVariants = data.variants.filter(
-        (variant) => (variant.attributeName || "").toLowerCase() === "color" && variant.hexCode
+        (variant) =>
+          (variant.attributeName || "").toLowerCase() === "color" &&
+          variant.hexCode,
       );
       if (colorVariants.length > 0) {
         const newColorHexCodes = {};
         const newColors = colorVariants.map((variant) => {
           const name = ColorNamer(variant.hexCode).ntc[0].name;
-          newColorHexCodes[variant.variantValue.split(" ")[0]] = variant.hexCode;
+          newColorHexCodes[variant.variantValue.split(" ")[0]] =
+            variant.hexCode;
           return { hex: variant.hexCode, name };
         });
         setColorHexCodes(newColorHexCodes);
@@ -941,7 +1037,8 @@ function EditProduct() {
       const originalFilters = data.filter.map((item) => ({
         _id: item._id,
         Filter_name: item.Filter_name,
-        selected: item.selected?.map((s) => ({ _id: s._id, name: s.name })) || [],
+        selected:
+          item.selected?.map((s) => ({ _id: s._id, name: s.name })) || [],
       }));
       setOriginalFilterData(originalFilters);
 
@@ -1006,7 +1103,7 @@ function EditProduct() {
       }
       setOriginalProduct(product);
       setData(product);
-      showAlert("info","",1)
+      showAlert("info", "", 1);
     } catch (err) {
       console.error(err);
       showAlert("error", "Failed to load product");
@@ -1046,7 +1143,7 @@ function EditProduct() {
     }
 
     showAlert("loading", "Updating product...");
-    
+
     const formData = new FormData();
 
     formData.append("productName", name);
@@ -1054,6 +1151,7 @@ function EditProduct() {
     formData.append("ribbon", ribbon || "");
     formData.append("feature_product", isFeatured);
     formData.append("typeId", typeId);
+    formData.append("productType", productType);
     formData.append("unit", unitname);
     formData.append("tax", cgst);
     formData.append("online_visible", true);
@@ -1069,7 +1167,10 @@ function EditProduct() {
     }
 
     if (returnProduct.title) {
-      formData.append("returnProduct", JSON.stringify({ title: returnProduct.title }));
+      formData.append(
+        "returnProduct",
+        JSON.stringify({ title: returnProduct.title }),
+      );
     }
 
     if (returnProduct.image) {
@@ -1100,7 +1201,9 @@ function EditProduct() {
     }
 
     if (subSubCategory) {
-      const selectedSubSub = subsubCategories.find((subsub) => subsub._id === subSubCategory);
+      const selectedSubSub = subsubCategories.find(
+        (subsub) => subsub._id === subSubCategory,
+      );
       if (selectedSubSub) {
         formData.append("subSubCategory", selectedSubSub._id);
       }
@@ -1115,7 +1218,9 @@ function EditProduct() {
           zone: zones
             .map((zoneAddress) => {
               const zoneObj = city.zones.find((z) => z.address === zoneAddress);
-              return zoneObj ? { _id: zoneObj._id, name: zoneObj.address } : null;
+              return zoneObj
+                ? { _id: zoneObj._id, name: zoneObj.address }
+                : null;
             })
             .filter((zone) => zone !== null),
         };
@@ -1125,15 +1230,23 @@ function EditProduct() {
       }
     });
 
-    if (city && zone.length > 0 && !selectedCities.some((c) => c._id === city)) {
+    if (
+      city &&
+      zone.length > 0 &&
+      !selectedCities.some((c) => c._id === city)
+    ) {
       const selectedCity = citydata.find((item) => item._id === city);
       if (selectedCity) {
         const locationEntry = {
           city: [{ _id: selectedCity._id, name: selectedCity.city }],
           zone: zone
             .map((zoneAddress) => {
-              const zoneObj = selectedCity.zones.find((z) => z.address === zoneAddress);
-              return zoneObj ? { _id: zoneObj._id, name: zoneObj.address } : null;
+              const zoneObj = selectedCity.zones.find(
+                (z) => z.address === zoneAddress,
+              );
+              return zoneObj
+                ? { _id: zoneObj._id, name: zoneObj.address }
+                : null;
             })
             .filter((zone) => zone !== null),
         };
@@ -1159,16 +1272,19 @@ function EditProduct() {
           }
           // Find the original variant data from the initial product data
           const originalVariant = originalProduct?.variants?.find(
-            (v) => v.variantValue.split(" ")[0] === item.variantName
+            (v) => v.variantValue.split(" ")[0] === item.variantName,
           );
           return {
             ...(originalVariant?._id && { _id: originalVariant._id }), // Include _id if it exists
             attributeName: item.attributeName,
-            variantValue: `${item.variantName}${item.unit ? ` ${item.unit}` : ""}`,
+            variantValue: `${item.variantName}${
+              item.unit ? ` ${item.unit}` : ""
+            }`,
             mrp: parseFloat(prices.mrp) || 0,
             sell_price: parseFloat(prices.sell_price) || 0,
             imageKey: `var${index + 1}`,
-            ...(item.attributeName.toLowerCase() === "color" && colorHexCodes[item.variantName]
+            ...(item.attributeName.toLowerCase() === "color" &&
+            colorHexCodes[item.variantName]
               ? { hexCode: colorHexCodes[item.variantName] }
               : {}),
           };
@@ -1182,7 +1298,10 @@ function EditProduct() {
         .filter((item) => variantPrices[item.variantName])
         .forEach((item, index) => {
           if (variantImages[item.variantName]?.file) {
-            formData.append(`var${index + 1}`, variantImages[item.variantName].file);
+            formData.append(
+              `var${index + 1}`,
+              variantImages[item.variantName].file,
+            );
           }
         });
     }
@@ -1200,7 +1319,9 @@ function EditProduct() {
     Object.keys(selectedValuesByFilter).forEach((filterId) => {
       const filter = filters.find((f) => f._id === filterId);
       if (filter && filter._id) {
-        const selectedIds = selectedValuesByFilter[filterId].map((val) => val._id).filter(Boolean);
+        const selectedIds = selectedValuesByFilter[filterId]
+          .map((val) => val._id)
+          .filter(Boolean);
         if (selectedIds.length > 0) {
           combinedFilterData[filterId] = {
             _id: filter._id,
@@ -1229,17 +1350,25 @@ function EditProduct() {
     }
   };
 
-  const selectedAttribute = attribute.find((attr) => attr._id === attributedata);
-  const isColorAttribute = selectedAttribute?.Attribute_name?.toLowerCase() === "color";
+  const selectedAttribute = attribute.find(
+    (attr) => attr._id === attributedata,
+  );
+  const isColorAttribute =
+    selectedAttribute?.Attribute_name?.toLowerCase() === "color";
 
   const handlefiltervalue = async () => {
     try {
-      const newvalue = await patch(`${ENDPOINTS.EDIT_FILTER}/${filterTypeName}`, {
-        Filter: [{ name: newFilterValue }],
-      });
+      const newvalue = await patch(
+        `${ENDPOINTS.EDIT_FILTER}/${filterTypeName}`,
+        {
+          Filter: [{ name: newFilterValue }],
+        },
+      );
       if (newvalue.status === 200) {
         alert("Success");
-        const res = await fetch(`https://node-m8jb.onrender.com/getfilter/${filterTypeName}`);
+        const res = await fetch(
+          `https://node-m8jb.onrender.com/getfilter/${filterTypeName}`,
+        );
         const data = await res.json();
         setFilterValues(data.result?.Filter || []);
       }
@@ -1262,13 +1391,23 @@ function EditProduct() {
 
           {/* Basic Information */}
           <div className="background" id="basicinfo">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "20px",
+              }}
+            >
               Basic Information
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  Product Name <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Product Name{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -1281,7 +1420,11 @@ function EditProduct() {
               </div>
               <div className="input-container">
                 <label>
-                  Description <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Description{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <textarea
                   placeholder="Enter Product Description"
@@ -1306,7 +1449,11 @@ function EditProduct() {
               </div>
               <div className="input-container">
                 <label>
-                  Type <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Type{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -1323,20 +1470,61 @@ function EditProduct() {
                 </select>
               </div>
             </div>
+            <div className="input-container">
+              <label>Product Type *</label>
+              <select
+                className="input-field"
+                value={productType}
+                onChange={(e) => setProductType(e.target.value)}
+                style={{ backgroundColor: "white" }}
+              >
+                <option value="">--Select Product Type--</option>
+                <option value="gym">Gym</option>
+                <option value="healthy">Healthy</option>
+                <option value="snacks">Snacks</option>
+              </select>
+            </div>
             <div className="row-section">
               <div className="input-container">
                 <label>Feature Product</label>
-                <Switch checked={isFeatured} onChange={handleFeatureToggle} color="primary" />
-                <div style={{ fontWeight: "bold", color: isFeatured ? "green" : "gray" }}>
-                  {isFeatured ? "✅ Featured Product" : "❌ Not Featured Product"}
+                <Switch
+                  checked={isFeatured}
+                  onChange={handleFeatureToggle}
+                  color="primary"
+                />
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    color: isFeatured ? "green" : "gray",
+                  }}
+                >
+                  {isFeatured
+                    ? "✅ Featured Product"
+                    : "❌ Not Featured Product"}
                 </div>
               </div>
               <div className="input-container">
                 <label>
-                  Return Policy <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Return Policy{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={returnProduct.title === "No Return"}
@@ -1345,7 +1533,13 @@ function EditProduct() {
                     />
                     No Return
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={returnProduct.title === "No Exchange"}
@@ -1354,7 +1548,13 @@ function EditProduct() {
                     />
                     No Exchange
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={returnProduct.title === "3 Day Return"}
@@ -1373,11 +1573,17 @@ function EditProduct() {
                       style={{ marginTop: "8px" }}
                     />
                     {returnProduct.image && (
-                      <div style={{ marginTop: "10px", display: "flex", alignItems: "center" }}>
+                      <div
+                        style={{
+                          marginTop: "10px",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
                         <img
-                          src={`${process.env.REACT_APP_IMAGE_LINK}${URL.createObjectURL(
-                            returnProduct.image
-                          )}`}
+                          src={`${
+                            process.env.REACT_APP_IMAGE_LINK
+                          }${URL.createObjectURL(returnProduct.image)}`}
                           alt="Return Policy Preview"
                           style={{
                             width: "50px",
@@ -1414,9 +1620,16 @@ function EditProduct() {
               <div className="input-container">
                 <label>
                   Is this a food product?{" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <Switch checked={isFood} onChange={() => setIsFood(!isFood)} color="primary" />
+                <Switch
+                  checked={isFood}
+                  onChange={() => setIsFood(!isFood)}
+                  color="primary"
+                />
               </div>
             </div>
 
@@ -1424,10 +1637,18 @@ function EditProduct() {
               <div className="row-section">
                 <div className="input-container">
                   <label>
-                    Select Type <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                    Select Type{" "}
+                    <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                      {" "}
+                      *
+                    </span>
                   </label>
                   <label>
-                    <input type="checkbox" checked={isVeg} onChange={() => setIsVeg(!isVeg)} />
+                    <input
+                      type="checkbox"
+                      checked={isVeg}
+                      onChange={() => setIsVeg(!isVeg)}
+                    />
                     Veg
                   </label>
                   <label>
@@ -1445,14 +1666,30 @@ function EditProduct() {
 
           {/* Image Upload */}
           <div className="background" id="imagesection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Images
             </span>
             <div className="row-section">
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                }}
+              >
                 <div>
                   <label>
-                    Product Images <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                    Product Images{" "}
+                    <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                      {" "}
+                      *
+                    </span>
                   </label>
                   <input
                     type="file"
@@ -1463,7 +1700,9 @@ function EditProduct() {
                     style={{ backgroundColor: "white" }}
                     disabled={selectedImages.length >= 4}
                   />
-                  {error && <p style={{ color: "red", fontSize: "12px" }}>{error}</p>}
+                  {error && (
+                    <p style={{ color: "red", fontSize: "12px" }}>{error}</p>
+                  )}
                 </div>
                 <div
                   style={{
@@ -1503,12 +1742,19 @@ function EditProduct() {
 
           {/* Category Selection */}
           <div className="background" id="category-section">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Category Selection
             </span>
             <div className="row-section" style={{ flexDirection: "column" }}>
               <label>
-                Select Category <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                Select Category{" "}
+                <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
               </label>
               <select
                 className="input-field"
@@ -1520,7 +1766,9 @@ function EditProduct() {
                   setSubCategory("");
                   setSubSubCategory("");
 
-                  const selectedCat = categories.find((cat) => cat._id === selectedValue);
+                  const selectedCat = categories.find(
+                    (cat) => cat._id === selectedValue,
+                  );
                   const allSubCats = selectedCat?.subcat || [];
                   const allAttributes = selectedCat?.attribute || [];
 
@@ -1546,7 +1794,14 @@ function EditProduct() {
               {category.length > 0 && (
                 <div style={{ marginTop: "10px" }}>
                   <label>Selected Categories</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      marginTop: "10px",
+                    }}
+                  >
                     {category.map((catId) => {
                       const cat = categories.find((c) => c._id === catId);
                       return cat ? (
@@ -1565,7 +1820,11 @@ function EditProduct() {
                           title={`Click to remove ${cat.name}`}
                         >
                           {cat.name}
-                          <span style={{ marginLeft: "5px", cursor: "pointer" }}>×</span>
+                          <span
+                            style={{ marginLeft: "5px", cursor: "pointer" }}
+                          >
+                            ×
+                          </span>
                         </div>
                       ) : null;
                     })}
@@ -1611,15 +1870,29 @@ function EditProduct() {
 
           {/* City & Zones */}
           <div className="background" id="citysection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               City & Zones
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  Select City <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Select City{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
-                <select className="input-field" value={city} onChange={handleCityChange}>
+                <select
+                  className="input-field"
+                  value={city}
+                  onChange={handleCityChange}
+                >
                   <option value="">--Select City--</option>
                   {citydata.map((item) => (
                     <option key={item._id} value={item._id}>
@@ -1635,8 +1908,16 @@ function EditProduct() {
                 <label>Selected Cities and Zones</label>
                 {selectedCities.map((city) => (
                   <div key={city._id} style={{ marginBottom: "20px" }}>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
-                      <span style={{ fontWeight: "bold", marginRight: "10px" }}>{city.city}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <span style={{ fontWeight: "bold", marginRight: "10px" }}>
+                        {city.city}
+                      </span>
                       <button
                         onClick={() => handleRemoveCity(city._id)}
                         style={{
@@ -1677,11 +1958,17 @@ function EditProduct() {
                               display: "inline-flex",
                               alignItems: "center",
                             }}
-                            onClick={() => handleRemoveZoneFromCity(city._id, zoneAddress)}
+                            onClick={() =>
+                              handleRemoveZoneFromCity(city._id, zoneAddress)
+                            }
                             title={`Click to remove ${zoneAddress}`}
                           >
                             {getDisplayZoneAddress(zoneAddress)}
-                            <span style={{ marginLeft: "5px", cursor: "pointer" }}>×</span>
+                            <span
+                              style={{ marginLeft: "5px", cursor: "pointer" }}
+                            >
+                              ×
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1694,13 +1981,23 @@ function EditProduct() {
 
           {/* Units & Brands */}
           <div className="background" id="citysection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Units & Brands
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  Select Units <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  Select Units{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -1754,11 +2051,23 @@ function EditProduct() {
                         placeholder="Enter Unit Name"
                         value={addUnit}
                         onChange={(e) => setAddUnit(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleUnitData}>Save</Button>
-                        <Button onClick={() => setShowUnitPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setShowUnitPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1770,7 +2079,9 @@ function EditProduct() {
                   className="input-field"
                   value={selectedBrand?._id || ""}
                   onChange={(e) => {
-                    const selected = brands.find((item) => item._id === e.target.value);
+                    const selected = brands.find(
+                      (item) => item._id === e.target.value,
+                    );
                     setSelectedBrand(selected);
                   }}
                 >
@@ -1820,7 +2131,11 @@ function EditProduct() {
                         type="text"
                         placeholder="Enter Brand Name"
                         value={addBrand}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                         onChange={(e) => setBrand(e.target.value)}
                       />
                       <input
@@ -1828,7 +2143,11 @@ function EditProduct() {
                         accept="image/jpeg,image/png,image/jpg"
                         ref={brandImageInputRef}
                         onChange={handleBrandImage}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
                       {brandImage && (
                         <p style={{ fontSize: "12px", marginBottom: "10px" }}>
@@ -1836,7 +2155,13 @@ function EditProduct() {
                         </p>
                       )}
                       {brandImageError && (
-                        <p style={{ color: "red", fontSize: "12px", marginBottom: "10px" }}>
+                        <p
+                          style={{
+                            color: "red",
+                            fontSize: "12px",
+                            marginBottom: "10px",
+                          }}
+                        >
                           {brandImageError}
                         </p>
                       )}
@@ -1851,7 +2176,13 @@ function EditProduct() {
                           borderRadius: "10px",
                         }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleBrand}>Save</Button>
                         <Button
                           onClick={() => {
@@ -1859,7 +2190,8 @@ function EditProduct() {
                             setBrand("");
                             setDes("");
                             setBrandImage(null);
-                            if (brandImageInputRef.current) brandImageInputRef.current.value = "";
+                            if (brandImageInputRef.current)
+                              brandImageInputRef.current.value = "";
                           }}
                         >
                           Cancel
@@ -1874,14 +2206,23 @@ function EditProduct() {
 
           {/* Filter & Types */}
           <div className="background" id="citysection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Filter & Types
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
                   Select Filter (Type){" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -1893,7 +2234,7 @@ function EditProduct() {
 
                     try {
                       const res = await fetch(
-                        `https://node-m8jb.onrender.com/getfilter/${selectedId}`
+                        `https://node-m8jb.onrender.com/getfilter/${selectedId}`,
                       );
                       if (res.status === 200) {
                         const data = await res.json();
@@ -1913,8 +2254,10 @@ function EditProduct() {
                       key={item._id}
                       value={item._id}
                       style={{
-                        fontWeight: filterTypeName === item._id ? "bold" : "normal",
-                        backgroundColor: filterTypeName === item._id ? "#e0f7fa" : "white",
+                        fontWeight:
+                          filterTypeName === item._id ? "bold" : "normal",
+                        backgroundColor:
+                          filterTypeName === item._id ? "#e0f7fa" : "white",
                       }}
                     >
                       {item.Filter_name}
@@ -1956,9 +2299,19 @@ function EditProduct() {
                         placeholder="Enter Filter Value"
                         value={newFilterValue}
                         onChange={(e) => setNewFilterValue(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handlefiltervalue}>Save</Button>
                         <Button
                           onClick={() => {
@@ -1983,67 +2336,90 @@ function EditProduct() {
                 gap: "10px",
               }}
             >
-              {Object.entries(selectedValuesByFilter).map(([filterId, values]) => {
-                const filterName =
-                  filters.find((f) => f._id === filterId)?.Filter_name || "Unknown Filter";
-                return (
-                  <div key={filterId}>
-                    <strong style={{ fontSize: "14px", color: "#007b83" }}>{filterName}</strong>
-                    <div
-                      style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "5px" }}
-                    >
-                      {values.map((val) => (
-                        <div
-                          key={val._id}
-                          style={{
-                            padding: "4px 10px",
-                            backgroundColor: "#e0f7fa",
-                            borderRadius: "15px",
-                            fontSize: "12px",
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          {val.name}
-                          <span
-                            onClick={() => {
-                              setSelectedValuesByFilter((prev) => {
-                                const updatedValues = (prev[filterId] || []).filter(
-                                  (v) => v._id !== val._id
-                                );
-                                const updated = { ...prev, [filterId]: updatedValues };
-                                if (updatedValues.length === 0) delete updated[filterId];
-                                return updated;
-                              });
-                            }}
+              {Object.entries(selectedValuesByFilter).map(
+                ([filterId, values]) => {
+                  const filterName =
+                    filters.find((f) => f._id === filterId)?.Filter_name ||
+                    "Unknown Filter";
+                  return (
+                    <div key={filterId}>
+                      <strong style={{ fontSize: "14px", color: "#007b83" }}>
+                        {filterName}
+                      </strong>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                          marginTop: "5px",
+                        }}
+                      >
+                        {values.map((val) => (
+                          <div
+                            key={val._id}
                             style={{
-                              marginLeft: "6px",
-                              cursor: "pointer",
-                              color: "red",
-                              fontWeight: "bold",
+                              padding: "4px 10px",
+                              backgroundColor: "#e0f7fa",
+                              borderRadius: "15px",
+                              fontSize: "12px",
+                              display: "flex",
+                              alignItems: "center",
                             }}
                           >
-                            ×
-                          </span>
-                        </div>
-                      ))}
+                            {val.name}
+                            <span
+                              onClick={() => {
+                                setSelectedValuesByFilter((prev) => {
+                                  const updatedValues = (
+                                    prev[filterId] || []
+                                  ).filter((v) => v._id !== val._id);
+                                  const updated = {
+                                    ...prev,
+                                    [filterId]: updatedValues,
+                                  };
+                                  if (updatedValues.length === 0)
+                                    delete updated[filterId];
+                                  return updated;
+                                });
+                              }}
+                              style={{
+                                marginLeft: "6px",
+                                cursor: "pointer",
+                                color: "red",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              ×
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                },
+              )}
             </div>
           </div>
 
           {/* Attributes & Variants */}
           <div className="background" id="citysection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Attributes & Variants
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
                   Select Attribute (Filter)
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -2052,7 +2428,9 @@ function EditProduct() {
                 >
                   <option value="">--Select Attribute--</option>
                   {filteredAttributes.map((attr) => {
-                    const attributeObj = attribute.find((a) => a.Attribute_name === attr);
+                    const attributeObj = attribute.find(
+                      (a) => a.Attribute_name === attr,
+                    );
                     return attributeObj ? (
                       <option key={attributeObj._id} value={attributeObj._id}>
                         {attributeObj.Attribute_name}
@@ -2100,11 +2478,23 @@ function EditProduct() {
                         placeholder="Enter attribute"
                         value={addAttribute}
                         onChange={(e) => setAddattribute(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleAttribute}>Save</Button>
-                        <Button onClick={() => setShowPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setShowPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -2113,7 +2503,9 @@ function EditProduct() {
               <div className="input-container">
                 <label>
                   Select Variant
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}> </span>
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -2170,18 +2562,33 @@ function EditProduct() {
                         placeholder="Enter variant value"
                         value={addVarient}
                         onChange={(e) => setAddVarient(e.target.value)}
-                        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          marginBottom: "10px",
+                        }}
                       />
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: "10px",
+                        }}
+                      >
                         <Button onClick={handleVarient}>Save</Button>
-                        <Button onClick={() => setShowVariantPopup(false)}>Cancel</Button>
+                        <Button onClick={() => setShowVariantPopup(false)}>
+                          Cancel
+                        </Button>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-            <div className="row-section" style={{ flexWrap: "wrap", display: "flex" }}>
+            <div
+              className="row-section"
+              style={{ flexWrap: "wrap", display: "flex" }}
+            >
               {attributeValue.map((item, index) => {
                 const variant = attribute
                   .find((attr) => attr._id === attributedata)
@@ -2196,10 +2603,14 @@ function EditProduct() {
                     <div style={{ marginBottom: "4px" }}>
                       <label style={{ fontSize: "14px" }}>
                         {item.attributeName} - {item.variantName}
-                        {item.unit && !item.unit.includes(item.unitName) ? ` ${item.unit}` : ""}
+                        {item.unit && !item.unit.includes(item.unitName)
+                          ? ` ${item.unit}`
+                          : ""}
                       </label>
                       <button
-                        onClick={() => handleRemoveVariant(variant?._id, item.variantName)}
+                        onClick={() =>
+                          handleRemoveVariant(variant?._id, item.variantName)
+                        }
                         style={{
                           background: "red",
                           color: "white",
@@ -2220,7 +2631,13 @@ function EditProduct() {
                       placeholder="Enter Variant MRP"
                       className="input-field"
                       value={variantPrices[item.variantName]?.mrp || ""}
-                      onChange={(e) => handlePriceChange(item.variantName, "mrp", e.target.value)}
+                      onChange={(e) =>
+                        handlePriceChange(
+                          item.variantName,
+                          "mrp",
+                          e.target.value,
+                        )
+                      }
                     />
 
                     <input
@@ -2229,14 +2646,20 @@ function EditProduct() {
                       className="input-field"
                       value={variantPrices[item.variantName]?.sell_price || ""}
                       onChange={(e) =>
-                        handlePriceChange(item.variantName, "sell_price", e.target.value)
+                        handlePriceChange(
+                          item.variantName,
+                          "sell_price",
+                          e.target.value,
+                        )
                       }
                     />
 
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleVariantImageChange(item.variantName, e)}
+                      onChange={(e) =>
+                        handleVariantImageChange(item.variantName, e)
+                      }
                       className="input-field"
                       style={{ backgroundColor: "white", marginTop: "10px" }}
                     />
@@ -2279,7 +2702,13 @@ function EditProduct() {
                     )}
 
                     {item.attributeName.toLowerCase() === "color" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "10px",
+                        }}
+                      >
                         <input
                           type="text"
                           placeholder="Hex Code"
@@ -2287,7 +2716,12 @@ function EditProduct() {
                           value={colorHexCodes[item.variantName] || ""}
                           style={{ backgroundColor: "white" }}
                           onClick={() => handleHexCodeClick(item.variantName)}
-                          onChange={(e) => handleHexCodeChange(item.variantName, e.target.value)}
+                          onChange={(e) =>
+                            handleHexCodeChange(
+                              item.variantName,
+                              e.target.value,
+                            )
+                          }
                         />
                       </div>
                     )}
@@ -2297,7 +2731,10 @@ function EditProduct() {
             </div>
 
             {isColorAttribute && (
-              <div className="input-container" style={{ width: "100%", padding: "20px" }}>
+              <div
+                className="input-container"
+                style={{ width: "100%", padding: "20px" }}
+              >
                 <label>Select Colors (Global)</label>
                 <div
                   style={{
@@ -2311,7 +2748,12 @@ function EditProduct() {
                     type="color"
                     value={currentColor}
                     onChange={(e) => setCurrentColor(e.target.value)}
-                    style={{ width: "100%", height: "40px", border: "none", cursor: "pointer" }}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
                   />
                   <button
                     onClick={addColor}
@@ -2328,7 +2770,13 @@ function EditProduct() {
                   </button>
                 </div>
                 {colorError && (
-                  <p style={{ color: "red", fontSize: "12px", marginBottom: "10px" }}>
+                  <p
+                    style={{
+                      color: "red",
+                      fontSize: "12px",
+                      marginBottom: "10px",
+                    }}
+                  >
                     {colorError}
                   </p>
                 )}
@@ -2387,13 +2835,23 @@ function EditProduct() {
 
           {/* Tax Section  */}
           <div className="background" id="taxsection">
-            <span style={{ marginLeft: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+            <span
+              style={{
+                marginLeft: "20px",
+                fontWeight: "bold",
+                marginBottom: "10px",
+              }}
+            >
               Product Taxes
             </span>
             <div className="row-section">
               <div className="input-container">
                 <label>
-                  GST <span style={{ marginLeft: "5px", marginTop: "10px" }}> *</span>
+                  GST{" "}
+                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
+                    {" "}
+                    *
+                  </span>
                 </label>
                 <select
                   className="input-field"
@@ -2412,18 +2870,31 @@ function EditProduct() {
           </div>
 
           <div
-            style={{ display: "flex", gap: "30px", alignItems: "center", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              gap: "30px",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <Button
               variant="contained"
-              style={{ backgroundColor: "#00c853", color: "white", fontSize: "15px" }}
+              style={{
+                backgroundColor: "#00c853",
+                color: "white",
+                fontSize: "15px",
+              }}
               onClick={handelProduct}
             >
               SAVE
             </Button>
             <Button
               variant="contained"
-              style={{ backgroundColor: "#00c853", color: "white", fontSize: "15px" }}
+              style={{
+                backgroundColor: "#00c853",
+                color: "white",
+                fontSize: "15px",
+              }}
               onClick={() => navigate(-1)}
             >
               BACK
@@ -2444,7 +2915,8 @@ function EditProduct() {
               {index < array.length - 1 && (
                 <div
                   className={`dashed-line ${
-                    activeSection === item.id || array[index + 1].id === activeSection
+                    activeSection === item.id ||
+                    array[index + 1].id === activeSection
                       ? "active"
                       : ""
                   }`}
@@ -2455,8 +2927,14 @@ function EditProduct() {
                 className="sidebar-link-container"
                 style={{ textDecoration: "none" }}
               >
-                <span className={`dot ${activeSection === item.id ? "active" : ""}`}></span>
-                <h5 className={`label-text ${activeSection === item.id ? "active" : ""}`}>
+                <span
+                  className={`dot ${activeSection === item.id ? "active" : ""}`}
+                ></span>
+                <h5
+                  className={`label-text ${
+                    activeSection === item.id ? "active" : ""
+                  }`}
+                >
                   {item.label}
                 </h5>
               </a>
