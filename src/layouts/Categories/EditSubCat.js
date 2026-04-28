@@ -4,13 +4,15 @@ import MDBox from "components/MDBox";
 import { useMaterialUIController } from "context";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@mui/material";
-
+import { post } from "api/apiClient";
+import { showAlert } from "components/commonFunction/alertsLoader";
+import { ENDPOINTS } from "api/endPoints";
 const EditSubCat = () => {
   const [name, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [id,setId]=useState('');
+  const [id, setId] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -18,18 +20,14 @@ const EditSubCat = () => {
   const [controller] = useMaterialUIController();
   const { miniSidenav } = controller;
 
-
   const category = location.state;
-  
-
 
   useEffect(() => {
     if (category) {
-       
       setCategoryName(category.name || "");
       setDescription(category.description || "");
-      setImagePreview(category.image || null); 
-      setId(category._id)
+      setImagePreview(category.image || null);
+      setId(category._id);
     } else {
       console.warn("No category data provided in location.state");
       alert("No category data provided.");
@@ -39,50 +37,45 @@ const EditSubCat = () => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setImage(file); 
+    setImage(file);
 
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result); 
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     } else {
-      setImagePreview(category.image || null); 
+      setImagePreview(category.image || null);
     }
   };
 
   const handleSubmit = async () => {
-  if (!name) {
-    alert("Please enter a category name.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("name", name);
-  formData.append("description", description);
-  if (image) {
-    formData.append("image", image);
-  }
-
-  try {
-    const response = await fetch(`https://node-m8jb.onrender.com/edit-category/${id}`, {
-      method: "PUT",
-      body: formData,
-    });
-
-    if (response.status === 200) {
-      alert("Category updated successfully!");
-      navigate(-1);
-    } else {
-      const errorData = await response.json();
-      alert(
-        errorData.message || `Failed to update category (Status: ${response.status})`
-      );
+    if (!name) {
+      alert("Please enter a category name.");
+      return;
     }
-  } catch (err) {
-    console.error("Error updating category:", err);
-    alert("Error updating category: " + err.message);
-  }
-};
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    if (image) {
+      formData.append("image", image);
+    }
+
+    try {
+      const response = await post(`${ENDPOINTS.EDIT_SUB_CATEGORY}/${id}`, formData);
+
+      if (response.status === 200) {
+        showAlert("success", "Category updated successfully!");
+        navigate(-1);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || `Failed to update category (Status: ${response.status})`);
+      }
+    } catch (err) {
+      console.error("Error updating category:", err);
+      alert("Error updating category: " + err.message);
+    }
+  };
 
   return (
     <MDBox

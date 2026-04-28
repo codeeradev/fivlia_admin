@@ -1,7 +1,32 @@
-// export const API_BASE_URL = "https://api.fivlia.com";
-// export const API_BASE_URL = "https://api.fivlia.in";
-export const API_BASE_URL = "http://localhost:8080";
-// export const API_BASE_URL = "https://api.fivlia.co.in";
+import db from "components/firebase";
+import { doc, getDoc } from "firebase/firestore";
+
+export const USE_FIREBASE_API_BASE_URL = false; // Set to true to enable Firebase-based API base URL
+
+// export const DEFAULT_API_BASE_URL = "https://api.fivlia.com";
+// export const DEFAULT_API_BASE_URL = "https://api.fivlia.in";
+// export const DEFAULT_API_BASE_URL = "http://localhost:8080";
+export const DEFAULT_API_BASE_URL = "https://api.fivlia.co.in";
+
+export let API_BASE_URL = DEFAULT_API_BASE_URL;
+
+const normalizeApiBaseUrl = (url) =>
+  typeof url === "string" ? url.trim().replace(/\/+$/, "") : "";
+
+export const apiBaseUrlPromise = USE_FIREBASE_API_BASE_URL
+  ? getDoc(doc(db, "config", "api"))
+      .then((docSnap) => {
+        API_BASE_URL = normalizeApiBaseUrl(docSnap.data()?.base_url) || DEFAULT_API_BASE_URL;
+        return API_BASE_URL;
+      })
+      .catch((error) => {
+        console.error("Failed to load API base URL from Firebase:", error);
+        API_BASE_URL = DEFAULT_API_BASE_URL;
+        return API_BASE_URL;
+      })
+  : Promise.resolve(API_BASE_URL);
+
+export const getApiBaseUrl = async () => apiBaseUrlPromise;
 
 // Define all endpoints here
 export const ENDPOINTS = {
@@ -95,6 +120,7 @@ export const ENDPOINTS = {
   CREATE_STORE: "/createStore",
   GENERATE_KEY: "/generateKey",
   EDIT_CATEGORY: "/editCat",
+  EDIT_SUB_CATEGORY: `/edit-category`,
   GET_SELLER: "/getSeller",
   
   MARK_ALL_READ: "/markAllRead",
