@@ -13,41 +13,27 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import Dashboard from "layouts/dashboard";
-import Tables from "layouts/tables";
-import Billing from "layouts/billing";
-import RTL from "layouts/rtl";
-import Notifications from "layouts/notifications";
-import Profile from "layouts/profile";
-import SignIn from "layouts/authentication/sign-in";
-import SignUp from "layouts/authentication/sign-up";
 import Table from "layouts/servicearea/ServiceTable";
 import Demo from "layouts/dashboard/Demo";
 import Icon from "@mui/material/Icon";
 import CityTable from "layouts/City Management/CityTable";
-import UserData from "layouts/Users/Users";
 import BanerManagement from "layouts/Banner/Banner";
 import Categories from "layouts/Categories/Categories";
+import FoodCategories from "layouts/foodCategory/foodCategory";
 import BrandTable from "layouts/Brand/BrandTable";
 import AttributeTable from "layouts/Attribute/AttributeArray";
 import Tax from "layouts/Attribute/Tax";
-import Product from "layouts/Products/Product";
 import Stock from "layouts/Store/StoreRoutes/Stock";
 import ProductTable from "layouts/Products/ProductTable";
+import FoodProductTable from "layouts/Products/ProductTable";
+
 import User from "layouts/User/User";
-import CreateStore from "layouts/Store/Store";
 import SellerTable from "layouts/Store/sellerTable";
 import UnitsTable from "layouts/Attribute/Units";
-import VarientTabel from "layouts/Attribute/Varient";
 import Setting from "Setting/Setting";
 import PagesTable from "Setting/pageTable";
 import OrderSetting from "Setting/OrderSetting";
-import LoginPage from "Login/Login";
-import button from "assets/theme/components/button";
 import StoreTabel from "layouts/Store/StoreTable";
-import DeliveryStatusDropdown from "layouts/Attribute/Delievery";
-import { Collapse } from "@mui/material";
-import def from "ajv/dist/vocabularies/applicator/additionalItems";
 import Filter from "layouts/Attribute/Filter";
 import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
 import Drivers from "layouts/Drivers/Drivers";
@@ -224,15 +210,40 @@ const routes = [
     route: "/serviceArea",
     component: <Table />,
   },
+  // {
+  //   type: "collapse",
+  //   name: "Categories",
+  //   key: "servicearea",
+  //   icon: <Icon fontSize="small">storefront</Icon>,
+  //   permission: "CATEGORY_VIEW",
+  //   route: "/categories",
+  //   component: <Categories />,
+  // },
   {
-    type: "collapse",
-    name: "Categories",
-    key: "servicearea",
-    icon: <Icon fontSize="small">storefront</Icon>,
-    permission: "CATEGORY_VIEW",
-    route: "/categories",
-    component: <Categories />,
-  },
+  type: "collapse",
+  name: "Categories",
+  key: "categories-management",
+  icon: <Icon fontSize="small">storefront</Icon>,
+  permission: "CATEGORY_VIEW",
+  collapse: [
+    {
+      name: "All Categories",
+      key: "servicearea",
+      route: "/categories",
+      permission: "CATEGORY_VIEW",
+      component: <Categories />,
+      icon: <Icon fontSize="small">category</Icon>,
+    },
+    {
+      name: "Food Categories",
+      key: "food-categories",
+      route: "/food-categories",
+      permission: "CATEGORY_VIEW",
+      component: <FoodCategories />,
+      icon: <Icon fontSize="small">restaurant_menu</Icon>,
+    },
+  ],
+},
   {
     type: "collapse",
     name: "Banner-Management",

@@ -133,6 +133,8 @@ function EditProduct() {
   const [typeId, setTypeId] = useState("");
   const [productTypes, setProductTypes] = useState([]);
   const [productType, setProductType] = useState("");
+  const [foodTypes, setFoodTypes] = useState([]);
+  const [foodTypeId, setFoodTypeId] = useState("");
 
   const maxSize = 500 * 1024; // 500KB
 
@@ -882,6 +884,17 @@ function EditProduct() {
     }
   };
 
+  const fetchFoodTypes = async () => {
+    try {
+      const res = await get(ENDPOINTS.GET_FOOD);
+      setFoodTypes(res.data || []);
+    } catch (err) {
+      console.error("Error fetching food types:", err);
+    }
+  };
+
+  fetchFoodTypes();
+
   const setData = (data) => {
     if (!data) {
       alert("No product data provided.");
@@ -897,6 +910,7 @@ function EditProduct() {
     setSellingPrice(data.sell_price || "");
     setTypeId(getSelectedTypeId(data));
     setProductType(data.productType || "");
+    setFoodTypeId(data.foodTypeId?._id || data.foodTypeId || "");
     setStatus(data.online_visible || true);
     setIsFeatured(data.feature_product || false);
     setThumbnailImage(data.productThumbnailUrl || null);
@@ -1156,6 +1170,10 @@ function EditProduct() {
     formData.append("tax", cgst);
     formData.append("online_visible", true);
     formData.append("status", status);
+
+    if (foodTypeId) {
+      formData.append("foodTypeId", foodTypeId);
+    }
 
     if (isFood) {
       if (isVeg) {
@@ -1484,6 +1502,29 @@ function EditProduct() {
                 <option value="snacks">Snacks</option>
               </select>
             </div>
+            {productTypes
+              .find((t) => t._id === typeId)
+              ?.name?.toLowerCase()
+              .includes("food") && (
+              <div className="input-container">
+                <label>Select Food Type</label>
+
+                <select
+                  className="input-field"
+                  value={foodTypeId}
+                  onChange={(e) => setFoodTypeId(e.target.value)}
+                  style={{ backgroundColor: "white" }}
+                >
+                  <option value="">--Select Food Type--</option>
+
+                  {foodTypes.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="row-section">
               <div className="input-container">
                 <label>Feature Product</label>

@@ -55,6 +55,11 @@ export const ENDPOINTS = {
   GET_SUB_CATEGORIES: "/GetSubCategories",
   GET_SUB_SUB_CATEGORIES: "/GetSubSubCategories",
 
+  ADD_FOOD: "/food/add-food",
+  GET_FOOD: "/food/get-all-food",
+  UPDATE_FOOD: "/food/update-food/:id",
+  DELETE_FOOD: "/food/delete-food/:id",
+
   UPDATE_ATTRIBUTE: "/updateAt",
   EDIT_FILTER: "/editFilter",
   UPDATE_PRODUCT: "/updateProduct",

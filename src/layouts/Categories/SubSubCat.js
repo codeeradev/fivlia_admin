@@ -136,7 +136,7 @@ function SubSubCat() {
                     <td style={{ ...bodyCell }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
                         <img
-                          src={subsub.image}
+                          src={`${process.env.REACT_APP_IMAGE_LINK}${subsub.image}`}
                           alt={subsub.name}
                           style={{
                             width: "50px",

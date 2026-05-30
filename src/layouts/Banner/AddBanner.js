@@ -30,6 +30,8 @@ function AddBanner() {
   const [selectedCityId, setSelectedCityId] = useState([]);
   const [imageError, setImageError] = useState("");
   const [bannerType, setBannerType] = useState("normal");
+  const [typeId, setTypeId] = useState("");
+  const [bannerTypes, setBannerTypes] = useState([]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -46,7 +48,9 @@ function AddBanner() {
 
     const fetchBrands = async () => {
       try {
-        const res = await get(ENDPOINTS.GET_BRANDS);
+        const res = await get(
+          `${ENDPOINTS.GET_BRANDS}${typeId ? `?typeId=${typeId}` : ""}`
+        );
         const data = res.data;
         const brandList = Array.isArray(data) ? data : data.allBrands || data.allBrand || [];
         setBrands(brandList);
@@ -55,11 +59,11 @@ function AddBanner() {
       }
     };
 
-    fetchBrands();
-
     const fetchCategories = async () => {
       try {
-        const res = await get(ENDPOINTS.GET_MAIN_CATEGORY);
+        const res = await get(
+          `${ENDPOINTS.GET_MAIN_CATEGORY}${typeId ? `?typeId=${typeId}` : ""}`
+        );
         const data = res.data;
         // Handle both old and new API response structures
         const categories = Array.isArray(data) ? data : data.result || data.data || [];
@@ -69,9 +73,20 @@ function AddBanner() {
       }
     };
 
+    const fetchTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setBannerTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching types:", err);
+      }
+    };
+
     fetchLocations();
+    fetchBrands();
     fetchCategories();
-  }, []);
+    fetchTypes();
+  }, [typeId]);
 
   const selectedCity = useMemo(
     () => locations.filter((loc) => selectedCityId.includes(loc._id)),
@@ -164,10 +179,15 @@ function AddBanner() {
       showAlert("error", imageError);
       return;
     }
+    if (!typeId) {
+      showAlert("error", "Please select a type");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", name);
     formData.append("type", bannerType);
+    formData.append("typeId", typeId);
     formData.append("city", JSON.stringify(selectedCityId));
     formData.append("image", imageFile);
     formData.append("type2", type ? type : "NO");
@@ -282,6 +302,28 @@ function AddBanner() {
           </div>
         )}
 
+        <div style={formRowStyle}>
+          <label style={labelStyle}>Type</label>
+          <select
+            style={inputStyle}
+            value={typeId}
+            onChange={(e) => {
+              setTypeId(e.target.value);
+              setSelectedBrandId("");
+              setMainId("");
+              setSubId("");
+              setSubsubId("");
+            }}
+          >
+            <option value="">-- Select Type --</option>
+            {bannerTypes.map((typeItem) => (
+              <option key={typeItem._id} value={typeItem._id}>
+                {typeItem.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* City */}
         <div style={formRowStyle}>
           <label style={labelStyle}>City</label>
@@ -354,7 +396,7 @@ function AddBanner() {
 
         {/* Type */}
         <div style={formRowStyle}>
-          <label style={labelStyle}>Type</label>
+          <label style={labelStyle}>Banner Link Type</label>
           <select
             style={inputStyle}
             value={type}

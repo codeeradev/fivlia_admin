@@ -34,6 +34,11 @@ function BannerManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const getBannerTypeName = (typeId) => {
+    if (!typeId) return "N/A";
+    return typeof typeId === "object" ? typeId.name || "N/A" : typeId;
+  };
+
   useEffect(() => {
     const getBanner = async () => {
       try {
@@ -109,6 +114,7 @@ function BannerManagement() {
     return (
       item.title?.toLowerCase().includes(search) ||
       item.type?.toLowerCase().includes(search) ||
+      getBannerTypeName(item.typeId).toLowerCase().includes(search) ||
       (item.city && Array.isArray(item.city)
         ? item.city.some((c) => c.name.toLowerCase().includes(search))
         : item.city?.name?.toLowerCase().includes(search))
@@ -206,6 +212,7 @@ function BannerManagement() {
                 <tr>
                   <th style={headerCell}>Sr. No</th>
                   <th style={headerCell}>Banner Name</th>
+                  <th style={headerCell}>Business Type</th>
                   <th style={headerCell}>Type</th>
                   <th style={headerCell}>City</th>
                   <th style={headerCell}>Public</th>
@@ -226,6 +233,7 @@ function BannerManagement() {
                         <span>{item.title}</span>
                       </div>
                     </td>
+                    <td style={bodyCell}>{getBannerTypeName(item.typeId)}</td>
                     <td style={bodyCell}>{item.type}</td>
                     <td style={bodyCell}>
                       {Array.isArray(item.city)
@@ -286,7 +294,7 @@ function BannerManagement() {
                 ))}
                 {currentBanners.length === 0 && (
                   <tr>
-                    <td colSpan={6} style={{ ...bodyCell, textAlign: "center" }}>
+                    <td colSpan={7} style={{ ...bodyCell, textAlign: "center" }}>
                       No banners found
                     </td>
                   </tr>

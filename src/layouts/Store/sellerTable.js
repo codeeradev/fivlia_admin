@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import MDBox from "components/MDBox";
 import { useMaterialUIController } from "context";
 import {
@@ -40,6 +40,90 @@ const bodyCell = {
   backgroundColor: "#fff",
 };
 
+const compactBodyCell = {
+  ...bodyCell,
+  minWidth: 150,
+  whiteSpace: "nowrap",
+};
+
+const getBusinessType = (store = {}) =>
+  String(
+    store.businessType ||
+      store.business_type ||
+      store.BusinessType ||
+      store.business?.type ||
+      ""
+  ).toUpperCase();
+
+const hasTruthyFlag = (value) =>
+  value === true || value === "true" || value === 1 || value === "1";
+
+const isFoodSeller = (store = {}) => {
+  const businessType = getBusinessType(store);
+
+  return (
+    hasTruthyFlag(store.sellfood) ||
+    hasTruthyFlag(store.sellFood) ||
+    hasTruthyFlag(store.sell_food) ||
+    businessType === "FSAII" ||
+    businessType === "FSSAI" ||
+    businessType.includes("FOOD")
+  );
+};
+
+const getSellerTypeMeta = (store = {}) =>
+  isFoodSeller(store)
+    ? {
+        label: "Food Seller",
+        segment: "Food Service",
+        color: "#1b7f4c",
+        bg: "#e8f7ef",
+        border: "#b7e2c8",
+      }
+    : {
+        label: "Retail Partner",
+        segment: "Commerce",
+        color: "#3556a3",
+        bg: "#edf2ff",
+        border: "#c8d5ff",
+      };
+
+const getRegistrationInfo = (store = {}) => {
+  if (store.fsiNumber || store.fssaiNumber || store.fssai) {
+    return {
+      label: "FSSAI",
+      value: store.fsiNumber || store.fssaiNumber || store.fssai,
+      color: "#8a4b00",
+      bg: "#fff4e5",
+    };
+  }
+
+  if (store.gstNumber) {
+    return {
+      label: "GST",
+      value: store.gstNumber,
+      color: "#04566e",
+      bg: "#e7f7fb",
+    };
+  }
+
+  if (store.enrollmentId) {
+    return {
+      label: "Enrollment",
+      value: store.enrollmentId,
+      color: "#5d4777",
+      bg: "#f3eefb",
+    };
+  }
+
+  return {
+    label: "Not Added",
+    value: "-",
+    color: "#666",
+    bg: "#f5f5f5",
+  };
+};
+
 function SellerTable() {
   const [controller] = useMaterialUIController();
   const { miniSidenav } = controller;
@@ -48,6 +132,7 @@ function SellerTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sellerTypeFilter, setSellerTypeFilter] = useState("");
   const [actionAnchorEl, setActionAnchorEl] = useState(null);
   const [actionStore, setActionStore] = useState(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -64,10 +149,6 @@ function SellerTable() {
   useEffect(() => {
     getAllStores();
   }, []);
-
-  useEffect(() => {
-    handleFilter();
-  }, [searchTerm, selectedCity, statusFilter, stores]);
 
   const handleAdminLogin = async (store) => {
     try {
@@ -114,19 +195,22 @@ function SellerTable() {
     }
   };
 
-  const handleFilter = () => {
+  const handleFilter = useCallback(() => {
     let filtered = stores;
 
     if (searchTerm.trim() !== "") {
       const lower = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (s) =>
-          s.storeName?.toLowerCase().includes(lower) || s.ownerName?.toLowerCase().includes(lower)
+          s.storeName?.toLowerCase().includes(lower) ||
+          s.ownerName?.toLowerCase().includes(lower)
       );
     }
 
     if (selectedCity !== "") {
-      filtered = filtered.filter((s) => s.city?.name?.toLowerCase() === selectedCity.toLowerCase());
+      filtered = filtered.filter(
+        (s) => s.city?.name?.toLowerCase() === selectedCity.toLowerCase()
+      );
     }
 
     if (statusFilter !== "") {
@@ -134,9 +218,19 @@ function SellerTable() {
       filtered = filtered.filter((s) => s.status === isOnline);
     }
 
+    if (sellerTypeFilter !== "") {
+      filtered = filtered.filter((s) =>
+        sellerTypeFilter === "food" ? isFoodSeller(s) : !isFoodSeller(s)
+      );
+    }
+
     setFilteredStores(filtered);
     setCurrentPage(1);
-  };
+  }, [searchTerm, selectedCity, statusFilter, sellerTypeFilter, stores]);
+
+  useEffect(() => {
+    handleFilter();
+  }, [handleFilter]);
 
   const handleActionClick = (event, store) => {
     setActionAnchorEl(event.currentTarget);
@@ -152,7 +246,7 @@ function SellerTable() {
     try {
       const approveStatus = newStatus ? "banned" : "approved";
 
-      await put(`${ENDPOINTS.EDIT_STORE}/${storeId}`, {approveStatus});
+      await put(`${ENDPOINTS.EDIT_STORE}/${storeId}`, { approveStatus });
 
       setStores((prevStores) =>
         prevStores.map((s) => (s._id === storeId ? { ...s, approveStatus } : s))
@@ -170,14 +264,18 @@ function SellerTable() {
       });
 
       setStores((prevStores) =>
-        prevStores.map((s) => (s._id === storeId ? { ...s, status: newStatus } : s))
+        prevStores.map((s) =>
+          s._id === storeId ? { ...s, status: newStatus } : s
+        )
       );
     } catch (err) {
       showAlert("error", "Something went wrong while updating status.");
     }
   };
 
-  const cityOptions = [...new Set(stores.map((s) => s.city?.name).filter(Boolean))];
+  const cityOptions = [
+    ...new Set(stores.map((s) => s.city?.name).filter(Boolean)),
+  ];
 
   const indexOfLast = currentPage * entries;
   const indexOfFirst = indexOfLast - entries;
@@ -213,7 +311,9 @@ function SellerTable() {
             }}
           >
             <div>
-              <span style={{ fontWeight: "bold", fontSize: 26 }}>Sellers List</span>
+              <span style={{ fontWeight: "bold", fontSize: 26 }}>
+                Sellers List
+              </span>
               <br />
               <span style={{ fontSize: 17 }}>View and manage all stores</span>
             </div>
@@ -297,6 +397,20 @@ function SellerTable() {
                   <MenuItem value="offline">Offline</MenuItem>
                 </Select>
               </FormControl>
+
+              {/* Filter by Seller Type */}
+              <FormControl style={{ minWidth: "190px", marginTop: "15px" }}>
+                <InputLabel>Seller Category</InputLabel>
+                <Select
+                  value={sellerTypeFilter}
+                  onChange={(e) => setSellerTypeFilter(e.target.value)}
+                  style={{ height: "45px" }}
+                >
+                  <MenuItem value="">All Sellers</MenuItem>
+                  <MenuItem value="food">Food Sellers</MenuItem>
+                  <MenuItem value="retail">Retail Partners</MenuItem>
+                </Select>
+              </FormControl>
             </div>
 
             {/* RIGHT SIDE SEARCH */}
@@ -329,6 +443,9 @@ function SellerTable() {
                   <th style={headerCell}>Seller Name</th>
                   <th style={headerCell}>Owner Info</th>
                   <th style={headerCell}>Wallet</th>
+                  <th style={headerCell}>Seller Type</th>
+                  <th style={headerCell}>Business Segment</th>
+                  <th style={headerCell}>Registration ID</th>
                   <th style={headerCell}>City</th>
                   <th style={headerCell}>Zone(s)</th>
                   <th style={headerCell}>Products</th>
@@ -339,130 +456,216 @@ function SellerTable() {
               </thead>
 
               <tbody>
-                {paginatedStores.map((store, index) => (
-                  <tr key={store._id}>
-                    <td style={{ ...bodyCell, textAlign: "center" }}>
-                      {(currentPage - 1) * entries + index + 1}
-                    </td>
+                {paginatedStores.map((store, index) => {
+                  const sellerType = getSellerTypeMeta(store);
+                  const registration = getRegistrationInfo(store);
 
-                    <td style={bodyCell}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        {store.image ? (
-                          <img
-                            src={`${process.env.REACT_APP_IMAGE_LINK}${store.image}`}
-                            alt="store"
-                            style={{
-                              width: 60,
-                              height: 60,
-                              borderRadius: 8,
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 60,
-                              height: 60,
-                              borderRadius: 8,
-                              backgroundColor: "#ccc",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "#555",
-                            }}
-                          >
-                            No Image
-                          </div>
-                        )}
-                        <span style={{ marginLeft: "30px" }}>{store.storeName}</span>
-                      </div>
-                    </td>
+                  return (
+                    <tr key={store._id}>
+                      <td style={{ ...bodyCell, textAlign: "center" }}>
+                        {(currentPage - 1) * entries + index + 1}
+                      </td>
 
-                    {/* Owner Info */}
-                    <td
-                      style={bodyCell}
-                      onClick={() => {
-                        setSelectedStore(store);
-                        setShowPassword(false);
-                        setViewModalOpen(true);
-                      }}
-                    >
-                      <strong style={{ cursor: "pointer", color: "#007bff" }}>
-                        {store.ownerName || "N/A"}
-                      </strong>
-                    </td>
+                      <td style={bodyCell}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
+                          {store.image ? (
+                            <img
+                              src={`${process.env.REACT_APP_IMAGE_LINK}${store.image}`}
+                              alt="store"
+                              style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: 8,
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: 8,
+                                backgroundColor: "#ccc",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "#555",
+                              }}
+                            >
+                              No Image
+                            </div>
+                          )}
+                          <span style={{ marginLeft: "30px" }}>
+                            {store.storeName}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Wallet */}
-                    <td
-                      style={{ ...bodyCell, textAlign: "left" }}
-                      onClick={() => {
-                        setSelectedStore(store);
-                        setWalletModalOpen(true);
-                      }}
-                    >
-                      <span
-                        style={{
-                          marginLeft: "30px",
-                          color: "#007bff",
-                          textDecoration: "underline",
-                          cursor: "pointer",
+                      {/* Owner Info */}
+                      <td
+                        style={bodyCell}
+                        onClick={() => {
+                          setSelectedStore(store);
+                          setShowPassword(false);
+                          setViewModalOpen(true);
                         }}
                       >
-                        {(store.wallet ?? 0).toFixed(2)}
-                      </span>
-                    </td>
+                        <strong style={{ cursor: "pointer", color: "#007bff" }}>
+                          {store.ownerName || "N/A"}
+                        </strong>
+                      </td>
 
-                    <td style={bodyCell}>{store.city?.name || "N/A"}</td>
-                    <td style={bodyCell}>{store.zone?.length || 0}</td>
-                    <td style={bodyCell}>{store.Category?.length || 0}</td>
-
-                    <td style={{ ...bodyCell, textAlign: "center" }}>
-                      <Switch
-                        checked={store.status}
-                        onChange={(e) => handleStatusToggle(store._id, e.target.checked)}
-                        color="primary"
-                      />
-                    </td>
-
-                    <td style={{ ...bodyCell, textAlign: "center" }}>
-                      <Switch
-                        checked={store.approveStatus === "banned"}
-                        onChange={(e) => handleBanToggle(store._id, e.target.checked)}
-                        color="error"
-                      />
-                    </td>
-
-                    <td style={{ ...bodyCell, textAlign: "center" }}>
-                      <IconButton onClick={(e) => handleActionClick(e, store)} size="small">
-                        <MoreVertIcon />
-                      </IconButton>
-
-                      <Menu
-                        anchorEl={actionAnchorEl}
-                        open={Boolean(actionAnchorEl) && actionStore?._id === store._id}
-                        onClose={handleActionClose}
+                      {/* Wallet */}
+                      <td
+                        style={{ ...bodyCell, textAlign: "left" }}
+                        onClick={() => {
+                          setSelectedStore(store);
+                          setWalletModalOpen(true);
+                        }}
                       >
-                        <MenuItem
-                          onClick={async () => {
-                            handleActionClose();
-                            navigate("/edit-store", { state: { store } });
+                        <span
+                          style={{
+                            marginLeft: "30px",
+                            color: "#007bff",
+                            textDecoration: "underline",
+                            cursor: "pointer",
                           }}
                         >
-                          Edit
-                        </MenuItem>
+                          {(store.wallet ?? 0).toFixed(2)}
+                        </span>
+                      </td>
 
-                        <MenuItem
-                          onClick={async () => {
-                            handleActionClose();
-                            await handleAdminLogin(store);
+                      <td style={{ ...compactBodyCell, textAlign: "center" }}>
+                        <Chip
+                          label={sellerType.label}
+                          size="small"
+                          sx={{
+                            minWidth: 116,
+                            borderRadius: "8px",
+                            fontWeight: 700,
+                            color: sellerType.color,
+                            backgroundColor: sellerType.bg,
+                            border: `1px solid ${sellerType.border}`,
+                          }}
+                        />
+                      </td>
+
+                      <td style={{ ...compactBodyCell, textAlign: "center" }}>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minWidth: 112,
+                            padding: "5px 10px",
+                            borderRadius: 8,
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: sellerType.color,
+                            backgroundColor: "#fff",
+                            border: `1px solid ${sellerType.border}`,
                           }}
                         >
-                          Login
-                        </MenuItem>
-                      </Menu>
-                    </td>
-                  </tr>
-                ))}
+                          {sellerType.segment}
+                        </span>
+                      </td>
+
+                      <td style={{ ...compactBodyCell, minWidth: 190 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "fit-content",
+                              padding: "3px 8px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: registration.color,
+                              backgroundColor: registration.bg,
+                            }}
+                          >
+                            {registration.label}
+                          </span>
+                          <span style={{ fontSize: 14, color: "#333" }}>
+                            {registration.value}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td style={bodyCell}>{store.city?.name || "N/A"}</td>
+                      <td style={bodyCell}>{store.zone?.length || 0}</td>
+                      <td style={bodyCell}>{store.Category?.length || 0}</td>
+
+                      <td style={{ ...bodyCell, textAlign: "center" }}>
+                        <Switch
+                          checked={store.status}
+                          onChange={(e) =>
+                            handleStatusToggle(store._id, e.target.checked)
+                          }
+                          color="primary"
+                        />
+                      </td>
+
+                      <td style={{ ...bodyCell, textAlign: "center" }}>
+                        <Switch
+                          checked={store.approveStatus === "banned"}
+                          onChange={(e) =>
+                            handleBanToggle(store._id, e.target.checked)
+                          }
+                          color="error"
+                        />
+                      </td>
+
+                      <td style={{ ...bodyCell, textAlign: "center" }}>
+                        <IconButton
+                          onClick={(e) => handleActionClick(e, store)}
+                          size="small"
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+
+                        <Menu
+                          anchorEl={actionAnchorEl}
+                          open={
+                            Boolean(actionAnchorEl) &&
+                            actionStore?._id === store._id
+                          }
+                          onClose={handleActionClose}
+                        >
+                          <MenuItem
+                            onClick={async () => {
+                              handleActionClose();
+                              navigate("/edit-store", { state: { store } });
+                            }}
+                          >
+                            Edit
+                          </MenuItem>
+
+                          <MenuItem
+                            onClick={async () => {
+                              handleActionClose();
+                              await handleAdminLogin(store);
+                            }}
+                          >
+                            Login
+                          </MenuItem>
+                        </Menu>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -543,8 +746,12 @@ function SellerTable() {
                   <div style={{ flex: "1.4" }}>Date</div>
                   <div style={{ flex: "1" }}>Order ID</div>
                   <div style={{ flex: "0.8", textAlign: "center" }}>Type</div>
-                  <div style={{ flex: "1", textAlign: "center" }}>Amount (₹)</div>
-                  <div style={{ flex: "2", marginLeft: "20px" }}>Description</div>
+                  <div style={{ flex: "1", textAlign: "center" }}>
+                    Amount (₹)
+                  </div>
+                  <div style={{ flex: "2", marginLeft: "20px" }}>
+                    Description
+                  </div>
                 </div>
 
                 {/* ---- Rows ---- */}
@@ -642,7 +849,13 @@ function SellerTable() {
           <DialogTitle>Owner Info</DialogTitle>
           <DialogContent dividers>
             {selectedStore && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "20px",
+                }}
+              >
                 <TextField
                   label="Owner Name"
                   value={[selectedStore.firstName, selectedStore.lastName]
@@ -653,7 +866,11 @@ function SellerTable() {
                 />
                 <TextField
                   label="Phone Number"
-                  value={selectedStore.PhoneNumber || selectedStore.mobileNumber || ""}
+                  value={
+                    selectedStore.PhoneNumber ||
+                    selectedStore.mobileNumber ||
+                    ""
+                  }
                   fullWidth
                   InputProps={{ readOnly: true }}
                 />

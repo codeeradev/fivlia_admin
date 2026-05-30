@@ -29,6 +29,8 @@ function Product() {
   const [colorError, setColorError] = useState("");
   const [activeVariant, setActiveVariant] = useState("");
   const [productType, setProductType] = useState("");
+  const [foodTypes, setFoodTypes] = useState([]);
+  const [foodTypeId, setFoodTypeId] = useState("");
   const [filterdropdown, setFilterDropdown] = useState(false);
   const [returnProduct, setReturnProduct] = useState({
     title: "No Return",
@@ -136,6 +138,17 @@ function Product() {
     };
 
     fetchTypes();
+
+    const fetchFoodTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_FOOD);
+        setFoodTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching food types:", err);
+      }
+    };
+
+    fetchFoodTypes();
 
     const fetchFilters = async () => {
       try {
@@ -1003,7 +1016,18 @@ function Product() {
       showAlert("warning", "Please select product type.");
       return;
     }
-    
+
+    if (
+      productTypes
+        .find((t) => t._id === typeId)
+        ?.name?.toLowerCase()
+        .includes("food") &&
+      !foodTypeId
+    ) {
+      showAlert("warning", "Please select food type.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("productName", name);
     formData.append("description", description);
@@ -1013,7 +1037,7 @@ function Product() {
     formData.append("feature_product", isFeatured);
     formData.append("typeId", typeId);
     formData.append("productType", productType);
-
+    formData.append("foodTypeId", foodTypeId);
     if (isFood) {
       if (isVeg) {
         formData.append("isVeg", 1); // Send 1 if Veg is selected
@@ -1276,6 +1300,33 @@ function Product() {
                 <option value="snacks">Snacks</option>
               </select>
             </div>
+
+            {productTypes
+              .find((t) => t._id === typeId)
+              ?.name?.toLowerCase()
+              .includes("food") && (
+              <div className="input-container">
+                <label>
+                  Select Food Type <span>*</span>
+                </label>
+
+                <select
+                  className="input-field"
+                  value={foodTypeId}
+                  onChange={(e) => setFoodTypeId(e.target.value)}
+                  style={{ backgroundColor: "white" }}
+                >
+                  <option value="">--Select Food Type--</option>
+
+                  {foodTypes.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="row-section">
               <div className="input-container">
                 <label>Feature Product</label>

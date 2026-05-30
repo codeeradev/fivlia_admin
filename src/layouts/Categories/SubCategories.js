@@ -178,7 +178,7 @@ function GetSubCategories() {
                           }}
                         >
                           <img
-                            src={subcatItem.image}
+                            src={`${process.env.REACT_APP_IMAGE_LINK}${subcatItem.image}`}
                             alt={subcatItem.name}
                             style={{
                               width: "50px",

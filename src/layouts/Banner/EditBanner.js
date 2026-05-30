@@ -28,7 +28,9 @@ function EditBanner() {
   const [mainId, setMainId] = useState("");
   const [subId, setSubId] = useState("");
   const [subsubId, setSubsubId] = useState("");
-  const [selectedCityId, setSelectedCityId] = useState("");
+  const [selectedCityId, setSelectedCityId] = useState([]);
+  const [typeId, setTypeId] = useState("");
+  const [bannerTypes, setBannerTypes] = useState([]);
   // Load initial data from location.state and fetch locations & categories
   useEffect(() => {
     const data = location.state;
@@ -47,6 +49,9 @@ function EditBanner() {
         );
       }
       setType(data.type2 || "");
+      setTypeId(
+        typeof data.typeId === "object" ? data.typeId?._id || "" : data.typeId || ""
+      );
 
       if (data.brand && data.brand._id) {
         setBrandId(data.brand._id);
@@ -89,7 +94,9 @@ function EditBanner() {
 
     const fetchBrands = async () => {
       try {
-        const res = await get(ENDPOINTS.GET_BRANDS);
+        const res = await get(
+          `${ENDPOINTS.GET_BRANDS}${typeId ? `?typeId=${typeId}` : ""}`
+        );
         const data = res.data;
         setBrands(data.allBrands || []);
       } catch (err) {
@@ -114,18 +121,53 @@ function EditBanner() {
 
     const fetchCategories = async () => {
       try {
-        const res = await get(ENDPOINTS.GET_MAIN_CATEGORY);
-        setMain(res.data.result || []);
-        setMain(data.result || []);
+        const res = await get(
+          `${ENDPOINTS.GET_MAIN_CATEGORY}${typeId ? `?typeId=${typeId}` : ""}`
+        );
+        const data = res.data;
+        const categories = Array.isArray(data) ? data : data.result || data.data || [];
+        setMain(categories);
       } catch (err) {
         console.error("Error fetching categories:", err);
         showAlert("error", "Error fetching categories");
       }
     };
 
+    const fetchTypes = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        setBannerTypes(res.data || []);
+      } catch (err) {
+        console.error("Error fetching types:", err);
+        showAlert("error", "Failed to load types");
+      }
+    };
+
     fetchLocations();
     fetchCategories();
+    fetchTypes();
   }, [location.state]);
+
+  useEffect(() => {
+    const fetchBrandsAndCategories = async () => {
+      try {
+        const [brandRes, categoryRes] = await Promise.all([
+          get(`${ENDPOINTS.GET_BRANDS}${typeId ? `?typeId=${typeId}` : ""}`),
+          get(`${ENDPOINTS.GET_MAIN_CATEGORY}${typeId ? `?typeId=${typeId}` : ""}`),
+        ]);
+        const brandData = brandRes.data;
+        const categoryData = categoryRes.data;
+        setBrands(Array.isArray(brandData) ? brandData : brandData.allBrands || []);
+        setMain(
+          Array.isArray(categoryData) ? categoryData : categoryData.result || categoryData.data || []
+        );
+      } catch (err) {
+        console.error("Error fetching type-based banner data:", err);
+      }
+    };
+
+    fetchBrandsAndCategories();
+  }, [typeId]);
 
   useEffect(() => {
     const selectedCitiesData = locations.filter((loc) => selectedCityId.includes(loc._id));
@@ -202,10 +244,15 @@ function EditBanner() {
       showAlert("error", "Please select an image.");
       return;
     }
+    if (!typeId) {
+      showAlert("error", "Please select a type.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", name);
     formData.append("city", JSON.stringify(selectedCityId));
+    formData.append("typeId", typeId);
     formData.append("type", type);
     formData.append("type2", type);
     if (type === "Brand") {
@@ -380,9 +427,31 @@ function EditBanner() {
           </div>
         )}
 
-        {/* Type */}
         <div style={formRowStyle}>
           <label style={labelStyle}>Type</label>
+          <select
+            style={inputStyle}
+            value={typeId}
+            onChange={(e) => {
+              setTypeId(e.target.value);
+              setBrandId("");
+              setMainId("");
+              setSubId("");
+              setSubsubId("");
+            }}
+          >
+            <option value="">-- Select Type --</option>
+            {bannerTypes.map((typeItem) => (
+              <option key={typeItem._id} value={typeItem._id}>
+                {typeItem.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Type */}
+        <div style={formRowStyle}>
+          <label style={labelStyle}>Banner Link Type</label>
           <select
             style={inputStyle}
             value={type}
