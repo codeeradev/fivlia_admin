@@ -11,7 +11,7 @@ import { showAlert } from "components/commonFunction/alertsLoader";
 import { getMainCategories, getAllZones } from "components/commonApi/commonApi";
 
 // Shared api client & endpoints
-import { post, put } from "api/apiClient";
+import { post, put, get } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
 
 function AddStore() {
@@ -35,7 +35,10 @@ function AddStore() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [markerPosition, setMarkerPosition] = useState({ lat: 29.1492, lng: 75.7217 });
+  const [markerPosition, setMarkerPosition] = useState({
+    lat: 29.1492,
+    lng: 75.7217,
+  });
   const [range, setRange] = useState(3);
   const [selectedZone, setSelectedZone] = useState([]);
   const [latitude, setLatitude] = useState("");
@@ -50,6 +53,8 @@ function AddStore() {
   const [cities, setCities] = useState([]);
   const [availableZones, setAvailableZones] = useState([]);
   const [mainCategories, setMainCategories] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [typeId, setTypeId] = useState("");
 
   const mapRef = useRef(null);
   const inputRef = useRef(null);
@@ -79,6 +84,7 @@ function AddStore() {
       setSelectedZone(zoneIds);
       setLatitude(storedetails.store.Latitude);
       setLongitude(storedetails.store.Longitude);
+      setTypeId(storedetails.store.typeId);
       setDescription(storedetails.store.Description);
       setIsAuthorized(storedetails.store.Authorized_Store);
       setAssured(storedetails.store.fivliaAssured);
@@ -102,6 +108,20 @@ function AddStore() {
         if (res.status === 200) {
           const result = await res.data;
           setMainCategories(result.result);
+        } else {
+          console.error("Failed to fetch categories");
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+
+    const getType = async () => {
+      try {
+        const res = await get(ENDPOINTS.GET_TYPE);
+        if (res.status === 200) {
+          const result = await res.data;
+          setTypes(result.result);
         } else {
           console.error("Failed to fetch categories");
         }
@@ -140,7 +160,9 @@ function AddStore() {
 
     setAvailableZones(cityObj.zones);
     setSelectedZone((prev) =>
-      prev.filter((zoneId) => cityObj.zones.some((zone) => zone._id === zoneId))
+      prev.filter((zoneId) =>
+        cityObj.zones.some((zone) => zone._id === zoneId),
+      ),
     );
   }, [selectedCity, cities]);
 
@@ -209,13 +231,24 @@ function AddStore() {
   };
 
   const handleStore = async () => {
-    if (!storeName || !ownerName || !phone || !email || !latitude || !longitude || !selectedCity) {
+    if (
+      !storeName ||
+      !ownerName ||
+      !phone ||
+      !email ||
+      !latitude ||
+      !longitude ||
+      !selectedCity
+    ) {
       showAlert("warning", "Please fill all required fields");
       return;
     }
 
     if (isAuthorized && selectedCategory.length === 0) {
-      showAlert("warning", "Please select at least one category for authorized store");
+      showAlert(
+        "warning",
+        "Please select at least one category for authorized store",
+      );
       return;
     }
 
@@ -233,6 +266,7 @@ function AddStore() {
       formData.append("email", email);
       formData.append("password", password);
       formData.append("city", selectedCity);
+      formData.append("typeId", typeId);
       formData.append("zone", JSON.stringify(selectedZone));
       formData.append("Latitude", latitude);
       formData.append("Longitude", longitude);
@@ -274,7 +308,10 @@ function AddStore() {
         showAlert("Error:", errorData.message || "Failed to save store");
       }
     } catch (error) {
-      showAlert("error", "Error saving store: " + (error.message || "Network error"));
+      showAlert(
+        "error",
+        "Error saving store: " + (error.message || "Network error"),
+      );
     }
   };
 
@@ -409,10 +446,27 @@ function AddStore() {
             )}
           </div>
 
+          <div className="store-input">
+            <label>Select Type</label>
+
+            <select value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+              <option value="">--- Select Type ---</option>
+
+              {types.map((type) => (
+                <option key={type._id} value={type._id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="store-row">
             <div className="store-input">
               <label>Select City</label>
-              <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+              >
                 <option value="">---Select City---</option>
                 {cities.length > 0 ? (
                   cities.map((city) => (
@@ -441,12 +495,21 @@ function AddStore() {
                   ))
                 ) : (
                   <option disabled>
-                    {selectedCity ? "No zones available for this city" : "Select a city first"}
+                    {selectedCity
+                      ? "No zones available for this city"
+                      : "Select a city first"}
                   </option>
                 )}
               </select>
               {selectedZone.length > 0 && (
-                <div style={{ marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                <div
+                  style={{
+                    marginTop: "10px",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                  }}
+                >
                   {selectedZone.map((zoneId) => {
                     const zone = availableZones.find((z) => z._id === zoneId);
                     if (!zone) return null;
@@ -464,8 +527,16 @@ function AddStore() {
                         }}
                         onClick={() => handleRemoveZone(zone._id)}
                       >
-                        {zone ? zone.zoneTitle || zone.address || "Unnamed Zone" : zoneId}
-                        <span style={{ marginLeft: "5px", color: "#ff0000", fontWeight: "bold" }}>
+                        {zone
+                          ? zone.zoneTitle || zone.address || "Unnamed Zone"
+                          : zoneId}
+                        <span
+                          style={{
+                            marginLeft: "5px",
+                            color: "#ff0000",
+                            fontWeight: "bold",
+                          }}
+                        >
                           ×
                         </span>
                       </span>
@@ -520,13 +591,23 @@ function AddStore() {
           <div className="store-row">
             <div className="store-input">
               <label>Authorized Store</label>
-              <Switch checked={isAuthorized} onChange={handleSwitchChange} color="success" />
-              <p>Status: {isAuthorized ? "Authorized Store" : "Not Authorized"}</p>
+              <Switch
+                checked={isAuthorized}
+                onChange={handleSwitchChange}
+                color="success"
+              />
+              <p>
+                Status: {isAuthorized ? "Authorized Store" : "Not Authorized"}
+              </p>
             </div>
 
             <div className="store-input">
               <label>Assured Store</label>
-              <Switch checked={isAssured} onChange={handleAssuredSwitchChange} color="success" />
+              <Switch
+                checked={isAssured}
+                onChange={handleAssuredSwitchChange}
+                color="success"
+              />
               <p>Status: {isAssured ? "Assured Store" : "Not Assured"}</p>
             </div>
 
@@ -551,9 +632,18 @@ function AddStore() {
                 </select>
 
                 {selectedCategory.length > 0 && (
-                  <div style={{ marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
                     {selectedCategory.map((catId) => {
-                      const category = mainCategories.find((cat) => cat._id === catId);
+                      const category = mainCategories.find(
+                        (cat) => cat._id === catId,
+                      );
                       return (
                         <span
                           key={catId}
@@ -569,7 +659,13 @@ function AddStore() {
                           onClick={() => handleRemoveCategory(catId)}
                         >
                           {category ? category.name : catId}
-                          <span style={{ marginLeft: "5px", color: "#ff0000", fontWeight: "bold" }}>
+                          <span
+                            style={{
+                              marginLeft: "5px",
+                              color: "#ff0000",
+                              fontWeight: "bold",
+                            }}
+                          >
                             ×
                           </span>
                         </span>

@@ -151,28 +151,6 @@ function EditProduct() {
     }
   };
 
-  // Handle thumbnail image change
-  const handleThumbnailChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.size <= maxSize) {
-      setThumbnailImage(file);
-      setPreview(URL.createObjectURL(file));
-      setThumbnailError("");
-    } else {
-      setThumbnailError("Thumbnail image must be less than 500KB.");
-    }
-  };
-
-  // Handle thumbnail removal
-  const handleRemoveThumbnail = () => {
-    setThumbnailImage(null);
-    setPreview(null);
-    setThumbnailError("");
-    if (thumbnailInputRef.current) {
-      thumbnailInputRef.current.value = "";
-    }
-  };
-
   const handleFilterValueChange = (e) => {
     const selectedId = e.target.value;
     setSelectedFilterValue(selectedId);

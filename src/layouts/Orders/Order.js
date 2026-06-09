@@ -42,6 +42,24 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
   const restrictedStatuses = ["Going to Pickup", "Picked Up", "On The Way", "Delivered"];
 
+  const getOrderTypeInfo = (order) => {
+    const typeNames =
+      order.items
+        ?.map((item) => {
+          return item?.typeName || item?.typeId || "";
+        })
+        .filter(Boolean) || [];
+
+    const hasFoodType = typeNames.some((name) => name.toLowerCase() === "food");
+    const firstType = typeNames[0] || "Normal";
+    const displayType = firstType.charAt(0).toUpperCase() + firstType.slice(1);
+
+    return {
+      isFood: hasFoodType,
+      label: hasFoodType ? "Food Order" : `${displayType} Order`,
+    };
+  };
+
   const fetchData = useCallback(async () => {
     showAlert("loading", "Loading orders...");
 
@@ -310,6 +328,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
       drivers.find((d) => d.id === String(order.driver?.driverId || order.driverId))?.name ||
       "-",
     Store: order.storeId?.storeName || "-",
+    OrderType: getOrderTypeInfo(order).label,
     PaymentStatus: order.cashOnDelivery ? "Cash" : `Online (${order.paymentStatus || "-"})`,
     Status: order.orderStatus || "-",
   }));
@@ -500,6 +519,24 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
           .payment-online {
             color: #28a745;
             font-weight: 600;
+          }
+          .order-type-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+          }
+          .order-type-badge.food {
+            color: #0f5132;
+            background: #d1e7dd;
+          }
+          .order-type-badge.normal {
+            color: #664d03;
+            background: #fff3cd;
           }
           .transaction-id {
             display: block;
@@ -931,6 +968,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     <th className="header-cell" style={{ width: "120px" }}>
                       Invoice
                     </th>
+                    <th className="header-cell" style={{ width: "130px" }}>
+                      Order Type
+                    </th>
                     <th className="header-cell" style={{ width: "160px" }}>
                       Payment Status
                     </th>
@@ -959,6 +999,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           (v._id?.$oid || v._id) ===
                           (order.items?.[0]?.varientId?.$oid || order.items?.[0]?.varientId)
                       );
+                      const orderType = getOrderTypeInfo(order);
                       return (
                         <tr key={order.orderId}>
                           <td className="body-cell">{startIndex + index + 1}</td>
@@ -1039,6 +1080,15 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             </button>
                           </td>
                           <td className="body-cell">
+                            <span
+                              className={`order-type-badge ${
+                                orderType.isFood ? "food" : "normal"
+                              }`}
+                            >
+                              {orderType.label}
+                            </span>
+                          </td>
+                          <td className="body-cell">
                             <span className={`payment-${order.cashOnDelivery ? "cash" : "online"}`}>
                               {order.cashOnDelivery
                                 ? "Cash"
@@ -1072,7 +1122,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                   ) : (
                     <tr>
                       <td
-                        colSpan="9"
+                        colSpan="10"
                         className="body-cell"
                         style={{ textAlign: "center", color: "#7b809a", fontSize: "14px" }}
                       >
@@ -1129,6 +1179,15 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 </h3>
                 <div style={{ marginBottom: "16px", fontSize: "14px", color: "#344767" }}>
                   <strong>Status:</strong> {selectedOrder.orderStatus || ""}
+                </div>
+                <div style={{ marginBottom: "16px" }}>
+                  <span
+                    className={`order-type-badge ${
+                      getOrderTypeInfo(selectedOrder).isFood ? "food" : "normal"
+                    }`}
+                  >
+                    {getOrderTypeInfo(selectedOrder).label}
+                  </span>
                 </div>
                 <div className="modal-table-container">
                   <table className="modal-table">

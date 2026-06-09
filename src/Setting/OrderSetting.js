@@ -28,6 +28,7 @@ const numericFields = new Set([
   "minimumOrderCancelTime",
   "codLimit",
   "extraTime",
+  "foodGlobalCommission",
 ]);
 
 const OrderSetting = ({ miniSidenav }) => {
@@ -40,18 +41,19 @@ const OrderSetting = ({ miniSidenav }) => {
     maxPrice: 0,
     minWithdrawal: 0,
     freeDeliveryLimit: 0,
-    fixDeliveryCharges:0,
-    perKmCharges:0,
+    fixDeliveryCharges: 0,
+    perKmCharges: 0,
     fixNightDeliveryCharges: 0,
     perKmNightCharges: 0,
     minimumOrderCancelTime: 0,
     codLimit: 0,
-    extraTime:0,
+    extraTime: 0,
     dayStartTime: "",
     dayEndTime: "",
     nightStartTime: "",
     nightEndTime: "",
     zoneTimeZone: "Asia/Kolkata",
+    foodGlobalCommission: 0,
   });
 
   const [loading, setLoading] = useState(false);
@@ -87,6 +89,7 @@ const OrderSetting = ({ miniSidenav }) => {
           nightStartTime: s.nightStartTime || "",
           nightEndTime: s.nightEndTime || "",
           zoneTimeZone: s.zoneTimeZone || "Asia/Kolkata",
+          foodGlobalCommission: Number(s.foodGlobalCommission ?? 0),
         });
         showAlert("info", "", 1);
       } else {
@@ -101,14 +104,14 @@ const OrderSetting = ({ miniSidenav }) => {
   };
 
   // Handle input changes
- const handleChange = (e) => {
-  const { name, value } = e.target;
-  const isNumeric = numericFields.has(name);
-  setFormData((prev) => ({
-    ...prev,
-    [name]: isNumeric ? (value === "" ? 0 : Number(value)) : value,
-  }));
-};
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    const isNumeric = numericFields.has(name);
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNumeric ? (value === "" ? 0 : Number(value)) : value,
+    }));
+  };
 
   const sectionWrapperSx = {
     border: "1px solid",
@@ -117,7 +120,6 @@ const OrderSetting = ({ miniSidenav }) => {
     p: { xs: 2, sm: 2.5 },
     bgcolor: "background.paper",
   };
-
 
   // Submit updated settings
   const handleSubmit = async (e) => {
@@ -128,7 +130,7 @@ const OrderSetting = ({ miniSidenav }) => {
     try {
       await put(`${ENDPOINTS.ADMIN_SETTING}`, formData);
       showAlert("success", "Settings updated successfully!");
-      fetchSettings()
+      fetchSettings();
     } catch (err) {
       console.error("Save failed:", err);
       showAlert("error", "Failed to save settings.");
@@ -164,7 +166,10 @@ const OrderSetting = ({ miniSidenav }) => {
           variant={isSm ? "h6" : "h5"}
           fontWeight="bold"
           mb={3}
-          sx={{ color: (theme) => theme.palette.text.primary, textAlign: { xs: "center", md: "left" } }}
+          sx={{
+            color: (theme) => theme.palette.text.primary,
+            textAlign: { xs: "center", md: "left" },
+          }}
         >
           Order Settings
         </Typography>
@@ -250,6 +255,19 @@ const OrderSetting = ({ miniSidenav }) => {
                         onChange={handleChange}
                         variant="outlined"
                         helperText="Maximum allowed cash-on-delivery amount"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Food Global Commission (%)"
+                        name="foodGlobalCommission"
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        fullWidth
+                        value={formData.foodGlobalCommission}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Default commission for food products when FoodType commission is not available"
                       />
                     </Grid>
                   </Grid>
@@ -426,7 +444,15 @@ const OrderSetting = ({ miniSidenav }) => {
               </Grid>
 
               {/* Submit Button */}
-              <Grid item xs={12} sx={{ display: "flex", justifyContent: isSm ? "stretch" : "center", mt: isMd ? 0 : 1 }}>
+              <Grid
+                item
+                xs={12}
+                sx={{
+                  display: "flex",
+                  justifyContent: isSm ? "stretch" : "center",
+                  mt: isMd ? 0 : 1,
+                }}
+              >
                 <Button
                   type="submit"
                   variant="contained"
