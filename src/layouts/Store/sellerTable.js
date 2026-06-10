@@ -455,7 +455,6 @@ function SellerTable() {
                   <th style={headerCell}>Seller Name</th>
                   <th style={headerCell}>Owner Info</th>
                   <th style={headerCell}>Wallet</th>
-                  <th style={headerCell}>Seller Type</th>
                   <th style={headerCell}>Business Segment</th>
                   <th style={headerCell}>Registration ID</th>
                   <th style={headerCell}>City</th>
@@ -566,26 +565,6 @@ function SellerTable() {
                             border: `1px solid ${sellerType.border}`,
                           }}
                         />
-                      </td>
-
-                      <td style={{ ...compactBodyCell, textAlign: "center" }}>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minWidth: 112,
-                            padding: "5px 10px",
-                            borderRadius: 8,
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: sellerType.color,
-                            backgroundColor: "#fff",
-                            border: `1px solid ${sellerType.border}`,
-                          }}
-                        >
-                          {sellerType.segment}
-                        </span>
                       </td>
 
                       <td style={{ ...compactBodyCell, minWidth: 190 }}>
