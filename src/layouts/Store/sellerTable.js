@@ -46,47 +46,60 @@ const compactBodyCell = {
   whiteSpace: "nowrap",
 };
 
-const getBusinessType = (store = {}) =>
-  String(
-    store.businessType ||
-      store.business_type ||
-      store.BusinessType ||
-      store.business?.type ||
-      ""
-  ).toUpperCase();
-
-const hasTruthyFlag = (value) =>
-  value === true || value === "true" || value === 1 || value === "1";
-
-const isFoodSeller = (store = {}) => {
-  const businessType = getBusinessType(store);
-
-  return (
-    hasTruthyFlag(store.sellfood) ||
-    hasTruthyFlag(store.sellFood) ||
-    hasTruthyFlag(store.sell_food) ||
-    businessType === "FSAII" ||
-    businessType === "FSSAI" ||
-    businessType.includes("FOOD")
-  );
+const SELLER_TYPE_IDS = {
+  FOOD: "69cf8a31ad92aee54ecb1e72",
+  GROCERY: "69cf8a3fad92aee54ecb1e74",
+  MALL: "69cf8a4bad92aee54ecb1e76",
 };
 
-const getSellerTypeMeta = (store = {}) =>
-  isFoodSeller(store)
-    ? {
-        label: "Food Seller",
-        segment: "Food Service",
-        color: "#1b7f4c",
-        bg: "#e8f7ef",
-        border: "#b7e2c8",
-      }
-    : {
-        label: "Retail Partner",
-        segment: "Commerce",
-        color: "#3556a3",
-        bg: "#edf2ff",
-        border: "#c8d5ff",
-      };
+const getTypeId = (store = {}) =>
+  String(store.typeId?.$oid || store.typeId || "").trim();
+
+const getSellerTypeMeta = (store = {}) => {
+  const typeId = getTypeId(store);
+
+  if (typeId === SELLER_TYPE_IDS.FOOD) {
+    return {
+      label: "Food Seller",
+      segment: "Food Service",
+      color: "#1b7f4c",
+      bg: "#e8f7ef",
+      border: "#b7e2c8",
+    };
+  }
+
+  if (typeId === SELLER_TYPE_IDS.GROCERY) {
+    return {
+      label: "Grocery",
+      segment: "Grocery & Essentials",
+      color: "#7b5c00",
+      bg: "#fff8e1",
+      border: "#ffe082",
+    };
+  }
+
+  if (typeId === SELLER_TYPE_IDS.MALL) {
+    return {
+      label: "Mall",
+      segment: "Mall & Shopping",
+      color: "#6a1b9a",
+      bg: "#f3e5f5",
+      border: "#ce93d8",
+    };
+  }
+
+  // fallback for sellers without a typeId
+  return {
+    label: "Retail Partner",
+    segment: "Commerce",
+    color: "#3556a3",
+    bg: "#edf2ff",
+    border: "#c8d5ff",
+  };
+};
+
+const isFoodSeller = (store = {}) =>
+  getTypeId(store) === SELLER_TYPE_IDS.FOOD;
 
 const getRegistrationInfo = (store = {}) => {
   if (store.fsiNumber || store.fssaiNumber || store.fssai) {
@@ -219,9 +232,7 @@ function SellerTable() {
     }
 
     if (sellerTypeFilter !== "") {
-      filtered = filtered.filter((s) =>
-        sellerTypeFilter === "food" ? isFoodSeller(s) : !isFoodSeller(s)
-      );
+      filtered = filtered.filter((s) => getTypeId(s) === sellerTypeFilter);
     }
 
     setFilteredStores(filtered);
@@ -407,8 +418,9 @@ function SellerTable() {
                   style={{ height: "45px" }}
                 >
                   <MenuItem value="">All Sellers</MenuItem>
-                  <MenuItem value="food">Food Sellers</MenuItem>
-                  <MenuItem value="retail">Retail Partners</MenuItem>
+                  <MenuItem value={SELLER_TYPE_IDS.FOOD}>Food Sellers</MenuItem>
+                  <MenuItem value={SELLER_TYPE_IDS.GROCERY}>Grocery</MenuItem>
+                  <MenuItem value={SELLER_TYPE_IDS.MALL}>Mall</MenuItem>
                 </Select>
               </FormControl>
             </div>
