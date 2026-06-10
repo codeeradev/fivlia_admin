@@ -84,7 +84,7 @@ function AddStore() {
       setSelectedZone(zoneIds);
       setLatitude(storedetails.store.Latitude);
       setLongitude(storedetails.store.Longitude);
-      setTypeId(storedetails.store.typeId);
+      setTypeId(storedetails.store.typeId?._id || storedetails.store.typeId);
       setDescription(storedetails.store.Description);
       setIsAuthorized(storedetails.store.Authorized_Store);
       setAssured(storedetails.store.fivliaAssured);
@@ -120,8 +120,7 @@ function AddStore() {
       try {
         const res = await get(ENDPOINTS.GET_TYPE);
         if (res.status === 200) {
-          const result = await res.data;
-          setTypes(result.result);
+          setTypes(res.data);
         } else {
           console.error("Failed to fetch categories");
         }
@@ -144,6 +143,7 @@ function AddStore() {
 
     getMainCategory();
     fetchCities();
+    getType();
   }, []);
 
   useEffect(() => {
