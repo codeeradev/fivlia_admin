@@ -72,7 +72,6 @@ function EditProduct() {
   const [citydata, setCityData] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [ribbon, setRibbon] = useState("");
   const [mrp, setMrp] = useState("");
   const [sellingprice, setSellingPrice] = useState("");
   const [status, setStatus] = useState(true);
@@ -126,7 +125,6 @@ function EditProduct() {
   const [filterid, setFilterId] = useState("");
   const [singlefilterdata, setSingleFilterData] = useState([]);
   const [selecetdcategory, setSelectedcategory] = useState("");
-  const [isFood, setIsFood] = useState(false);
   const [isVeg, setIsVeg] = useState(false);
   const [isNonVeg, setIsNonVeg] = useState(false);
   const [originalFilterData, setOriginalFilterData] = useState([]);
@@ -871,8 +869,6 @@ function EditProduct() {
     }
   };
 
-  fetchFoodTypes();
-
   const setData = (data) => {
     if (!data) {
       alert("No product data provided.");
@@ -883,7 +879,6 @@ function EditProduct() {
     setId(data._id || "");
     setName(data.productName || "");
     setDescription(data.description || "");
-    setRibbon(data.ribbon || "");
     setMrp(data.mrp || "");
     setSellingPrice(data.sell_price || "");
     setTypeId(getSelectedTypeId(data));
@@ -891,6 +886,9 @@ function EditProduct() {
     setFoodTypeId(data.foodTypeId?._id || data.foodTypeId || "");
     setStatus(data.online_visible || true);
     setIsFeatured(data.feature_product || false);
+    // Set veg/non-veg from saved isVeg field
+    if (data.isVeg === 1) { setIsVeg(true); setIsNonVeg(false); }
+    else if (data.isVeg === 2) { setIsNonVeg(true); setIsVeg(false); }
     setThumbnailImage(data.productThumbnailUrl || null);
     setPreview(data.productThumbnailUrl || null);
 
@@ -1112,7 +1110,8 @@ function EditProduct() {
     getUnits();
     fetchTypes();
     fetchFullProduct(location.state.id);
-
+    fetchFoodTypes();
+    
     const handleScroll = () => {
       let current = "";
       for (let id of sectionIds) {
@@ -1140,7 +1139,6 @@ function EditProduct() {
 
     formData.append("productName", name);
     formData.append("description", description);
-    formData.append("ribbon", ribbon || "");
     formData.append("feature_product", isFeatured);
     formData.append("typeId", typeId);
     formData.append("productType", productType);
@@ -1153,7 +1151,7 @@ function EditProduct() {
       formData.append("foodTypeId", foodTypeId);
     }
 
-    if (isFood) {
+    if (isFoodType) {
       if (isVeg) {
         formData.append("isVeg", 1); // Send 1 if Veg is selected
       }
@@ -1352,6 +1350,12 @@ function EditProduct() {
   const isColorAttribute =
     selectedAttribute?.Attribute_name?.toLowerCase() === "color";
 
+  // Derived: is the selected type "food"?
+  const isFoodType = productTypes
+    .find((t) => t._id === typeId)
+    ?.name?.toLowerCase()
+    .includes("food") || false;
+
   const handlefiltervalue = async () => {
     try {
       const newvalue = await patch(
@@ -1433,17 +1437,6 @@ function EditProduct() {
             </div>
             <div className="row-section">
               <div className="input-container">
-                <label>Ribbon</label>
-                <input
-                  type="text"
-                  placeholder="Enter Ribbon Text"
-                  className="input-field"
-                  value={ribbon}
-                  style={{ backgroundColor: "white" }}
-                  onChange={(e) => setRibbon(e.target.value)}
-                />
-              </div>
-              <div className="input-container">
                 <label>
                   Type{" "}
                   <span style={{ marginLeft: "5px", marginTop: "10px" }}>
@@ -1466,42 +1459,117 @@ function EditProduct() {
                 </select>
               </div>
             </div>
-            <div className="input-container">
-              <label>Product Type *</label>
-              <select
-                className="input-field"
-                value={productType}
-                onChange={(e) => setProductType(e.target.value)}
-                style={{ backgroundColor: "white" }}
-              >
-                <option value="">--Select Product Type--</option>
-                <option value="gym">Gym</option>
-                <option value="healthy">Healthy</option>
-                <option value="snacks">Snacks</option>
-              </select>
-            </div>
-            {productTypes
-              .find((t) => t._id === typeId)
-              ?.name?.toLowerCase()
-              .includes("food") && (
-              <div className="input-container">
-                <label>Select Food Type</label>
+            {/* Product Type + Food extras - only when type is food */}
+            {isFoodType && (
+              <>
+                <div className="row-section" style={{ flexDirection: "column", paddingTop: "0" }}>
+                  <label>
+                    Product Type <span style={{ marginLeft: "5px" }}>*</span>
+                  </label>
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "8px" }}>
+                    {["gym", "healthy", "snacks"].map((type) => (
+                      <div
+                        key={type}
+                        onClick={() => setProductType(type)}
+                        style={{
+                          padding: "7px 20px",
+                          borderRadius: "6px",
+                          border: `1px solid ${productType === type ? "#344767" : "#d2d6da"}`,
+                          backgroundColor: productType === type ? "#344767" : "white",
+                          color: productType === type ? "white" : "#344767",
+                          fontWeight: "500",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          transition: "all 0.2s",
+                          textTransform: "capitalize",
+                          userSelect: "none",
+                        }}
+                      >
+                        {type}
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                <select
-                  className="input-field"
-                  value={foodTypeId}
-                  onChange={(e) => setFoodTypeId(e.target.value)}
-                  style={{ backgroundColor: "white" }}
-                >
-                  <option value="">--Select Food Type--</option>
+                <div className="row-section" style={{ flexDirection: "column", paddingTop: "0" }}>
+                  <label>
+                    Select Food Type <span style={{ marginLeft: "5px" }}>*</span>
+                  </label>
+                  <select
+                    className="input-field"
+                    value={foodTypeId}
+                    onChange={(e) => setFoodTypeId(e.target.value)}
+                    style={{ backgroundColor: "white", marginTop: "8px" }}
+                  >
+                    <option value="">-- Select Food Type --</option>
+                    {foodTypes.map((item) => (
+                      <option key={item._id} value={item._id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  {foodTypes.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="row-section" style={{ flexDirection: "column", paddingTop: "0" }}>
+                  <label>
+                    Veg / Non-Veg <span style={{ marginLeft: "5px" }}>*</span>
+                  </label>
+                  <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        cursor: "pointer",
+                        padding: "7px 18px",
+                        borderRadius: "6px",
+                        border: `1px solid ${isVeg ? "#344767" : "#d2d6da"}`,
+                        backgroundColor: isVeg ? "#344767" : "white",
+                        color: isVeg ? "white" : "#344767",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        userSelect: "none",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="vegNonVeg"
+                        checked={isVeg}
+                        onChange={() => { setIsVeg(true); setIsNonVeg(false); }}
+                        style={{ accentColor: "white" }}
+                      />
+                      Veg
+                    </label>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        cursor: "pointer",
+                        padding: "7px 18px",
+                        borderRadius: "6px",
+                        border: `1px solid ${isNonVeg ? "#344767" : "#d2d6da"}`,
+                        backgroundColor: isNonVeg ? "#344767" : "white",
+                        color: isNonVeg ? "white" : "#344767",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                        userSelect: "none",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="vegNonVeg"
+                        checked={isNonVeg}
+                        onChange={() => { setIsNonVeg(true); setIsVeg(false); }}
+                        style={{ accentColor: "white" }}
+                      />
+                      Non-Veg
+                    </label>
+                  </div>
+                </div>
+              </>
             )}
             <div className="row-section">
               <div className="input-container">
@@ -1634,55 +1702,6 @@ function EditProduct() {
             </div>
           </div>
 
-          <div className="background">
-            <div className="row-section">
-              <div className="input-container">
-                <label>
-                  Is this a food product?{" "}
-                  <span style={{ marginLeft: "5px", marginTop: "10px" }}>
-                    {" "}
-                    *
-                  </span>
-                </label>
-                <Switch
-                  checked={isFood}
-                  onChange={() => setIsFood(!isFood)}
-                  color="primary"
-                />
-              </div>
-            </div>
-
-            {isFood && (
-              <div className="row-section">
-                <div className="input-container">
-                  <label>
-                    Select Type{" "}
-                    <span style={{ marginLeft: "5px", marginTop: "10px" }}>
-                      {" "}
-                      *
-                    </span>
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={isVeg}
-                      onChange={() => setIsVeg(!isVeg)}
-                    />
-                    Veg
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={isNonVeg}
-                      onChange={() => setIsNonVeg(!isNonVeg)}
-                    />
-                    Non-Veg
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Image Upload */}
           <div className="background" id="imagesection">
             <span
@@ -1759,7 +1778,8 @@ function EditProduct() {
             </div>
           </div>
 
-          {/* Category Selection */}
+          {/* Category Selection - hidden for food type */}
+          {!isFoodType && (
           <div className="background" id="category-section">
             <span
               style={{
@@ -1886,6 +1906,7 @@ function EditProduct() {
               )}
             </div>
           </div>
+          )} {/* end !isFoodType category section */}
 
           {/* City & Zones */}
           <div className="background" id="citysection">
