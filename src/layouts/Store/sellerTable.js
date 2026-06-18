@@ -98,8 +98,7 @@ const getSellerTypeMeta = (store = {}) => {
   };
 };
 
-const isFoodSeller = (store = {}) =>
-  getTypeId(store) === SELLER_TYPE_IDS.FOOD;
+const isFoodSeller = (store = {}) => getTypeId(store) === SELLER_TYPE_IDS.FOOD;
 
 const getRegistrationInfo = (store = {}) => {
   if (store.fsiNumber || store.fssaiNumber || store.fssai) {
@@ -177,7 +176,7 @@ function SellerTable() {
             "Content-Type": "application/json",
             "x-internal-key": process.env.REACT_APP_INTERNAL_API_KEY,
           },
-        }
+        },
       );
 
       const data = await response.data;
@@ -199,9 +198,11 @@ function SellerTable() {
 
   const getAllStores = async () => {
     try {
+      showAlert("loading", "Loading Sellers....");
       const result = await get(`${ENDPOINTS.GET_SELLER}?includeBanned=true`);
       const res = result.data;
       setStores(res.sellers || []);
+      showAlert("info", "", 1);
     } catch (err) {
       console.log(err);
       showAlert("error", "Something went wrong");
@@ -216,13 +217,13 @@ function SellerTable() {
       filtered = filtered.filter(
         (s) =>
           s.storeName?.toLowerCase().includes(lower) ||
-          s.ownerName?.toLowerCase().includes(lower)
+          s.ownerName?.toLowerCase().includes(lower),
       );
     }
 
     if (selectedCity !== "") {
       filtered = filtered.filter(
-        (s) => s.city?.name?.toLowerCase() === selectedCity.toLowerCase()
+        (s) => s.city?.name?.toLowerCase() === selectedCity.toLowerCase(),
       );
     }
 
@@ -260,7 +261,9 @@ function SellerTable() {
       await put(`${ENDPOINTS.EDIT_STORE}/${storeId}`, { approveStatus });
 
       setStores((prevStores) =>
-        prevStores.map((s) => (s._id === storeId ? { ...s, approveStatus } : s))
+        prevStores.map((s) =>
+          s._id === storeId ? { ...s, approveStatus } : s,
+        ),
       );
     } catch (err) {
       console.error("Error updating ban status:", err);
@@ -276,8 +279,8 @@ function SellerTable() {
 
       setStores((prevStores) =>
         prevStores.map((s) =>
-          s._id === storeId ? { ...s, status: newStatus } : s
-        )
+          s._id === storeId ? { ...s, status: newStatus } : s,
+        ),
       );
     } catch (err) {
       showAlert("error", "Something went wrong while updating status.");

@@ -207,6 +207,7 @@ function ProductTable() {
 
   const fetchProducts = async () => {
     try {
+      showAlert("loading", "Loading Products....");    
       const query = `?page=${currentPage}&limit=${entries}&search=${encodeURIComponent(
         searchQuery
       )}&city=${encodeURIComponent(selectedCity)}&category=${encodeURIComponent(selectedCategory)}`;
@@ -214,7 +215,7 @@ function ProductTable() {
       const resp = await get(`${ENDPOINTS.GET_PRODUCTS}${query}`);
       const res = resp.data;
       const products = res.Product || [];
-
+      showAlert("info", "", 1);
       const productsWithCachedType = products.map((item) => ({
         ...item,
         typeId: item.typeId || productTypeCache[item._id] || "",
@@ -264,8 +265,10 @@ function ProductTable() {
           typeId: item.typeId || fetchedTypeMap[item._id] || "",
         }))
       );
+      showAlert("info", "", 1);
     } catch (err) {
       console.error("Error fetching products:", err);
+      showAlert("error", "Something went wrong");
     }
   };
 
