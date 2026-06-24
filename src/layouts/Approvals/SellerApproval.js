@@ -630,6 +630,10 @@ export default function ApprovalRequests() {
                 <strong>Title:</strong> {request.title}
               </MDTypography>
               <MDTypography>
+  <strong>Store Name:</strong>{" "}
+  {request.storeId?.storeName || "-"}
+</MDTypography>
+              <MDTypography>
                 <strong>Discount:</strong> {request.offer}%
               </MDTypography>
               <MDTypography>

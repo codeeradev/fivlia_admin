@@ -2,7 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import MDBox from "components/MDBox";
 import { useMaterialUIController } from "context";
 import Modal from "@mui/material/Modal";
-import { FaSortUp, FaSortDown, FaMapMarkerAlt, FaUser, FaPhoneAlt } from "react-icons/fa";
+import {
+  FaSortUp,
+  FaSortDown,
+  FaMapMarkerAlt,
+  FaUser,
+  FaPhoneAlt,
+} from "react-icons/fa";
 import { CSVLink } from "react-csv";
 import { io } from "socket.io-client";
 import { showAlert } from "components/commonFunction/alertsLoader";
@@ -27,7 +33,10 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [selectedStore, setSelectedStore] = useState("");
   const [selectedZone, setSelectedZone] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: "createdAt", direction: "desc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "createdAt",
+    direction: "desc",
+  });
   // const [error, setError] = useState("");
   // const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -40,7 +49,12 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [activeTab, setActiveTab] = useState("all"); // all | temp
   const [tempOrders, setTempOrders] = useState([]);
 
-  const restrictedStatuses = ["Going to Pickup", "Picked Up", "On The Way", "Delivered"];
+  const restrictedStatuses = [
+    "Going to Pickup",
+    "Picked Up",
+    "On The Way",
+    "Delivered",
+  ];
 
   const getOrderTypeInfo = (order) => {
     const typeNames =
@@ -64,15 +78,21 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
     showAlert("loading", "Loading orders...");
 
     try {
-      const [ordersRes, tempOrdersRes, storesRes, zonesRes, driversRes, statusesRes] =
-        await Promise.all([
-          get(ENDPOINTS.GET_ORDERS),
-          get(ENDPOINTS.GET_TEMP_ORDERS),
-          get(ENDPOINTS.GET_STORE),
-          getAllZones(), // common API
-          get(ENDPOINTS.GET_DRIVERS),
-          get(ENDPOINTS.GET_DELIVERY_STATUS),
-        ]);
+      const [
+        ordersRes,
+        tempOrdersRes,
+        storesRes,
+        zonesRes,
+        driversRes,
+        statusesRes,
+      ] = await Promise.all([
+        get(ENDPOINTS.GET_ORDERS),
+        get(ENDPOINTS.GET_TEMP_ORDERS),
+        get(ENDPOINTS.GET_STORE),
+        getAllZones(), // common API
+        get(ENDPOINTS.GET_DRIVERS),
+        get(ENDPOINTS.GET_DELIVERY_STATUS),
+      ]);
       // Handle Orders
       const ordersData = ordersRes.data;
       const storesData = storesRes.data;
@@ -82,7 +102,8 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
       // console.log("Orders API response:", ordersData);
       if (ordersData?.orders) setOrders(ordersData.orders);
-      if (tempOrdersRes.data?.tempOrders) setTempOrders(tempOrdersRes.data.tempOrders);
+      if (tempOrdersRes.data?.tempOrders)
+        setTempOrders(tempOrdersRes.data.tempOrders);
 
       // Handle Stores
       // console.log("Stores API response:", storesData);
@@ -101,7 +122,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                   title: z.title || "Unknown",
                 }))
               : [],
-          }))
+          })),
         );
       }
 
@@ -114,8 +135,8 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 id: zone._id?.$oid || zone._id,
                 title: zone.zoneTitle || "Unknown",
                 city: city.city || "Unknown",
-              })) || []
-          )
+              })) || [],
+          ),
         );
       }
       if (driversData?.Driver) {
@@ -124,7 +145,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
             id: d._id,
             driverId: d.driverId,
             name: d.driverName,
-          }))
+          })),
         );
       }
 
@@ -132,7 +153,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
       if (statusesData?.Status) {
         const unique = [
           ...new Set(
-            statusesData.Status.map((s) => (s.statusTitle || s.status || s.name || "").trim())
+            statusesData.Status.map((s) =>
+              (s.statusTitle || s.status || s.name || "").trim(),
+            ),
           ),
         ]
           .filter(Boolean)
@@ -198,13 +221,17 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
         if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
-      })
+      }),
     );
   };
 
   const handleStatusChange = (orderId, newStatus) => {
     const order = orders.find((o) => o._id === orderId);
-    if (restrictedStatuses.includes(newStatus) && !order.driver?.driverId && !order.driverId) {
+    if (
+      restrictedStatuses.includes(newStatus) &&
+      !order.driver?.driverId &&
+      !order.driverId
+    ) {
       setPendingOrderId(orderId);
       setPendingStatus(newStatus);
       setShowDriverModal(true);
@@ -248,8 +275,8 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 orderStatus: updated.orderStatus,
                 driver: updated.driver,
               }
-            : order
-        )
+            : order,
+        ),
       );
       setSelectedOrder((prev) =>
         prev?._id === id
@@ -258,7 +285,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
               orderStatus: updated.orderStatus,
               driver: updated.driver,
             }
-          : prev
+          : prev,
       );
 
       if (status === "Delivered" && updated.orderId) {
@@ -280,9 +307,12 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
   const handleInvoiceDownload = async (orderId) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}${ENDPOINTS.INVOICE}/${orderId}`, {
-        method: "GET", // Or POST, depending on route
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}${ENDPOINTS.INVOICE}/${orderId}`,
+        {
+          method: "GET", // Or POST, depending on route
+        },
+      );
 
       if (!res.ok) throw new Error("Failed to fetch PDF");
 
@@ -316,7 +346,10 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
   const totalPages = Math.ceil(filteredOrders.length / entriesToShow);
   const startIndex = (currentPage - 1) * entriesToShow;
-  const currentOrders = filteredOrders.slice(startIndex, startIndex + entriesToShow);
+  const currentOrders = filteredOrders.slice(
+    startIndex,
+    startIndex + entriesToShow,
+  );
 
   const csvData = filteredOrders.map((order, index) => ({
     No: startIndex + index + 1,
@@ -325,11 +358,15 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
     Address: order.addressId?.fullAddress || "-",
     Driver:
       order.driver?.name ||
-      drivers.find((d) => d.id === String(order.driver?.driverId || order.driverId))?.name ||
+      drivers.find(
+        (d) => d.id === String(order.driver?.driverId || order.driverId),
+      )?.name ||
       "-",
     Store: order.storeId?.storeName || "-",
     OrderType: getOrderTypeInfo(order).label,
-    PaymentStatus: order.cashOnDelivery ? "Cash" : `Online (${order.paymentStatus || "-"})`,
+    PaymentStatus: order.cashOnDelivery
+      ? "Cash"
+      : `Online (${order.paymentStatus || "-"})`,
     Status: order.orderStatus || "-",
   }));
 
@@ -575,12 +612,19 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
             background: white;
             padding: 32px;
             border-radius: 16px;
-            max-width: 900px;
-            width: 90%;
-            margin: 48px auto;
-            position: relative;
+
+            width: 98%;
+            max-width: 1400px;
+
+            margin: 20px auto;
+            height: 90vh;
+            max-height: 98vh;
+            overflow-y: auto;
+
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            overflow: hidden;
+            display: flex;
+  flex-direction: column;
+
           }
           .driver-modal-content {
             background: white;
@@ -595,15 +639,16 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
             font-family: 'Urbanist', sans-serif;
           }
           .modal-table-container {
-            overflow-y: auto;
-            max-height: 400px;
-            margin-bottom: 24px;
-            -webkit-overflow-scrolling: touch;
-          }
-          .modal-table {
-            width: 100%;
-            border-collapse: collapse;
-          }
+  overflow: auto;
+  max-height: 75vh;
+  width: 100%;
+  flex:1
+}
+
+.modal-table {
+  width: 100%;
+  table-layout: fixed;
+}
           .modal-table th, .modal-table td {
             padding: 16px;
             border: 1px solid #d2d6da;
@@ -787,7 +832,13 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     {isDashboard ? "Recent Orders" : "Order Management"}
                   </h2>
                 )}
-                <p style={{ fontSize: "16px", color: "#7b809a", marginTop: "8px" }}>
+                <p
+                  style={{
+                    fontSize: "16px",
+                    color: "#7b809a",
+                    marginTop: "8px",
+                  }}
+                >
                   View and manage all orders
                 </p>
               </div>
@@ -795,7 +846,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 <button className="refresh-button" onClick={fetchData}>
                   Refresh
                 </button>
-                <CSVLink data={csvData} filename={"orders.csv"} className="export-button">
+                <CSVLink
+                  data={csvData}
+                  filename={"orders.csv"}
+                  className="export-button"
+                >
                   Export CSV
                 </CSVLink>
               </div>
@@ -880,7 +935,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
               <div className="control-item">
                 <label>Status</label>
                 {activeTab === "temp" ? (
-                  <span style={{ color: "#dc3545", fontWeight: 600 }}>Failed Payment</span>
+                  <span style={{ color: "#dc3545", fontWeight: 600 }}>
+                    Failed Payment
+                  </span>
                 ) : (
                   <select
                     value={selectedStatus}
@@ -924,7 +981,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     >
                       Sr No{" "}
                       {sortConfig.key === "index" &&
-                        (sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />)}
+                        (sortConfig.direction === "asc" ? (
+                          <FaSortUp />
+                        ) : (
+                          <FaSortDown />
+                        ))}
                     </th>
                     <th
                       className="header-cell"
@@ -933,7 +994,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     >
                       Order ID{" "}
                       {sortConfig.key === "orderId" &&
-                        (sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />)}
+                        (sortConfig.direction === "asc" ? (
+                          <FaSortUp />
+                        ) : (
+                          <FaSortDown />
+                        ))}
                     </th>
                     <th
                       className="header-cell"
@@ -942,7 +1007,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     >
                       Order Details{" "}
                       {sortConfig.key === "items[0].name" &&
-                        (sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />)}
+                        (sortConfig.direction === "asc" ? (
+                          <FaSortUp />
+                        ) : (
+                          <FaSortDown />
+                        ))}
                     </th>
                     <th
                       className="header-cell"
@@ -951,7 +1020,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     >
                       Fullname/Address{" "}
                       {sortConfig.key === "addressId.fullAddress" &&
-                        (sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />)}
+                        (sortConfig.direction === "asc" ? (
+                          <FaSortUp />
+                        ) : (
+                          <FaSortDown />
+                        ))}
                     </th>
                     <th className="header-cell" style={{ width: "160px" }}>
                       Driver
@@ -963,7 +1036,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     >
                       Store{" "}
                       {sortConfig.key === "storeId.storeName" &&
-                        (sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />)}
+                        (sortConfig.direction === "asc" ? (
+                          <FaSortUp />
+                        ) : (
+                          <FaSortDown />
+                        ))}
                     </th>
                     <th className="header-cell" style={{ width: "120px" }}>
                       Invoice
@@ -981,7 +1058,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     >
                       Status{" "}
                       {sortConfig.key === "orderStatus" &&
-                        (sortConfig.direction === "asc" ? <FaSortUp /> : <FaSortDown />)}
+                        (sortConfig.direction === "asc" ? (
+                          <FaSortUp />
+                        ) : (
+                          <FaSortDown />
+                        ))}
                     </th>
                   </tr>
                 </thead>
@@ -990,19 +1071,24 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     currentOrders.map((order, index) => {
                       const item = order.items?.[0];
                       const store = stores.find(
-                        (s) => s.id === (order.storeId?._id?.$oid || order.storeId?._id)
+                        (s) =>
+                          s.id ===
+                          (order.storeId?._id?.$oid || order.storeId?._id),
                       );
                       const variant = variants[
                         order.items?.[0]?.productId?.$oid || item?.productId
                       ]?.find(
                         (v) =>
                           (v._id?.$oid || v._id) ===
-                          (order.items?.[0]?.varientId?.$oid || order.items?.[0]?.varientId)
+                          (order.items?.[0]?.varientId?.$oid ||
+                            order.items?.[0]?.varientId),
                       );
                       const orderType = getOrderTypeInfo(order);
                       return (
                         <tr key={order.orderId}>
-                          <td className="body-cell">{startIndex + index + 1}</td>
+                          <td className="body-cell">
+                            {startIndex + index + 1}
+                          </td>
                           <td className="body-cell">
                             <span className="order-id" title={order.orderId}>
                               {order.orderId}
@@ -1016,19 +1102,26 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             >
                               ₹{order.totalPrice?.toFixed(2) || 0}
                             </span>
-                            <span style={{ color: "#7b809a", fontSize: "13px" }}>
+                            <span
+                              style={{ color: "#7b809a", fontSize: "13px" }}
+                            >
                               Quantity: {item?.quantity || 0}
                             </span>
                           </td>
                           <td className="body-cell address-cell">
                             <span
                               className="item-link"
-                              onClick={() => setSelectedAddress(order.addressId)}
+                              onClick={() =>
+                                setSelectedAddress(order.addressId)
+                              }
                               title={order.addressId?.fullAddress}
                             >
                               {order.addressId?.fullName
                                 ? order.addressId.fullName.length > 20
-                                  ? `${order.addressId.fullName.substring(0, 20)}...`
+                                  ? `${order.addressId.fullName.substring(
+                                      0,
+                                      20,
+                                    )}...`
                                   : order.addressId.fullName
                                 : "-"}
                             </span>
@@ -1042,7 +1135,10 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             >
                               {order.addressId?.fullAddress
                                 ? order.addressId.fullAddress.length > 25
-                                  ? `${order.addressId.fullAddress.substring(0, 25)}...`
+                                  ? `${order.addressId.fullAddress.substring(
+                                      0,
+                                      25,
+                                    )}...`
                                   : order.addressId.fullAddress
                                 : "-"}
                             </span>
@@ -1050,11 +1146,21 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           <td className="body-cell">
                             <select
                               className="driver-select"
-                              value={order.driver?.driverId || order.driverId || ""}
-                              onChange={(e) =>
-                                handleOrderUpdate(order._id, undefined, e.target.value)
+                              value={
+                                order.driver?.driverId || order.driverId || ""
                               }
-                              disabled={activeTab === "temp" || driverUpdating || !drivers.length}
+                              onChange={(e) =>
+                                handleOrderUpdate(
+                                  order._id,
+                                  undefined,
+                                  e.target.value,
+                                )
+                              }
+                              disabled={
+                                activeTab === "temp" ||
+                                driverUpdating ||
+                                !drivers.length
+                              }
                             >
                               <option value="">Unassigned</option>
                               {drivers.map((driver) => (
@@ -1067,14 +1173,17 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           <td className="body-cell store-cell">
                             {order.storeId?.storeName
                               ? `${order.storeId.storeName} (${
-                                  store?.zones.map((z) => z.title).join(", ") || "Unknown"
+                                  store?.zones.map((z) => z.title).join(", ") ||
+                                  "Unknown"
                                 })`
                               : "-"}
                           </td>
                           <td className="body-cell">
                             <button
                               className="download-button"
-                              onClick={() => handleInvoiceDownload(order.orderId)}
+                              onClick={() =>
+                                handleInvoiceDownload(order.orderId)
+                              }
                             >
                               Download
                             </button>
@@ -1089,24 +1198,38 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             </span>
                           </td>
                           <td className="body-cell">
-                            <span className={`payment-${order.cashOnDelivery ? "cash" : "online"}`}>
+                            <span
+                              className={`payment-${
+                                order.cashOnDelivery ? "cash" : "online"
+                              }`}
+                            >
                               {order.cashOnDelivery
                                 ? "Cash"
                                 : `Online (${order.paymentStatus || "-"})`}
                             </span>
                             {!order.cashOnDelivery && order.transactionId && (
-                              <span className="transaction-id">Txn ID: {order.transactionId}</span>
+                              <span className="transaction-id">
+                                Txn ID: {order.transactionId}
+                              </span>
                             )}
                           </td>
                           <td className="body-cell">
                             {activeTab === "temp" ? (
-                              <span style={{ color: "#dc3545", fontWeight: 600 }}>Canceled</span>
+                              <span
+                                style={{ color: "#dc3545", fontWeight: 600 }}
+                              >
+                                Canceled
+                              </span>
                             ) : (
                               <select
                                 className="status-select"
                                 value={order.orderStatus || ""}
-                                onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                disabled={statusUpdating || !deliveryStatuses.length}
+                                onChange={(e) =>
+                                  handleStatusChange(order._id, e.target.value)
+                                }
+                                disabled={
+                                  statusUpdating || !deliveryStatuses.length
+                                }
                               >
                                 {deliveryStatuses.map((status) => (
                                   <option key={status} value={status}>
@@ -1124,7 +1247,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                       <td
                         colSpan="10"
                         className="body-cell"
-                        style={{ textAlign: "center", color: "#7b809a", fontSize: "14px" }}
+                        style={{
+                          textAlign: "center",
+                          color: "#7b809a",
+                          fontSize: "14px",
+                        }}
                       >
                         No orders found
                       </td>
@@ -1138,18 +1265,22 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
               <div className="pagination">
                 <span style={{ fontSize: "14px", color: "#7b809a" }}>
                   Showing {startIndex + 1} to{" "}
-                  {Math.min(startIndex + entriesToShow, filteredOrders.length)} of{" "}
-                  {filteredOrders.length} orders
+                  {Math.min(startIndex + entriesToShow, filteredOrders.length)}{" "}
+                  of {filteredOrders.length} orders
                 </span>
                 <div style={{ display: "flex", gap: "12px" }}>
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                   >
                     Previous
                   </button>
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
                   >
                     Next
@@ -1162,7 +1293,10 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
         <Modal open={!!selectedOrder} onClose={() => setSelectedOrder(null)}>
           <div className="modal-content">
-            <span className="modal-close" onClick={() => setSelectedOrder(null)}>
+            <span
+              className="modal-close"
+              onClick={() => setSelectedOrder(null)}
+            >
               ×
             </span>
             {selectedOrder && (
@@ -1177,7 +1311,13 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 >
                   Order Details - {selectedOrder.orderId}
                 </h3>
-                <div style={{ marginBottom: "16px", fontSize: "14px", color: "#344767" }}>
+                <div
+                  style={{
+                    marginBottom: "16px",
+                    fontSize: "14px",
+                    color: "#344767",
+                  }}
+                >
                   <strong>Status:</strong> {selectedOrder.orderStatus || ""}
                 </div>
                 <div style={{ marginBottom: "16px" }}>
@@ -1193,27 +1333,54 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                   <table className="modal-table">
                     <thead>
                       <tr>
-                        <th style={{ width: "80px" }}>Sr No</th>
-                        <th style={{ width: "100px" }}>Price</th>
-                        <th style={{ width: "100px" }}>Quantity</th>
-                        <th style={{ width: "250px" }}>Product</th>
-                        <th style={{ width: "250px" }}>Sku</th>
-                        <th style={{ width: "150px" }}>Variant</th>
-                        <th style={{ width: "120px" }}>Price (Incl. GST)</th>
-                        <th style={{ width: "120px" }}>Subtotal</th>
+                        <th style={{ width: "10%" }}>Sr No</th>
+                        <th style={{ width: "10%" }}>Price</th>
+                        <th style={{ width: "10%" }}>Quantity</th>
+                        <th style={{ width: "10%" }}>Product</th>
+                        <th style={{ width: "10%" }}>Sku</th>
+                        <th style={{ width: "10%" }}>Variant</th>
+                        <th style={{ width: "10%" }}>Price (Incl. GST)</th>
+                        <th style={{ width: "10%" }}>Subtotal</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedOrder.items.map((item, index) => {
-                        const variant = variants[item.productId?.$oid || item.productId]?.find(
-                          (v) => (v._id?.$oid || v._id) === (item.varientId?.$oid || item.varientId)
+                        const variant = variants[
+                          item.productId?.$oid || item.productId
+                        ]?.find(
+                          (v) =>
+                            (v._id?.$oid || v._id) ===
+                            (item.varientId?.$oid || item.varientId),
                         );
                         const price = item.price || 0;
                         const subtotal = item.quantity * price;
                         return (
-                          <tr key={item._id?.$oid || item._id}>
-                            <td style={{ fontSize: "14px", padding: "16px" }}>{index + 1}</td>
-                            <td style={{ fontSize: "14px", padding: "16px" }}>₹{price}</td>
+                          <tr
+                            key={item._id?.$oid || item._id}
+                            style={{
+                              background: item.isOfferItem ? "#f0fff4" : "",
+                              borderLeft: item.isOfferItem
+                                ? "4px solid #22c55e"
+                                : "",
+                            }}
+                          >
+                            <td style={{ fontSize: "14px", padding: "16px" }}>
+                              {index + 1}
+                            </td>
+                            <td style={{ fontSize: "14px", padding: "16px" }}>
+                              {item.isOfferItem ? (
+                                <span
+                                  style={{
+                                    color: "#16a34a",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  FREE
+                                </span>
+                              ) : (
+                                `₹${price}`
+                              )}
+                            </td>
                             <td style={{ fontSize: "14px", padding: "16px" }}>
                               {item.quantity || 0}
                             </td>
@@ -1228,16 +1395,41 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                                   marginRight: 12,
                                 }}
                               />
-                              <span className="item-link" title={item.name}>
-                                {item.name || "-"}
-                              </span>
+                              <div>
+                                <span className="item-link" title={item.name}>
+                                  {item.name || "-"}
+                                </span>
+
+                                {item.isOfferItem && (
+                                  <div
+                                    style={{
+                                      marginTop: 6,
+                                      display: "inline-block",
+                                      background: "#dcfce7",
+                                      color: "#166534",
+                                      padding: "4px 8px",
+                                      borderRadius: 20,
+                                      fontSize: 11,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    🎁 FREE GIFT • {item.offerTitle}
+                                  </div>
+                                )}
+                              </div>
                             </td>
-                            <td style={{ fontSize: "14px", padding: "16px" }}>{item.sku || ""}</td>
+                            <td style={{ fontSize: "14px", padding: "16px" }}>
+                              {item.sku || ""}
+                            </td>
                             <td style={{ fontSize: "14px", padding: "16px" }}>
                               {item.variantName || "-"}
                             </td>
-                            <td style={{ fontSize: "14px", padding: "16px" }}>₹{price}</td>
-                            <td style={{ fontSize: "14px", padding: "16px" }}>₹{subtotal}</td>
+                            <td style={{ fontSize: "14px", padding: "16px" }}>
+                              ₹{price}
+                            </td>
+                            <td style={{ fontSize: "14px", padding: "16px" }}>
+                              ₹{subtotal}
+                            </td>
                           </tr>
                         );
                       })}
@@ -1258,8 +1450,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                         <td style={{ fontSize: "14px", padding: "16px" }}>
                           ₹
                           {selectedOrder.items.reduce(
-                            (sum, item) => sum + item.quantity * (item.price || 0),
-                            0
+                            (sum, item) =>
+                              sum + item.quantity * (item.price || 0),
+                            0,
                           )}
                         </td>
                       </tr>
@@ -1279,7 +1472,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           ₹
                           {selectedOrder.items
                             .reduce((sum, item) => {
-                              const price = item.quantity * (item.variantPrice || item.price || 0);
+                              const price =
+                                item.quantity *
+                                (item.variantPrice || item.price || 0);
                               const gstRate = parseFloat(item.gst || "0") / 100;
                               return sum + price * gstRate;
                             }, 0)
@@ -1322,6 +1517,34 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           {selectedOrder.platformFee || 0}
                         </td>
                       </tr>
+                      {selectedOrder.offerSummary?.freeProduct && (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            style={{
+                              textAlign: "right",
+                              fontWeight: 600,
+                              color: "#16a34a",
+                              padding: "16px",
+                            }}
+                          >
+                            🎁 Free Gift Applied:
+                          </td>
+                          <td style={{ padding: "16px", color: "#16a34a" }}>
+                            {selectedOrder.offerSummary.freeProduct.name}
+                            <br />
+                            <small>
+                              Coupon:{" "}
+                              {selectedOrder.offerSummary.freeProduct.title}
+                            </small>
+                            <br />
+                            <small>
+                              Saved ₹
+                              {selectedOrder.offerSummary.freeProduct.savings}
+                            </small>
+                          </td>
+                        </tr>
+                      )}
                       <tr style={{ borderTop: "2px solid #d2d6da" }}>
                         <td
                           colSpan="6"
@@ -1340,7 +1563,8 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             (
                               selectedOrder.items.reduce((sum, item) => {
                                 const price =
-                                  item.quantity * (item.variantPrice || item.price || 0);
+                                  item.quantity *
+                                  (item.variantPrice || item.price || 0);
                                 return sum + price;
                               }, 0) +
                               (selectedOrder.deliveryCharges || 0) +
@@ -1351,7 +1575,13 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                     </tfoot>
                   </table>
                 </div>
-                <div style={{ marginTop: "16px", fontSize: "13px", color: "#7b809a" }}>
+                <div
+                  style={{
+                    marginTop: "16px",
+                    fontSize: "13px",
+                    color: "#7b809a",
+                  }}
+                >
                   <em>Note: GST is already included in the product prices.</em>
                 </div>
               </>
@@ -1359,9 +1589,15 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
           </div>
         </Modal>
 
-        <Modal open={!!selectedAddress} onClose={() => setSelectedAddress(null)}>
+        <Modal
+          open={!!selectedAddress}
+          onClose={() => setSelectedAddress(null)}
+        >
           <div className="address-modal-content">
-            <span className="modal-close" onClick={() => setSelectedAddress(null)}>
+            <span
+              className="modal-close"
+              onClick={() => setSelectedAddress(null)}
+            >
               ×
             </span>
             {selectedAddress && (
@@ -1380,7 +1616,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                   <div className="address-field">
                     <FaUser className="address-field-icon" />
                     <span className="address-field-label">Full Name</span>
-                    <span className="address-field-value">{selectedAddress.fullName || "-"}</span>
+                    <span className="address-field-value">
+                      {selectedAddress.fullName || "-"}
+                    </span>
                   </div>
                   <div className="address-field">
                     <FaMapMarkerAlt className="address-field-icon" />
@@ -1404,19 +1642,37 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
         <Modal open={showDriverModal} onClose={() => setShowDriverModal(false)}>
           <div className="driver-modal-content">
-            <span className="modal-close" onClick={() => setShowDriverModal(false)}>
+            <span
+              className="modal-close"
+              onClick={() => setShowDriverModal(false)}
+            >
               ×
             </span>
             <h3
-              style={{ fontWeight: 700, fontSize: "24px", color: "#344767", marginBottom: "24px" }}
+              style={{
+                fontWeight: 700,
+                fontSize: "24px",
+                color: "#344767",
+                marginBottom: "24px",
+              }}
             >
               Select Delivery Driver
             </h3>
-            <p style={{ fontSize: "14px", color: "#7b809a", marginBottom: "16px" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#7b809a",
+                marginBottom: "16px",
+              }}
+            >
               A driver must be assigned to change the status to {pendingStatus}.
             </p>
             <div className="control-item" style={{ marginBottom: "24px" }}>
-              <label style={{ fontSize: "15px", fontWeight: 600, color: "#344767" }}>Driver</label>
+              <label
+                style={{ fontSize: "15px", fontWeight: 600, color: "#344767" }}
+              >
+                Driver
+              </label>
               <select
                 className="driver-select"
                 onChange={(e) => handleDriverSelection(e.target.value)}
@@ -1432,8 +1688,17 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 ))}
               </select>
             </div>
-            <div style={{ display: "flex", gap: "16px", justifyContent: "flex-end" }}>
-              <button className="modal-button cancel" onClick={() => setShowDriverModal(false)}>
+            <div
+              style={{
+                display: "flex",
+                gap: "16px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                className="modal-button cancel"
+                onClick={() => setShowDriverModal(false)}
+              >
                 Cancel
               </button>
               <button
