@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Switch } from "@mui/material";
 import * as XLSX from "xlsx";
 import { showAlert } from "components/commonFunction/alertsLoader";
-import { get, put } from "../../api/apiClient";
+import { get, put, del } from "../../api/apiClient";
 import { ENDPOINTS } from "../../api/endPoints";
 import { getMainCategories } from "components/commonApi/commonApi";
 
@@ -71,7 +71,9 @@ function Categories() {
       return typeValue.name || typeValue.typeName || "-";
     }
 
-    return categoryTypes.find((typeItem) => typeItem._id === typeValue)?.name || "-";
+    return (
+      categoryTypes.find((typeItem) => typeItem._id === typeValue)?.name || "-"
+    );
   };
 
   const filteredCategories = categories.filter((item) => {
@@ -91,7 +93,10 @@ function Categories() {
 
   const totalPages = Math.ceil(filteredCategories.length / entriesToShow);
   const startIndex = (currentPage - 1) * entriesToShow;
-  const currentCategories = filteredCategories.slice(startIndex, startIndex + entriesToShow);
+  const currentCategories = filteredCategories.slice(
+    startIndex,
+    startIndex + entriesToShow,
+  );
 
   const downloadSampleCSV = () => {
     const sampleData = [
@@ -176,23 +181,24 @@ function Categories() {
     setCurrentPage(1);
   };
 
-  const goToPreviousPage = () => currentPage > 1 && setCurrentPage(currentPage - 1);
-  const goToNextPage = () => currentPage < totalPages && setCurrentPage(currentPage + 1);
+  const goToPreviousPage = () =>
+    currentPage > 1 && setCurrentPage(currentPage - 1);
+  const goToNextPage = () =>
+    currentPage < totalPages && setCurrentPage(currentPage + 1);
 
   const handleCate = async (id) => {
     try {
-      const confirmDelete = window.confirm("Are you sure you want to delete this category?");
-      if (confirmDelete) {
-        const result = await fetch(`https://node-m8jb.onrender.com/delete/${id}`, {
-          method: "DELETE",
-        });
-        if (result.status === 200) {
-          showAlert("success", "Deleted Successfully");
-          setMainCategories((prev) => prev.filter((cat) => cat._id !== id));
-        }
-      }
+      if (!window.confirm("Are you sure you want to delete this category?"))
+        return;
+
+      const res = await del(`${ENDPOINTS.DELETE_CATEGORY}/${id}`);
+
+      showAlert("success", res.data.message);
+
+      setMainCategories((prev) => prev.filter((cat) => cat._id !== id));
     } catch (err) {
-      console.log(err);
+      console.error(err);
+      showAlert("error", err.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -201,17 +207,18 @@ function Categories() {
     const updatedStatus = !category.status;
 
     const updated = categories.map((cat) =>
-      cat._id === id ? { ...cat, status: updatedStatus } : cat
+      cat._id === id ? { ...cat, status: updatedStatus } : cat,
     );
     setMainCategories(updated);
 
     try {
-      const res = await put(`${ENDPOINTS.EDIT_CATEGORY}/${id}`, { status: updatedStatus })
+      const res = await put(`${ENDPOINTS.EDIT_CATEGORY}/${id}`, {
+        status: updatedStatus,
+      });
 
       if (res.status !== 200) {
         showAlert("error", "Failed to update status");
       }
-
     } catch (error) {
       console.error("Error updating status:", error);
     }
@@ -246,9 +253,13 @@ function Categories() {
             }}
           >
             <div>
-              <span style={{ fontWeight: "bold", fontSize: 26 }}>Categories Lists</span>
+              <span style={{ fontWeight: "bold", fontSize: 26 }}>
+                Categories Lists
+              </span>
               <br />
-              <span style={{ fontSize: 17 }}>View and manage all Categories</span>
+              <span style={{ fontSize: 17 }}>
+                View and manage all Categories
+              </span>
             </div>
 
             {/* Right Buttons Wrapper */}
@@ -300,7 +311,13 @@ function Categories() {
                 <option value={50}>50</option>
               </select>
             </div>
-            <div style={{ marginBottom: 8, display: "flex", flexDirection: "column" }}>
+            <div
+              style={{
+                marginBottom: 8,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <label style={{ fontSize: 16, marginBottom: 5 }}>Search</label>
               <input
                 type="text"
@@ -337,18 +354,32 @@ function Categories() {
                   <th style={headerCell}>Category Name</th>
                   <th style={{ ...headerCell, width: "15%" }}>Category Type</th>
                   <th style={{ ...headerCell, width: "15%" }}>Category Code</th>
-                  <th style={{ ...headerCell, width: "15%" }}>Sub Categories</th>
+                  <th style={{ ...headerCell, width: "15%" }}>
+                    Sub Categories
+                  </th>
                   <th style={headerCell}>Items</th>
                   <th style={headerCell}>Public</th>
-                  <th style={{ ...headerCell, width: "20%", textAlign: "center" }}>Action</th>
+                  <th
+                    style={{ ...headerCell, width: "20%", textAlign: "center" }}
+                  >
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {currentCategories.map((item, index) => (
                   <tr key={item._id}>
-                    <td style={{ ...bodyCell, textAlign: "center" }}>{startIndex + index + 1}</td>
                     <td style={{ ...bodyCell, textAlign: "center" }}>
-                      <div style={{ display: "flex", gap: "30px", alignItems: "center" }}>
+                      {startIndex + index + 1}
+                    </td>
+                    <td style={{ ...bodyCell, textAlign: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "30px",
+                          alignItems: "center",
+                        }}
+                      >
                         <img
                           src={`${process.env.REACT_APP_IMAGE_LINK}${item.image}`}
                           alt={item.name}
@@ -365,19 +396,32 @@ function Categories() {
                     <td style={{ ...bodyCell, textAlign: "center" }}>
                       {getCategoryTypeName(item.typeId)}
                     </td>
-                    <td style={{ ...bodyCell, textAlign: "center" }}>{item.categoryId}</td>
+                    <td style={{ ...bodyCell, textAlign: "center" }}>
+                      {item.categoryId}
+                    </td>
                     <td
-                      style={{ ...bodyCell, textAlign: "center", cursor: "pointer" }}
-                      onClick={() => navigate("/getsubcate", { state: { category: item } })}
+                      style={{
+                        ...bodyCell,
+                        textAlign: "center",
+                        cursor: "pointer",
+                      }}
+                      onClick={() =>
+                        navigate("/getsubcate", { state: { category: item } })
+                      }
                     >
                       {item.subcat ? item.subcat.length : 0}
                     </td>
                     <td style={{ ...bodyCell, textAlign: "center" }}>
                       {(() => {
-                        const subCatCount = item.subcat ? item.subcat.length : 0;
+                        const subCatCount = item.subcat
+                          ? item.subcat.length
+                          : 0;
                         const subSubCatCount = item.subcat
                           ? item.subcat.reduce((total, subcat) => {
-                              return total + (subcat.subsubcat ? subcat.subsubcat.length : 0);
+                              return (
+                                total +
+                                (subcat.subsubcat ? subcat.subsubcat.length : 0)
+                              );
                             }, 0)
                           : 0;
                         return subCatCount + subSubCatCount;
@@ -393,9 +437,10 @@ function Categories() {
                           "& .MuiSwitch-switchBase.Mui-checked": {
                             color: "green",
                           },
-                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                            backgroundColor: "green !important",
-                          },
+                          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                            {
+                              backgroundColor: "green !important",
+                            },
                           "& .MuiSwitch-track": {
                             backgroundColor: "red",
                             opacity: 1,
@@ -405,7 +450,11 @@ function Categories() {
                     </td>
                     <td style={{ ...bodyCell, textAlign: "center" }}>
                       <div
-                        style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
                       >
                         <button
                           style={{
@@ -454,8 +503,8 @@ function Categories() {
           >
             <span>
               Showing {startIndex + 1}-
-              {Math.min(startIndex + entriesToShow, filteredCategories.length)} of{" "}
-              {filteredCategories.length} categories
+              {Math.min(startIndex + entriesToShow, filteredCategories.length)}{" "}
+              of {filteredCategories.length} categories
             </span>
             <div>
               <button
@@ -476,7 +525,8 @@ function Categories() {
                 style={{
                   padding: "8px 16px",
                   borderRadius: 10,
-                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  cursor:
+                    currentPage === totalPages ? "not-allowed" : "pointer",
                 }}
               >
                 Next

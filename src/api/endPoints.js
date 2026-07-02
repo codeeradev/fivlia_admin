@@ -54,6 +54,7 @@ export const ENDPOINTS = {
   ADD_FILTER_IN_CATEGORY: "/addFilterInCategory",
   GET_SUB_CATEGORIES: "/GetSubCategories",
   GET_SUB_SUB_CATEGORIES: "/GetSubSubCategories",
+  DELETE_CATEGORY: "/deleteCategory",
 
   ADD_FOOD: "/food/add-food",
   GET_FOOD: "/food/get-all-food",

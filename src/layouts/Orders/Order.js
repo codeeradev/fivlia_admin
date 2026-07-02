@@ -48,6 +48,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [activeTab, setActiveTab] = useState("all"); // all | temp
   const [tempOrders, setTempOrders] = useState([]);
+  const [selectedTimeline, setSelectedTimeline] = useState(null);
 
   const restrictedStatuses = [
     "Going to Pickup",
@@ -257,7 +258,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
     setDriverUpdating(true);
     showAlert("loading", "Updating order...");
     try {
-      const body = {};
+      const body = {
+        type: "admin"
+      };
       if (status) body.status = status;
       if (driverId) body.driverId = driverId;
       const res = await put(`${ENDPOINTS.UPDATE_ORDER_STATUS}/${id}`, body);
@@ -369,6 +372,18 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
       : `Online (${order.paymentStatus || "-"})`,
     Status: order.orderStatus || "-",
   }));
+
+  const formatDateTime = (value) => {
+    if (!value) return "-";
+
+    return new Date(value).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <>
@@ -1064,6 +1079,9 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           <FaSortDown />
                         ))}
                     </th>
+                    <th className="header-cell" style={{ width: "170px" }}>
+                      Accepted By
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1237,6 +1255,114 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                                   </option>
                                 ))}
                               </select>
+                            )}
+                          </td>
+
+                          <td className="body-cell">
+                            {order.orderStatus === "Cancelled" ? (
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 10,
+                                  padding: "10px 14px",
+                                  borderRadius: 12,
+                                  background:
+                                    order.orderRejectedBy === "admin"
+                                      ? "#FEF2F2"
+                                      : "#FFF7ED",
+                                  color:
+                                    order.orderRejectedBy === "admin"
+                                      ? "#DC2626"
+                                      : "#EA580C",
+                                  fontWeight: 700,
+                                  border: "1px solid #FECACA",
+                                }}
+                              >
+                                ❌
+                                <div>
+                                  <div>Cancelled</div>
+                                  <div
+                                    style={{ fontSize: 12, fontWeight: 600 }}
+                                  >
+                                    by{" "}
+                                    {order.orderRejectedBy === "admin"
+                                      ? "Admin"
+                                      : "Seller"}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : order.orderAcceptedBy ? (
+                              <div
+                                onClick={() => setSelectedTimeline(order)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "12px",
+                                  padding: "10px 14px",
+                                  borderRadius: "12px",
+                                  background: "#F8FAFC",
+                                  border: "1px solid #D9E2EC",
+                                  cursor: "pointer",
+                                  transition: "all .2s ease",
+                                  minWidth: "180px",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "#EEF4FF";
+                                  e.currentTarget.style.borderColor = "#1976D2";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "#F8FAFC";
+                                  e.currentTarget.style.borderColor = "#D9E2EC";
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: "50%",
+                                    background:
+                                      order.orderAcceptedBy === "admin"
+                                        ? "#E3F2FD"
+                                        : "#E8F5E9",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: 18,
+                                  }}
+                                >
+                                  {order.orderAcceptedBy === "admin"
+                                    ? "👨‍💼"
+                                    : "🏪"}
+                                </div>
+
+                                <div style={{ lineHeight: 1.2 }}>
+                                  <div
+                                    style={{
+                                      fontWeight: 700,
+                                      fontSize: 13,
+                                      color: "#344767",
+                                    }}
+                                  >
+                                    {order.orderAcceptedBy === "admin"
+                                      ? "Accepted by Admin"
+                                      : "Accepted by Seller"}
+                                  </div>
+
+                                  <div
+                                    style={{
+                                      fontSize: 12,
+                                      color: "#1976D2",
+                                      fontWeight: 600,
+                                      marginTop: 3,
+                                    }}
+                                  >
+                                    Click to view timeline →
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              "-"
                             )}
                           </td>
                         </tr>
@@ -1583,6 +1709,118 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                   }}
                 >
                   <em>Note: GST is already included in the product prices.</em>
+                </div>
+              </>
+            )}
+          </div>
+        </Modal>
+
+        <Modal
+          open={!!selectedTimeline}
+          onClose={() => setSelectedTimeline(null)}
+        >
+          <div className="address-modal-content">
+            <span
+              className="modal-close"
+              onClick={() => setSelectedTimeline(null)}
+            >
+              ×
+            </span>
+
+            {selectedTimeline && (
+              <>
+                <h3
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 700,
+                    marginBottom: 25,
+                  }}
+                >
+                  Order Activity Timeline
+                </h3>
+
+                <div className="address-card">
+                  <div className="address-field">
+                    <span className="address-field-label">Accepted By</span>
+
+                    <span className="address-field-value">
+                      {selectedTimeline.orderAcceptedBy === "admin"
+                        ? "👨‍💼 Admin"
+                        : "🏪 Seller"}
+                    </span>
+                  </div>
+
+                  <div className="address-field">
+                    <span className="address-field-label">Accepted At</span>
+
+                    <span className="address-field-value">
+                      {formatDateTime(selectedTimeline.orderAceptedTime)}
+                    </span>
+                  </div>
+
+                  <div className="address-field">
+                    <span className="address-field-label">Ready At</span>
+
+                    <span className="address-field-value">
+                      {formatDateTime(selectedTimeline.orderReadyTime)}
+                    </span>
+                  </div>
+
+                  <div className="address-field">
+                    <span className="address-field-label">Picked Up</span>
+
+                    <span className="address-field-value">
+                      {formatDateTime(selectedTimeline.orderPickedTime)}
+                    </span>
+                  </div>
+
+                  <div className="address-field">
+                    <span className="address-field-label">Delivered At</span>
+
+                    <span className="address-field-value">
+                      {formatDateTime(selectedTimeline.orderDeliveredTime)}
+                    </span>
+                  </div>
+
+                  {selectedTimeline.orderAcceptedBy === "seller" ? (
+                    <div
+                      className="address-field"
+                      style={{
+                        marginTop: 20,
+                        background: "#F4FFF7",
+                        borderRadius: 10,
+                        padding: 15,
+                      }}
+                    >
+                      <span className="address-field-label">
+                        Preparation Time
+                      </span>
+
+                      <span
+                        className="address-field-value"
+                        style={{
+                          color: "#0F9D58",
+                          fontWeight: 700,
+                          fontSize: 16,
+                        }}
+                      >
+                        {selectedTimeline.avgPreparationTime || 0} Minutes
+                      </span>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        marginTop: 20,
+                        background: "#FFF8E6",
+                        padding: 15,
+                        borderRadius: 10,
+                        color: "#8A6D3B",
+                      }}
+                    >
+                      This order was accepted by the Admin. Preparation time is
+                      not measured for admin-accepted orders.
+                    </div>
+                  )}
                 </div>
               </>
             )}

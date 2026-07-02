@@ -4,7 +4,7 @@ import { useMaterialUIController } from "context";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Switch } from "@mui/material";
 import { showAlert } from "components/commonFunction/alertsLoader";
-import { put, get } from "api/apiClient";
+import { put, get, del } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
 
 const headerCell = {
@@ -93,24 +93,22 @@ function GetSubCategories() {
   };
 
   const handleDeleteSubcat = async (id) => {
-    const confirm = window.confirm("Are you sure you want to delete this sub-category?");
-    if (!confirm) return;
-
+    if (!window.confirm("Are you sure you want to delete this subcategory?"))
+      return;
+  
     try {
-      const res = await fetch(`https://node-m8jb.onrender.com/delete-subcategory/${id}`, {
-        method: "DELETE",
-      });
-      if (res.status === 200) {
-        alert("Deleted successfully");
-        const updatedList = data.filter((item) => item._id !== id);
-        setData(updatedList);
-
-        if (updatedList.length === 0) {
-          navigate(-1);
-        }
+      const res = await del(`${ENDPOINTS.DELETE_CATEGORY}/${id}`);
+  
+      alert(res.data.message);
+  
+      setData((prev) => prev.filter((item) => item._id !== id));
+  
+      if (data.length === 1) {
+        navigate(-1);
       }
     } catch (err) {
-      console.error("Delete error:", err);
+      console.error(err);
+      alert(err.response?.data?.message || "Something went wrong");
     }
   };
 
