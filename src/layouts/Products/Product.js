@@ -1016,10 +1016,10 @@ function Product() {
       return;
     }
 
-    if (!productType) {
-      showAlert("warning", "Please select product type.");
-      return;
-    }
+    // if (!productType) {
+    //   showAlert("warning", "Please select product type.");
+    //   return;
+    // }
 
     if (
       productTypes
