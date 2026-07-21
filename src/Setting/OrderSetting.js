@@ -29,6 +29,8 @@ const numericFields = new Set([
   "codLimit",
   "extraTime",
   "foodGlobalCommission",
+  "ready_in_min",
+  "referralAmount",
 ]);
 
 const OrderSetting = ({ miniSidenav }) => {
@@ -53,7 +55,9 @@ const OrderSetting = ({ miniSidenav }) => {
     nightStartTime: "",
     nightEndTime: "",
     zoneTimeZone: "Asia/Kolkata",
+    ready_in_min: 0,
     foodGlobalCommission: 0,
+    referralAmount: 0,
   });
 
   const [loading, setLoading] = useState(false);
@@ -89,7 +93,9 @@ const OrderSetting = ({ miniSidenav }) => {
           nightStartTime: s.nightStartTime || "",
           nightEndTime: s.nightEndTime || "",
           zoneTimeZone: s.zoneTimeZone || "Asia/Kolkata",
+          ready_in_min: Number(s.ready_in_min ?? 0),
           foodGlobalCommission: Number(s.foodGlobalCommission ?? 0),
+          referralAmount: Number(s.referralAmount ?? 0),
         });
         showAlert("info", "", 1);
       } else {
@@ -270,6 +276,19 @@ const OrderSetting = ({ miniSidenav }) => {
                         helperText="Default commission for food products when FoodType commission is not available"
                       />
                     </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Referral Amount (₹)"
+                        name="referralAmount"
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        fullWidth
+                        value={formData.referralAmount}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Bonus amount given to drivers for successful seller referrals"
+                      />
+                    </Grid>
                   </Grid>
                 </MDBox>
               </Grid>
@@ -346,6 +365,19 @@ const OrderSetting = ({ miniSidenav }) => {
                         onChange={handleChange}
                         variant="outlined"
                         helperText="Adds extra minutes to the system-calculated delivery time."
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Ready In (Minutes)"
+                        name="ready_in_min"
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        fullWidth
+                        value={formData.ready_in_min}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Default preparation time in minutes"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
