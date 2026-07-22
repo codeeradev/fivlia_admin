@@ -583,7 +583,7 @@ export default function Drivers() {
                 <th style={headerCell}>Rating</th>
                 <th style={headerCell}>Referrals</th>
                 <th style={headerCell}>Details</th>
-                <th style={headerCell}>Permanent Disable</th>
+                <th style={headerCell}>Status</th>
                 <th style={headerCell}>Action</th>
                 <th style={headerCell}>Locate</th>
               </tr>

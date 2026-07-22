@@ -11,6 +11,7 @@ import {
   FormLabel,
   MenuItem,
   Select,
+  Grid,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Paper, Typography } from "@mui/material";
@@ -18,6 +19,8 @@ import { get, put } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
 import { showAlert } from "components/commonFunction/alertsLoader";
 import { getAllTaxes } from "components/commonApi/commonApi";
+import { SketchPicker } from "react-color";
+import { Popover, TextField } from "@mui/material";
 
 function Setting() {
   const [controller] = useMaterialUIController();
@@ -26,6 +29,8 @@ function Setting() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [adminSignatureFile, setAdminSignatureFile] = useState(null);
+  const [homeScreenImage, setHomeScreenImage] = useState(null);
+  const [homeScreenPreview, setHomeScreenPreview] = useState(null);
   const [formData, setFormData] = useState({
     Owner_Name: "",
     Owner_Email: "",
@@ -60,11 +65,71 @@ function Setting() {
         bulksms: { api_id: "", api_password: "", status: false },
       },
     ],
+    homeScreen: {
+      food: {
+        primary_color: "",
+        secondary_color: "",
+      },
+      grocery: {
+        primary_color: "",
+        secondary_color: "",
+      },
+      mall: {
+        primary_color: "",
+        secondary_color: "",
+      },
+      allCategoryImage: "",
+    },
+
     imageLink: "",
     // freeDeliveryLimit: 0,
     adminSignature: "",
   });
   const [taxOptions, setTaxOptions] = useState([]);
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedColor, setSelectedColor] = useState({
+    section: "",
+    type: "",
+  });
+
+  const openPicker = (event, section, type) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedColor({
+      section,
+      type,
+    });
+  };
+
+  const closePicker = () => {
+    setAnchorEl(null);
+    setSelectedColor({
+      section: "",
+      type: "",
+    });
+  };
+
+  const handleHomeScreenImage = (e) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      setHomeScreenImage(file);
+      setHomeScreenPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleHomeScreenColor = (section, type, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      homeScreen: {
+        ...prev.homeScreen,
+        [section]: {
+          ...prev.homeScreen[section],
+          [type]: value,
+        },
+      },
+    }));
+  };
 
   useEffect(() => {
     const fetchTaxOptions = async () => {
@@ -79,7 +144,7 @@ function Setting() {
           options.map((tax) => ({
             display: tax.value || tax,
             value: parseFloat((tax.value || tax).replace("%", "")) || 0,
-          }))
+          })),
         );
 
         // showAlert("success", "Taxes loaded");
@@ -100,10 +165,14 @@ function Setting() {
         const response = await get(ENDPOINTS.GET_SETTINGS);
         const result = response.data;
         if (result.settings) {
-          const razorpayTest = result.settings.PaymentGateways?.RazorPayKey?.test || "";
-          const razorpayLive = result.settings.PaymentGateways?.RazorPayKey?.live || "";
-          const phonepeTest = result.settings.PaymentGateways?.PhonePe?.test || "";
-          const phonepeLive = result.settings.PaymentGateways?.PhonePe?.live || "";
+          const razorpayTest =
+            result.settings.PaymentGateways?.RazorPayKey?.test || "";
+          const razorpayLive =
+            result.settings.PaymentGateways?.RazorPayKey?.live || "";
+          const phonepeTest =
+            result.settings.PaymentGateways?.PhonePe?.test || "";
+          const phonepeLive =
+            result.settings.PaymentGateways?.PhonePe?.live || "";
           let activeGateway = "None";
           let activeMode = "";
           if (razorpayTest) {
@@ -142,10 +211,12 @@ function Setting() {
             activeMode,
             RazorPayKey_test: razorpayTest,
             RazorPayKey_live: razorpayLive,
-            RazorPayKey_secret: result.settings.PaymentGateways?.RazorPayKey?.secretKey || "",
+            RazorPayKey_secret:
+              result.settings.PaymentGateways?.RazorPayKey?.secretKey || "",
             PhonePe_test: phonepeTest,
             PhonePe_live: phonepeLive,
-            PhonePe_secret: result.settings.PaymentGateways?.PhonePe?.secretKey || "",
+            PhonePe_secret:
+              result.settings.PaymentGateways?.PhonePe?.secretKey || "",
             Map_Api: {
               google: {
                 api_key: mapApi.google?.api_key || "",
@@ -155,7 +226,10 @@ function Setting() {
                 api_key: mapApi.apple?.api_key || "",
                 status: mapApi.apple?.status || false,
               },
-              ola: { api_key: mapApi.ola?.api_key || "", status: mapApi.ola?.status || false },
+              ola: {
+                api_key: mapApi.ola?.api_key || "",
+                status: mapApi.ola?.status || false,
+              },
             },
             Auth:
               result.settings.Auth && result.settings.Auth.length > 0
@@ -197,6 +271,28 @@ function Setting() {
                       bulksms: { api_id: "", api_password: "", status: false },
                     },
                   ],
+            homeScreen: {
+              food: {
+                primary_color:
+                  result.settings.homeScreen?.food?.primary_color || "",
+                secondary_color:
+                  result.settings.homeScreen?.food?.secondary_color || "",
+              },
+              grocery: {
+                primary_color:
+                  result.settings.homeScreen?.grocery?.primary_color || "",
+                secondary_color:
+                  result.settings.homeScreen?.grocery?.secondary_color || "",
+              },
+              mall: {
+                primary_color:
+                  result.settings.homeScreen?.mall?.primary_color || "",
+                secondary_color:
+                  result.settings.homeScreen?.mall?.secondary_color || "",
+              },
+              allCategoryImage:
+                result.settings.homeScreen?.allCategoryImage || "",
+            },
             imageLink: result.settings.imageLink || "",
             // freeDeliveryLimit: result.settings.freeDeliveryLimit || 0,
             adminSignature: result.settings.adminSignature || "",
@@ -396,14 +492,17 @@ function Setting() {
       // let url = `${process.env.REACT_APP_API_URL}/adminSetting`;
       let response;
 
-      if (adminSignatureFile) {
-        // Step 6a: File exists → use FormData
+      if (adminSignatureFile || homeScreenImage) {
         const form = new FormData();
+
         form.append("payload", JSON.stringify(filteredData));
-        form.append("image", adminSignatureFile);
+
+        if (adminSignatureFile) form.append("image", adminSignatureFile);
+
+        if (homeScreenImage) form.append("file", homeScreenImage);
+
         response = await put(ENDPOINTS.ADMIN_SETTING, form);
       } else {
-        // Step 6b: No file → send JSON
         response = await put(ENDPOINTS.ADMIN_SETTING, filteredData);
       }
 
@@ -442,7 +541,9 @@ function Setting() {
               <input
                 type="text"
                 value={formData.Owner_Name}
-                onChange={(e) => handleInputChange("Owner_Name", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("Owner_Name", e.target.value)
+                }
               />
             </div>
             <div className="store-input">
@@ -450,7 +551,9 @@ function Setting() {
               <input
                 type="email"
                 value={formData.Owner_Email}
-                onChange={(e) => handleInputChange("Owner_Email", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("Owner_Email", e.target.value)
+                }
               />
             </div>
           </div>
@@ -460,7 +563,9 @@ function Setting() {
               <input
                 type="number"
                 value={formData.Owner_Number}
-                onChange={(e) => handleInputChange("Owner_Number", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("Owner_Number", e.target.value)
+                }
               />
             </div>
             <div className="store-input">
@@ -468,7 +573,9 @@ function Setting() {
               <input
                 type="text"
                 value={formData.GST_Number}
-                onChange={(e) => handleInputChange("GST_Number", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("GST_Number", e.target.value)
+                }
               />
             </div>
           </div>
@@ -478,7 +585,9 @@ function Setting() {
               <input
                 type="number"
                 value={formData.Platform_Fee}
-                onChange={(e) => handleInputChange("Platform_Fee", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("Platform_Fee", e.target.value)
+                }
               />
             </div>
             <div className="store-input">
@@ -489,13 +598,21 @@ function Setting() {
                   <img
                     src={previewImage}
                     alt="Admin Signature Preview"
-                    style={{ maxWidth: "100px", marginTop: "8px", display: "block" }}
+                    style={{
+                      maxWidth: "100px",
+                      marginTop: "8px",
+                      display: "block",
+                    }}
                   />
                 ) : formData.adminSignature ? (
                   <img
                     src={`${process.env.REACT_APP_IMAGE_LINK}${formData.adminSignature}`}
                     alt="Admin Signature"
-                    style={{ maxWidth: "100px", marginTop: "8px", display: "block" }}
+                    style={{
+                      maxWidth: "100px",
+                      marginTop: "8px",
+                      display: "block",
+                    }}
                     onError={(e) => {
                       e.target.src = "/placeholder.png";
                     }}
@@ -520,7 +637,9 @@ function Setting() {
               <textarea
                 rows={4}
                 value={formData.Description}
-                onChange={(e) => handleInputChange("Description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("Description", e.target.value)
+                }
               />
             </div>
           </div>
@@ -536,7 +655,9 @@ function Setting() {
               <input
                 type="number"
                 value={formData.Delivery_Charges}
-                onChange={(e) => handleInputChange("Delivery_Charges", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("Delivery_Charges", e.target.value)
+                }
               />
             </div>
             <div className="store-input">
@@ -544,16 +665,17 @@ function Setting() {
               <Select
                 fullWidth
                 value={
-                  taxOptions.find((option) => option.value === formData.Delivery_Charges_Gst)
-                    ?.display || ""
+                  taxOptions.find(
+                    (option) => option.value === formData.Delivery_Charges_Gst,
+                  )?.display || ""
                 }
                 onChange={(e) => {
                   const selectedOption = taxOptions.find(
-                    (option) => option.display === e.target.value
+                    (option) => option.display === e.target.value,
                   );
                   handleInputChange(
                     "Delivery_Charges_Gst",
-                    selectedOption ? selectedOption.value : 0
+                    selectedOption ? selectedOption.value : 0,
                   );
                 }}
                 style={{ height: "37px" }}
@@ -613,6 +735,211 @@ function Setting() {
         </div>
       </div>
 
+      {/* ---------------- Home Screen (cleaned up) ---------------- */}
+      <div className="store-container">
+        <div className="store-header">Home Screen</div>
+
+        <div className="store-form">
+          <Grid container spacing={2}>
+            {["food", "grocery", "mall"].map((section) => (
+              <Grid item xs={12} md={4} key={section}>
+                <Paper
+                  elevation={2}
+                  style={{
+                    padding: "16px",
+                    height: "100%",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    style={{
+                      textTransform: "capitalize",
+                      fontWeight: 600,
+                      marginBottom: 14,
+                    }}
+                  >
+                    {section}
+                  </Typography>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 13,
+                        color: "#666",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Primary Color
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div
+                        role="button"
+                        aria-label={`Pick ${section} primary color`}
+                        onClick={(e) => openPicker(e, section, "primary_color")}
+                        style={{
+                          width: 34,
+                          height: 34,
+                          minWidth: 34,
+                          borderRadius: 6,
+                          border: "1px solid #d0d0d0",
+                          backgroundColor:
+                            formData.homeScreen[section].primary_color || "#ffffff",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="#RRGGBB"
+                        value={formData.homeScreen[section].primary_color}
+                        onChange={(e) =>
+                          handleHomeScreenColor(
+                            section,
+                            "primary_color",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 13,
+                        color: "#666",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Secondary Color
+                    </label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div
+                        role="button"
+                        aria-label={`Pick ${section} secondary color`}
+                        onClick={(e) => openPicker(e, section, "secondary_color")}
+                        style={{
+                          width: 34,
+                          height: 34,
+                          minWidth: 34,
+                          borderRadius: 6,
+                          border: "1px solid #d0d0d0",
+                          backgroundColor:
+                            formData.homeScreen[section].secondary_color ||
+                            "#ffffff",
+                          cursor: "pointer",
+                        }}
+                      />
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="#RRGGBB"
+                        value={formData.homeScreen[section].secondary_color}
+                        onChange={(e) =>
+                          handleHomeScreenColor(
+                            section,
+                            "secondary_color",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Popover
+            open={Boolean(anchorEl)}
+            anchorEl={anchorEl}
+            onClose={closePicker}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
+          >
+            <SketchPicker
+              color={
+                formData.homeScreen[selectedColor.section]?.[
+                  selectedColor.type
+                ] || "#ffffff"
+              }
+              onChangeComplete={(color) =>
+                handleHomeScreenColor(
+                  selectedColor.section,
+                  selectedColor.type,
+                  color.hex,
+                )
+              }
+            />
+          </Popover>
+
+          <Paper
+            elevation={2}
+            style={{
+              padding: "16px",
+              marginTop: 16,
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: "1 1 220px" }}>
+              <Typography
+                variant="subtitle1"
+                style={{ fontWeight: 600, marginBottom: 10 }}
+              >
+                All Category Image
+              </Typography>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleHomeScreenImage}
+              />
+            </div>
+
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                minWidth: 100,
+                borderRadius: 8,
+                border: "1px dashed #ccc",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              {homeScreenPreview ? (
+                <img
+                  src={homeScreenPreview}
+                  alt="All category preview"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : formData.homeScreen.allCategoryImage ? (
+                <img
+                  src={`${process.env.REACT_APP_IMAGE_LINK}${formData.homeScreen.allCategoryImage}`}
+                  alt="All category"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <Typography variant="caption" style={{ color: "#999" }}>
+                  No image
+                </Typography>
+              )}
+            </div>
+          </Paper>
+        </div>
+      </div>
+      {/* -------------- end Home Screen -------------- */}
+
       <div className="store-container">
         <div className="store-header">Payment Gateway</div>
         <div className="store-form">
@@ -621,7 +948,9 @@ function Setting() {
               <label>Enable Payment Gateway</label>
               <Switch
                 checked={formData.PaymentGatewayStatus}
-                onChange={(e) => handleInputChange("PaymentGatewayStatus", e.target.checked)}
+                onChange={(e) =>
+                  handleInputChange("PaymentGatewayStatus", e.target.checked)
+                }
               />
             </div>
           </div>
@@ -633,13 +962,26 @@ function Setting() {
                 value={formData.activeGateway}
                 onChange={(e) => handleGatewayChange(e.target.value)}
               >
-                <FormControlLabel value="Razorpay" control={<Radio />} label="Razorpay" />
-                <FormControlLabel value="PhonePe" control={<Radio />} label="PhonePe" />
-                <FormControlLabel value="None" control={<Radio />} label="None" />
+                <FormControlLabel
+                  value="Razorpay"
+                  control={<Radio />}
+                  label="Razorpay"
+                />
+                <FormControlLabel
+                  value="PhonePe"
+                  control={<Radio />}
+                  label="PhonePe"
+                />
+                <FormControlLabel
+                  value="None"
+                  control={<Radio />}
+                  label="None"
+                />
               </RadioGroup>
             </FormControl>
           </div>
-          {(formData.activeGateway === "Razorpay" || formData.activeGateway === "PhonePe") && (
+          {(formData.activeGateway === "Razorpay" ||
+            formData.activeGateway === "PhonePe") && (
             <div className="store-row">
               <FormControl component="fieldset">
                 <FormLabel component="legend">Select Mode</FormLabel>
@@ -648,8 +990,16 @@ function Setting() {
                   value={formData.activeMode}
                   onChange={(e) => handleModeChange(e.target.value)}
                 >
-                  <FormControlLabel value="test" control={<Radio />} label="Test" />
-                  <FormControlLabel value="live" control={<Radio />} label="Live" />
+                  <FormControlLabel
+                    value="test"
+                    control={<Radio />}
+                    label="Test"
+                  />
+                  <FormControlLabel
+                    value="live"
+                    control={<Radio />}
+                    label="Live"
+                  />
                 </RadioGroup>
               </FormControl>
             </div>
@@ -670,8 +1020,10 @@ function Setting() {
                     }
                     onChange={(e) =>
                       handleInputChange(
-                        formData.activeMode === "test" ? "RazorPayKey_test" : "RazorPayKey_live",
-                        e.target.value
+                        formData.activeMode === "test"
+                          ? "RazorPayKey_test"
+                          : "RazorPayKey_live",
+                        e.target.value,
                       )
                     }
                   />
@@ -685,7 +1037,9 @@ function Setting() {
                   <input
                     type="text"
                     value={formData.RazorPayKey_secret}
-                    onChange={(e) => handleInputChange("RazorPayKey_secret", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("RazorPayKey_secret", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -695,16 +1049,22 @@ function Setting() {
             <>
               <div className="store-row">
                 <div className="store-input">
-                  <label>{`PhonePe ${formData.activeMode === "test" ? "Test" : "Live"} Key`}</label>
+                  <label>{`PhonePe ${
+                    formData.activeMode === "test" ? "Test" : "Live"
+                  } Key`}</label>
                   <input
                     type="text"
                     value={
-                      formData.activeMode === "test" ? formData.PhonePe_test : formData.PhonePe_live
+                      formData.activeMode === "test"
+                        ? formData.PhonePe_test
+                        : formData.PhonePe_live
                     }
                     onChange={(e) =>
                       handleInputChange(
-                        formData.activeMode === "test" ? "PhonePe_test" : "PhonePe_live",
-                        e.target.value
+                        formData.activeMode === "test"
+                          ? "PhonePe_test"
+                          : "PhonePe_live",
+                        e.target.value,
                       )
                     }
                   />
@@ -718,7 +1078,9 @@ function Setting() {
                   <input
                     type="text"
                     value={formData.PhonePe_secret}
-                    onChange={(e) => handleInputChange("PhonePe_secret", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("PhonePe_secret", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -733,7 +1095,11 @@ function Setting() {
           <RadioGroup
             row
             name="mapApiStatus"
-            value={["google", "apple", "ola"].find((p) => formData.Map_Api[p].status) || ""}
+            value={
+              ["google", "apple", "ola"].find(
+                (p) => formData.Map_Api[p].status,
+              ) || ""
+            }
             onChange={(e) => handleMapApiStatusChange(e.target.value)}
           >
             {["google", "apple", "ola"].map((provider) => (
@@ -766,7 +1132,9 @@ function Setting() {
                   type="text"
                   placeholder={`Enter ${provider} API Key`}
                   value={formData.Map_Api[provider].api_key}
-                  onChange={(e) => handleMapApiKeyChange(provider, e.target.value)}
+                  onChange={(e) =>
+                    handleMapApiKeyChange(provider, e.target.value)
+                  }
                   style={{
                     flex: 1,
                     padding: "8px",
@@ -776,7 +1144,13 @@ function Setting() {
                   }}
                 />
                 {formData.Map_Api[provider].status && (
-                  <span style={{ color: "#00c853", fontWeight: 500, marginLeft: 12 }}>
+                  <span
+                    style={{
+                      color: "#00c853",
+                      fontWeight: 500,
+                      marginLeft: 12,
+                    }}
+                  >
                     (Active)
                   </span>
                 )}
@@ -792,10 +1166,20 @@ function Setting() {
           <RadioGroup
             row
             name="authStatus"
-            value={["whatsApp", "bulksms"].find((p) => formData.Auth[0][p].status) || ""}
+            value={
+              ["whatsApp", "bulksms"].find((p) => formData.Auth[0][p].status) ||
+              ""
+            }
             onChange={(e) => handleAuthStatusChange(e.target.value, true)}
           >
-            <div style={{ display: "flex", marginLeft: "50px", gap: "46px", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                marginLeft: "50px",
+                gap: "46px",
+                flexWrap: "wrap",
+              }}
+            >
               {["whatsApp", "bulksms"].map((provider) => (
                 <Paper
                   key={provider}
@@ -822,7 +1206,13 @@ function Setting() {
                     style={{ marginRight: "24px" }}
                   />
                   {formData.Auth[0][provider].status && (
-                    <span style={{ color: "#00c853", fontWeight: 500, marginLeft: 12 }}>
+                    <span
+                      style={{
+                        color: "#00c853",
+                        fontWeight: 500,
+                        marginLeft: 12,
+                      }}
+                    >
                       (Active)
                     </span>
                   )}
@@ -832,7 +1222,14 @@ function Setting() {
           </RadioGroup>
         </div>
       </div>
-      <div style={{ display: "flex", gap: "30px", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "30px",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <Button
           variant="contained"
           style={{
