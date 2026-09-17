@@ -31,6 +31,7 @@ const numericFields = new Set([
   "foodGlobalCommission",
   "ready_in_min",
   "referralAmount",
+  "maxQuantity",
 ]);
 
 const OrderSetting = ({ miniSidenav }) => {
@@ -49,6 +50,7 @@ const OrderSetting = ({ miniSidenav }) => {
     perKmNightCharges: 0,
     minimumOrderCancelTime: 0,
     codLimit: 0,
+    maxQuantity: 0,
     extraTime: 0,
     dayStartTime: "",
     dayEndTime: "",
@@ -87,6 +89,7 @@ const OrderSetting = ({ miniSidenav }) => {
           perKmNightCharges: Number(s.perKmNightCharges ?? 0),
           minimumOrderCancelTime: Number(s.minimumOrderCancelTime ?? 0),
           codLimit: Number(s.codLimit ?? 0),
+          maxQuantity: Number(s.maxQuantity ?? 0),
           extraTime: Number(s.extraTime ?? 0),
           dayStartTime: s.dayStartTime || "",
           dayEndTime: s.dayEndTime || "",
@@ -261,6 +264,19 @@ const OrderSetting = ({ miniSidenav }) => {
                         onChange={handleChange}
                         variant="outlined"
                         helperText="Maximum allowed cash-on-delivery amount"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Maximum Quantity"
+                        name="maxQuantity"
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        fullWidth
+                        value={formData.maxQuantity}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Maximum quantity allowed per product"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6} md={4}>
