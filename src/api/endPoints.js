@@ -5,8 +5,8 @@ export const USE_FIREBASE_API_BASE_URL = true; // Set to true to enable Firebase
 
 // export const DEFAULT_API_BASE_URL = "https://api.fivlia.com";
 // export const DEFAULT_API_BASE_URL = "https://api.fivlia.in";
-export const DEFAULT_API_BASE_URL = "http://localhost:8080";
-// export const DEFAULT_API_BASE_URL = "https://api.fivlia.co.in";
+// export const DEFAULT_API_BASE_URL = "http://localhost:8080";
+export const DEFAULT_API_BASE_URL = "https://api.fivlia.co.in";
 
 export let API_BASE_URL = DEFAULT_API_BASE_URL;
 
