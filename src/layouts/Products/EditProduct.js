@@ -986,6 +986,14 @@ function EditProduct() {
         newVariantPrices[name] = {
           mrp: variant.mrp || "",
           sell_price: variant.sell_price || "",
+          // per-variant shipping weight
+          weight:
+            variant.weight?.value !== undefined &&
+            variant.weight?.value !== null &&
+            variant.weight.value > 0
+              ? variant.weight.value
+              : "",
+          weightUnit: variant.weight?.unit || "kg",
         };
       });
       setVariantPrices(newVariantPrices);
@@ -1277,6 +1285,14 @@ function EditProduct() {
             mrp: parseFloat(prices.mrp) || 0,
             sell_price: parseFloat(prices.sell_price) || 0,
             imageKey: `var${index + 1}`,
+            // Optional per-variant shipping weight
+            ...(prices.weight !== undefined &&
+              prices.weight !== "" && {
+                weight: {
+                  value: parseFloat(prices.weight),
+                  unit: prices.weightUnit === "g" ? "g" : "kg",
+                },
+              }),
             ...(item.attributeName.toLowerCase() === "color" &&
             colorHexCodes[item.variantName]
               ? { hexCode: colorHexCodes[item.variantName] }
@@ -1284,6 +1300,18 @@ function EditProduct() {
           };
         })
         .filter(Boolean);
+
+      const badWeightVariant = variants.find(
+        (v) => v.weight && !(v.weight.value > 0),
+      );
+      if (badWeightVariant) {
+        showAlert(
+          "error",
+          `Weight for variant "${badWeightVariant.variantValue}" must be greater than 0.`,
+        );
+        return null;
+      }
+
       if (variants.length > 0) {
         formData.append("variants", JSON.stringify(variants));
       }
@@ -2241,6 +2269,7 @@ function EditProduct() {
                   </div>
                 )}
               </div>
+
             </div>
           </div>
 
@@ -2693,6 +2722,51 @@ function EditProduct() {
                         )
                       }
                     />
+
+                    <label style={{ fontSize: "14px", marginTop: "10px", display: "block" }}>
+                      Product Weight (for shipping)
+                    </label>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                      }}
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 0.5"
+                        className="input-field"
+                        value={variantPrices[item.variantName]?.weight ?? ""}
+                        style={{ flex: 2 }}
+                        onChange={(e) =>
+                          handlePriceChange(
+                            item.variantName,
+                            "weight",
+                            e.target.value,
+                          )
+                        }
+                      />
+                      <select
+                        className="input-field"
+                        value={variantPrices[item.variantName]?.weightUnit || "kg"}
+                        style={{ flex: 1 }}
+                        onChange={(e) =>
+                          handlePriceChange(
+                            item.variantName,
+                            "weightUnit",
+                            e.target.value,
+                          )
+                        }
+                      >
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                      </select>
+                    </div>
+                    <span style={{ display: "block", fontSize: "12px", color: "#888" }}>
+                      Optional. Used for all-India / long-distance delivery cost calculation.
+                    </span>
 
                     <input
                       type="file"

@@ -35,6 +35,7 @@ function AddStore() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [serviceScope, setServiceScope] = useState("city"); // "city" | "global"
   const [markerPosition, setMarkerPosition] = useState({
     lat: 29.1492,
     lng: 75.7217,
@@ -80,7 +81,10 @@ function AddStore() {
       setPhone(storedetails.store.PhoneNumber);
       setEmail(storedetails.store.email || "");
       setPassword(storedetails.store.password);
-      setSelectedCity(storedetails.store.city?._id);
+      setSelectedCity(storedetails.store.city?._id || "");
+      setServiceScope(
+        storedetails.store.serviceScope === "global" ? "global" : "city",
+      );
       setSelectedZone(zoneIds);
       setLatitude(storedetails.store.Latitude);
       setLongitude(storedetails.store.Longitude);
@@ -186,6 +190,36 @@ function AddStore() {
     }
   };
 
+  // Manual latitude / longitude entry (fallback when the map cannot be used)
+  const COORD_PATTERN = /^-?\d*\.?\d*$/;
+
+  const isValidCoordinates = (lat, lng) => {
+    const la = parseFloat(lat);
+    const ln = parseFloat(lng);
+    return (
+      Number.isFinite(la) &&
+      Number.isFinite(ln) &&
+      Math.abs(la) <= 90 &&
+      Math.abs(ln) <= 180
+    );
+  };
+
+  const handleLatitudeInput = (value) => {
+    if (!COORD_PATTERN.test(value)) return;
+    setLatitude(value);
+    if (isValidCoordinates(value, longitude)) {
+      setMarkerPosition({ lat: parseFloat(value), lng: parseFloat(longitude) });
+    }
+  };
+
+  const handleLongitudeInput = (value) => {
+    if (!COORD_PATTERN.test(value)) return;
+    setLongitude(value);
+    if (isValidCoordinates(latitude, value)) {
+      setMarkerPosition({ lat: parseFloat(latitude), lng: parseFloat(value) });
+    }
+  };
+
   const handleSwitchChange = (event) => {
     setIsAuthorized(event.target.checked);
   };
@@ -236,11 +270,17 @@ function AddStore() {
       !ownerName ||
       !phone ||
       !email ||
-      !latitude ||
-      !longitude ||
-      !selectedCity
+      (serviceScope === "city" && (!latitude || !longitude || !selectedCity))
     ) {
       showAlert("warning", "Please fill all required fields");
+      return;
+    }
+
+    if (serviceScope === "city" && !isValidCoordinates(latitude, longitude)) {
+      showAlert(
+        "warning",
+        "Please enter a valid latitude (-90 to 90) and longitude (-180 to 180)",
+      );
       return;
     }
 
@@ -252,7 +292,7 @@ function AddStore() {
       return;
     }
 
-    if (selectedZone.length === 0) {
+    if (serviceScope === "city" && selectedZone.length === 0) {
       showAlert("warning", "Please select at least one zone");
       return;
     }
@@ -265,11 +305,16 @@ function AddStore() {
       formData.append("PhoneNumber", phone);
       formData.append("email", email);
       formData.append("password", password);
-      formData.append("city", selectedCity);
+      formData.append("serviceScope", serviceScope);
+      if (serviceScope === "city") {
+        formData.append("city", selectedCity);
+        formData.append("zone", JSON.stringify(selectedZone));
+      }
       formData.append("typeId", typeId);
-      formData.append("zone", JSON.stringify(selectedZone));
-      formData.append("Latitude", latitude);
-      formData.append("Longitude", longitude);
+      if (serviceScope === "city") {
+        formData.append("Latitude", latitude);
+        formData.append("Longitude", longitude);
+      }
       formData.append("Description", des);
       formData.append("isAuthorized", isAuthorized);
       formData.append("isAssured", isAssured);
@@ -462,113 +507,153 @@ function AddStore() {
 
           <div className="store-row">
             <div className="store-input">
-              <label>Select City</label>
+              <label>Service Area</label>
               <select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
+                value={serviceScope}
+                onChange={(e) => setServiceScope(e.target.value)}
               >
-                <option value="">---Select City---</option>
-                {cities.length > 0 ? (
-                  cities.map((city) => (
-                    <option key={city._id} value={city._id}>
-                      {city.city}
-                    </option>
-                  ))
-                ) : (
-                  <option disabled>Loading cities...</option>
-                )}
+                <option value="city">City Wise</option>
+                <option value="global">Global / All India</option>
               </select>
             </div>
-            <div className="store-input">
-              <label>Select Zone</label>
-              <select
-                value=""
-                onChange={handleZoneChange}
-                style={{ width: "100%", padding: "8px" }}
-              >
-                <option value="">---Select Zone---</option>
-                {availableZones.length > 0 ? (
-                  availableZones.map((zone) => (
-                    <option key={zone._id} value={zone._id}>
-                      {zone.zoneTitle || zone.address || "Unnamed Zone"}
-                    </option>
-                  ))
-                ) : (
-                  <option disabled>
-                    {selectedCity
-                      ? "No zones available for this city"
-                      : "Select a city first"}
-                  </option>
-                )}
-              </select>
-              {selectedZone.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "10px",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                  }}
+          </div>
+
+          {serviceScope === "city" ? (
+            <div className="store-row">
+              <div className="store-input">
+                <label>Select City</label>
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
                 >
-                  {selectedZone.map((zoneId) => {
-                    const zone = availableZones.find((z) => z._id === zoneId);
-                    if (!zone) return null;
-                    return (
-                      <span
-                        key={zone._id}
-                        style={{
-                          backgroundColor: "#e0e0e0",
-                          padding: "5px 10px",
-                          borderRadius: "15px",
-                          display: "flex",
-                          alignItems: "center",
-                          fontSize: "14px",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => handleRemoveZone(zone._id)}
-                      >
-                        {zone
-                          ? zone.zoneTitle || zone.address || "Unnamed Zone"
-                          : zoneId}
+                  <option value="">---Select City---</option>
+                  {cities.length > 0 ? (
+                    cities.map((city) => (
+                      <option key={city._id} value={city._id}>
+                        {city.city}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Loading cities...</option>
+                  )}
+                </select>
+              </div>
+              <div className="store-input">
+                <label>Select Zone</label>
+                <select
+                  value=""
+                  onChange={handleZoneChange}
+                  style={{ width: "100%", padding: "8px" }}
+                >
+                  <option value="">---Select Zone---</option>
+                  {availableZones.length > 0 ? (
+                    availableZones.map((zone) => (
+                      <option key={zone._id} value={zone._id}>
+                        {zone.zoneTitle || zone.address || "Unnamed Zone"}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>
+                      {selectedCity
+                        ? "No zones available for this city"
+                        : "Select a city first"}
+                    </option>
+                  )}
+                </select>
+                {selectedZone.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                    }}
+                  >
+                    {selectedZone.map((zoneId) => {
+                      const zone = availableZones.find((z) => z._id === zoneId);
+                      if (!zone) return null;
+                      return (
                         <span
+                          key={zone._id}
                           style={{
-                            marginLeft: "5px",
-                            color: "#ff0000",
-                            fontWeight: "bold",
+                            backgroundColor: "#e0e0e0",
+                            padding: "5px 10px",
+                            borderRadius: "15px",
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "14px",
+                            cursor: "pointer",
                           }}
+                          onClick={() => handleRemoveZone(zone._id)}
                         >
-                          ×
+                          {zone
+                            ? zone.zoneTitle || zone.address || "Unnamed Zone"
+                            : zoneId}
+                          <span
+                            style={{
+                              marginLeft: "5px",
+                              color: "#ff0000",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            ×
+                          </span>
                         </span>
-                      </span>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="store-row">
+              <div className="store-input" style={{ flex: "1 1 100%" }}>
+                <p style={{ margin: 0, color: "#555" }}>
+                  This store will be available to customers across all India.
+                  City, zone and map location are not required.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {serviceScope === "city" && (
+            <>
+              <div className="store-row">
+                <div className="store-input">
+                  <label>Latitude</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Click on map or enter e.g. 28.6139"
+                    value={latitude}
+                    onChange={(e) => handleLatitudeInput(e.target.value)}
+                  />
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="store-input">
+                  <label>Longitude</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Click on map or enter e.g. 77.2090"
+                    value={longitude}
+                    onChange={(e) => handleLongitudeInput(e.target.value)}
+                  />
+                </div>
+              </div>
 
-          <div className="store-row">
-            <div className="store-input">
-              <label>Latitude</label>
-              <input type="text" value={latitude} readOnly />
-            </div>
-            <div className="store-input">
-              <label>Longitude</label>
-              <input type="text" value={longitude} readOnly />
-            </div>
-          </div>
-
-          <div style={{ height: "400px", width: "100%" }}>
-            <AdaptiveMap
-              center={markerPosition}
-              zoom={13}
-              onClick={handleMapClick}
-              radiusMeters={range * 1000}
-            >
-              <Marker position={markerPosition} />
-              <Circle center={markerPosition} radius={range * 1000} />
-            </AdaptiveMap>
-          </div>
+              <div style={{ height: "400px", width: "100%" }}>
+                <AdaptiveMap
+                  center={markerPosition}
+                  zoom={13}
+                  onClick={handleMapClick}
+                  radiusMeters={range * 1000}
+                >
+                  <Marker position={markerPosition} />
+                  <Circle center={markerPosition} radius={range * 1000} />
+                </AdaptiveMap>
+              </div>
+            </>
+          )}
 
           <div className="store-row">
             <div className="store-input" style={{ flex: "1 1 100%" }}>

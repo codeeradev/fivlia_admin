@@ -222,8 +222,10 @@ function SellerTable() {
     }
 
     if (selectedCity !== "") {
-      filtered = filtered.filter(
-        (s) => s.city?.name?.toLowerCase() === selectedCity.toLowerCase(),
+      filtered = filtered.filter((s) =>
+        selectedCity === "__global__"
+          ? s.serviceScope === "global"
+          : s.city?.name?.toLowerCase() === selectedCity.toLowerCase(),
       );
     }
 
@@ -390,6 +392,7 @@ function SellerTable() {
                   style={{ height: "45px" }}
                 >
                   <MenuItem value="">All Cities</MenuItem>
+                  <MenuItem value="__global__">Global (All India)</MenuItem>
                   {cityOptions.map((city) => (
                     <MenuItem key={city} value={city}>
                       {city}
@@ -598,8 +601,16 @@ function SellerTable() {
                         </div>
                       </td>
 
-                      <td style={bodyCell}>{store.city?.name || "N/A"}</td>
-                      <td style={bodyCell}>{store.zone?.length || 0}</td>
+                      <td style={bodyCell}>
+                        {store.serviceScope === "global"
+                          ? "Global (All India)"
+                          : store.city?.name || "N/A"}
+                      </td>
+                      <td style={bodyCell}>
+                        {store.serviceScope === "global"
+                          ? "All"
+                          : store.zone?.length || 0}
+                      </td>
                       <td style={bodyCell}>{store.Category?.length || 0}</td>
 
                       <td style={{ ...bodyCell, textAlign: "center" }}>

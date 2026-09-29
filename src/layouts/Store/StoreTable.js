@@ -83,7 +83,12 @@ function StoreTabel() {
       const matchesSearch =
         store.storeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         store.ownerName?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCity = selectedCity ? store.city?.name === selectedCity : true;
+      const matchesCity =
+        selectedCity === "__global__"
+          ? store.serviceScope === "global"
+          : selectedCity
+            ? store.city?.name === selectedCity
+            : true;
       const matchesStatus = statusFilter === "" ? true : store.status?.toString() === statusFilter;
       return matchesSearch && matchesCity && matchesStatus;
     });
@@ -251,6 +256,7 @@ function StoreTabel() {
                 }}
               >
                 <option value="">🏙️ All Cities</option>
+                <option value="__global__">🌐 Global (All India)</option>
                 {cityOptions.map((city) => (
                   <option key={city} value={city}>
                     {city}
@@ -374,9 +380,17 @@ function StoreTabel() {
                         <strong>{store.ownerName || "N/A"}</strong>
                       </div>
                     </td>
-                    <td style={bodyCell}>{store.city?.name || "N/A"}</td>
+                    <td style={bodyCell}>
+                      {store.serviceScope === "global" ? (
+                        <Chip label="Global (All India)" size="small" color="success" />
+                      ) : (
+                        store.city?.name || "N/A"
+                      )}
+                    </td>
                     <td style={{ ...bodyCell, width: 140 }}>
-                      {store.zone && store.zone.length > 0 ? (
+                      {store.serviceScope === "global" ? (
+                        "All India"
+                      ) : store.zone && store.zone.length > 0 ? (
                         <>
                           {store.zone.slice(0, 2).map((z) => (
                             <Chip

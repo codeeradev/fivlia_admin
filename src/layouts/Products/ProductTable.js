@@ -423,6 +423,8 @@ function ProductTable() {
         "Description",
         "Mrp",
         "Price",
+        "Weight",
+        "Weight Unit (kg/g)",
         taxInfo.header,
         "Feature Product (0 = false, 1 = true)",
         "Category (CAT = (Main Category Id), SUB = (Sub Category Id), SUBB = (Sub Sub Category Id))",
@@ -438,6 +440,8 @@ function ProductTable() {
         "Deluxe burger",
         "150",
         "120",
+        "0.50",
+        "kg",
         "5",
         "1",
         "CAT01",
@@ -894,6 +898,7 @@ function ProductTable() {
                 <th style={{ ...headerCell, width: "130px" }}>City</th>
                 <th style={headerCell}>Zone</th>
                 <th style={headerCell}>Price</th>
+                <th style={{ ...headerCell, minWidth: 170 }}>Variant Weight</th>
                 <th style={headerCell}>Tax</th>
                 <th style={headerCell}>Categories</th>
                 <th style={headerCell}>Public</th>
@@ -1071,6 +1076,66 @@ function ProductTable() {
                         </Popover>
                       </td>
                       <td style={bodyCell}>
+                        {(() => {
+                          const fmt = (w) =>
+                            w && Number(w.value) > 0
+                              ? `${w.value} ${w.unit || "kg"}`
+                              : null;
+                          // Older products may still carry a product-level weight
+                          const fallbackWeight = fmt(item.weight);
+
+                          if (!item.variants?.length) {
+                            return fallbackWeight || <span>N/A</span>;
+                          }
+
+                          const rows = item.variants.map((variant) => ({
+                            label: variant.variantValue || variant.attributeName,
+                            text: fmt(variant.weight) || fallbackWeight || "N/A",
+                            own: Boolean(fmt(variant.weight)),
+                          }));
+                          const allText = rows
+                            .map((r) => `${r.label}: ${r.text}`)
+                            .join("\n");
+
+                          return (
+                            <Tooltip
+                              title={
+                                <span style={{ whiteSpace: "pre-line" }}>
+                                  {allText}
+                                </span>
+                              }
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                  gap: 4,
+                                }}
+                              >
+                                {rows.slice(0, 2).map((r, idx) => (
+                                  <Chip
+                                    key={idx}
+                                    label={`${r.label} - ${r.text}`}
+                                    size="small"
+                                    style={{
+                                      backgroundColor: r.own ? "#e8eaf6" : "#f5f5f5",
+                                      color: r.own ? "#3949ab" : "#757575",
+                                      fontSize: 10,
+                                    }}
+                                  />
+                                ))}
+                                {rows.length > 2 && (
+                                  <span style={{ fontSize: 11, color: "#757575" }}>
+                                    +{rows.length - 2} more (hover)
+                                  </span>
+                                )}
+                              </div>
+                            </Tooltip>
+                          );
+                        })()}
+                      </td>
+                      <td style={bodyCell}>
                         {item.variants?.length ? (
                           item.variants.slice(0, 2).map((variant, idx) => {
                             const taxPercent = parseFloat(item.tax) || 0;
@@ -1152,7 +1217,7 @@ function ProductTable() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="9" style={{ ...bodyCell, textAlign: "center" }}>
+                  <td colSpan="12" style={{ ...bodyCell, textAlign: "center" }}>
                     No products found
                   </td>
                 </tr>
@@ -1320,6 +1385,12 @@ function ProductTable() {
               <li>
                 <b>Price</b> — Number
               </li>
+              <li>
+                <b>Weight</b> — Number, optional (defaults to 0). Used for delivery cost calculation, e.g. all-India shipping.
+              </li>
+              <li>
+                <b>Weight Unit</b> — "kg" or "g" (defaults to kg if left blank)
+              </li>
 
               <li>
                 <b>IsVeg</b> —
@@ -1355,7 +1426,7 @@ function ProductTable() {
             }}
           >
             <code style={{ color: "#8d6e63" }}>
-              Burger,1,CAT01,BRD01,https://image.com/burger.jpg,No Return, Deluxe burger,150,120,2
+              Burger,1,CAT01,BRD01,https://image.com/burger.jpg,No Return, Deluxe burger,150,120,0.50,kg,2
             </code>
           </div>
 
