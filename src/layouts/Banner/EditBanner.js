@@ -31,12 +31,14 @@ function EditBanner() {
   const [selectedCityId, setSelectedCityId] = useState([]);
   const [typeId, setTypeId] = useState("");
   const [bannerTypes, setBannerTypes] = useState([]);
+  const [isGlobal, setIsGlobal] = useState(false);
   // Load initial data from location.state and fetch locations & categories
   useEffect(() => {
     const data = location.state;
     if (data) {
       setId(data._id);
       setName(data.title);
+      setIsGlobal(data.isGlobal === true);
       setSelectedCityId(Array.isArray(data.city) ? data.city.map((c) => c._id) : [data.city?._id]);
       if (Array.isArray(data.zones)) {
         setZones(
@@ -231,7 +233,7 @@ function EditBanner() {
 
   // Handle banner save
   const handleBanner = async () => {
-    if (!name || !type || !selectedCityId || zones.length === 0) {
+    if (!name || !type || (!isGlobal && (selectedCityId.length === 0 || zones.length === 0))) {
       showAlert("error", "Please fill all required fields.");
       return;
     }
@@ -251,7 +253,8 @@ function EditBanner() {
 
     const formData = new FormData();
     formData.append("title", name);
-    formData.append("city", JSON.stringify(selectedCityId));
+    formData.append("isGlobal", isGlobal ? "true" : "false");
+    if (!isGlobal) formData.append("city", JSON.stringify(selectedCityId));
     formData.append("typeId", typeId);
     formData.append("type", type);
     formData.append("type2", type);
@@ -267,7 +270,7 @@ function EditBanner() {
       if (subsubId) formData.append("subSubCategory", subsubId);
     }
     formData.append("storeId", storeId || "");
-    zones.forEach((zone, index) => {
+    (isGlobal ? [] : zones).forEach((zone, index) => {
       formData.append(`zones[${index}][address]`, zone.address);
       formData.append(`zones[${index}][latitude]`, zone.latitude);
       formData.append(`zones[${index}][longitude]`, zone.longitude);
@@ -361,7 +364,30 @@ function EditBanner() {
           </div>
         </div>
 
+        {/* Banner Coverage */}
+        <div style={formRowStyle}>
+          <label style={labelStyle}>Banner Coverage</label>
+          <select
+            style={inputStyle}
+            value={isGlobal ? "global" : "city"}
+            onChange={(e) => setIsGlobal(e.target.value === "global")}
+          >
+            <option value="city">City / Zone</option>
+            <option value="global">All India (Global)</option>
+          </select>
+        </div>
+
+        {isGlobal && (
+          <div style={formRowStyle}>
+            <label style={labelStyle}>Coverage</label>
+            <span style={{ width: "50%", color: "gray" }}>
+              This banner is shown to all users across India, including users outside every city and zone.
+            </span>
+          </div>
+        )}
+
         {/* City */}
+        {!isGlobal && (
         <div style={formRowStyle}>
           <label style={labelStyle}>City</label>
           <select
@@ -382,9 +408,10 @@ function EditBanner() {
             ))}
           </select>
         </div>
+        )}
 
         {/* Display Selected Zones */}
-        {selectedCityId && (
+        {!isGlobal && selectedCityId && (
           <div style={formRowStyle}>
             <label style={labelStyle}>Selected Zones</label>
             <div style={{ width: "50%", marginRight: "20px" }}>

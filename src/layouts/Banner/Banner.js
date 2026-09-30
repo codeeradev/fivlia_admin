@@ -236,7 +236,9 @@ function BannerManagement() {
                     <td style={bodyCell}>{getBannerTypeName(item.typeId)}</td>
                     <td style={bodyCell}>{item.type}</td>
                     <td style={bodyCell}>
-                      {Array.isArray(item.city)
+                      {item.isGlobal
+                        ? "All India"
+                        : Array.isArray(item.city)
                         ? item.city.map((c) => c.name).join(", ")
                         : item.city?.name || "N/A"}
                     </td>

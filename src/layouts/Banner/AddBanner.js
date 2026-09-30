@@ -32,6 +32,7 @@ function AddBanner() {
   const [bannerType, setBannerType] = useState("normal");
   const [typeId, setTypeId] = useState("");
   const [bannerTypes, setBannerTypes] = useState([]);
+  const [isGlobal, setIsGlobal] = useState(false);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -171,12 +172,17 @@ function AddBanner() {
   };
 
   const handleBanner = async () => {
-    if (!name || !imageFile || !selectedCityId || zones.length === 0) {
-      showAlert("error", "Please fill all required fields");
-      return;
-    }
+    // Show the real image problem first (size / dimensions) instead of a generic message
     if (imageError) {
       showAlert("error", imageError);
+      return;
+    }
+    if (!imageFile) {
+      showAlert("error", "Please select a banner image");
+      return;
+    }
+    if (!name || (!isGlobal && (selectedCityId.length === 0 || zones.length === 0))) {
+      showAlert("error", "Please fill all required fields");
       return;
     }
     if (!typeId) {
@@ -188,7 +194,8 @@ function AddBanner() {
     formData.append("title", name);
     formData.append("type", bannerType);
     formData.append("typeId", typeId);
-    formData.append("city", JSON.stringify(selectedCityId));
+    formData.append("isGlobal", isGlobal ? "true" : "false");
+    if (!isGlobal) formData.append("city", JSON.stringify(selectedCityId));
     formData.append("image", imageFile);
     formData.append("type2", type ? type : "NO");
 
@@ -211,7 +218,7 @@ function AddBanner() {
       formData.append("subSubCategory", subsubId);
     }
 
-    formData.append("zones", JSON.stringify(zones));
+    if (!isGlobal) formData.append("zones", JSON.stringify(zones));
 
     try {
       showAlert("loading", "Saving banner...");
@@ -324,7 +331,30 @@ function AddBanner() {
           </select>
         </div>
 
+        {/* Banner Coverage */}
+        <div style={formRowStyle}>
+          <label style={labelStyle}>Banner Coverage</label>
+          <select
+            style={inputStyle}
+            value={isGlobal ? "global" : "city"}
+            onChange={(e) => setIsGlobal(e.target.value === "global")}
+          >
+            <option value="city">City / Zone</option>
+            <option value="global">All India (Global)</option>
+          </select>
+        </div>
+
+        {isGlobal && (
+          <div style={formRowStyle}>
+            <label style={labelStyle}>Coverage</label>
+            <span style={{ width: "50%", color: "gray" }}>
+              This banner is shown to all users across India, including users outside every city and zone.
+            </span>
+          </div>
+        )}
+
         {/* City */}
+        {!isGlobal && (
         <div style={formRowStyle}>
           <label style={labelStyle}>City</label>
           <select
@@ -349,9 +379,10 @@ function AddBanner() {
             ))}
           </select>
         </div>
+        )}
 
         {/* Display Selected Zones */}
-        {selectedCity && (
+        {!isGlobal && selectedCity && (
           <div style={formRowStyle}>
             <label style={labelStyle}>Selected Zones</label>
             <div style={{ width: "50%", marginRight: "20px" }}>
