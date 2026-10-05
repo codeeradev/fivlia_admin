@@ -15,6 +15,10 @@ import { showAlert } from "components/commonFunction/alertsLoader";
 import { getAllZones } from "components/commonApi/commonApi";
 import { get, put } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
+import ShipOrderDialog, {
+  canShipOrder,
+  canEditTracking,
+} from "components/ShipOrderDialog";
 
 const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [controller] = useMaterialUIController();
@@ -49,6 +53,21 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [activeTab, setActiveTab] = useState("all"); // all | temp
   const [tempOrders, setTempOrders] = useState([]);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
+  const [shipTarget, setShipTarget] = useState(null);
+
+  const handleShipSuccess = (id, o) => {
+    if (!o) return;
+    setOrders((prev) =>
+      prev.map((x) =>
+        x._id === id ? { ...x, orderStatus: o.orderStatus, shipping: o.shipping } : x,
+      ),
+    );
+    setSelectedOrder((prev) =>
+      prev?._id === id
+        ? { ...prev, orderStatus: o.orderStatus, shipping: o.shipping }
+        : prev,
+    );
+  };
 
   const restrictedStatuses = [
     "Going to Pickup",
@@ -1256,6 +1275,17 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                                 ))}
                               </select>
                             )}
+                            {activeTab !== "temp" &&
+                              (canShipOrder(order) || canEditTracking(order)) && (
+                                <button
+                                  type="button"
+                                  className="modal-button"
+                                  style={{ marginTop: 6, padding: "4px 10px", fontSize: 12 }}
+                                  onClick={() => setShipTarget(order)}
+                                >
+                                  {canEditTracking(order) ? "Edit Tracking" : "Ship Order"}
+                                </button>
+                              )}
                           </td>
 
                           <td className="body-cell">
@@ -1446,6 +1476,31 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                 >
                   <strong>Status:</strong> {selectedOrder.orderStatus || ""}
                 </div>
+                {selectedOrder.serviceScope === "global" &&
+                  selectedOrder.shipping?.trackingId && (
+                    <div style={{ marginBottom: "16px", fontSize: "14px" }}>
+                      <strong>Shipping:</strong>{" "}
+                      {selectedOrder.shipping.courierName || "-"} | Tracking ID:{" "}
+                      {selectedOrder.shipping.trackingId}
+                      {selectedOrder.shipping.expectedDeliveryDate
+                        ? ` | Expected: ${String(
+                            selectedOrder.shipping.expectedDeliveryDate,
+                          ).slice(0, 10)}`
+                        : ""}
+                      {selectedOrder.shipping.trackingUrl && (
+                        <>
+                          {" "}
+                          <a
+                            href={selectedOrder.shipping.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Track
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  )}
                 <div style={{ marginBottom: "16px" }}>
                   <span
                     className={`order-type-badge ${
@@ -1949,6 +2004,12 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
             </div>
           </div>
         </Modal>
+        <ShipOrderDialog
+          open={Boolean(shipTarget)}
+          order={shipTarget}
+          onClose={() => setShipTarget(null)}
+          onSuccess={handleShipSuccess}
+        />
       </MDBox>
     </>
   );

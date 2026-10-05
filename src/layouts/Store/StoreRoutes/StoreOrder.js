@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import MDBox from "components/MDBox";
 import { useMaterialUIController } from "context";
+import ShipOrderDialog, {
+  canShipOrder,
+  canEditTracking,
+} from "components/ShipOrderDialog";
 import {
   Modal,
   Box,
@@ -281,6 +285,16 @@ function StoreOrder({ isDashboard = false }) {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
+  const [shipTarget, setShipTarget] = useState(null);
+
+  const handleShipSuccess = (id, o) => {
+    if (!o) return;
+    setOrders((prev) =>
+      prev.map((x) =>
+        x._id === id ? { ...x, orderStatus: o.orderStatus, shipping: o.shipping } : x,
+      ),
+    );
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -652,6 +666,15 @@ const handleDownloadInvoice = async (orderId) => {
                             >
                               Edit
                             </Button>
+                            {(canShipOrder(order) || canEditTracking(order)) && (
+                              <Button
+                                className="edit-button"
+                                style={{ marginTop: 6 }}
+                                onClick={() => setShipTarget(order)}
+                              >
+                                {canEditTracking(order) ? "Edit Tracking" : "Ship Order"}
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -911,6 +934,12 @@ const handleDownloadInvoice = async (orderId) => {
           </Box>
         </Box>
       </Modal>
+      <ShipOrderDialog
+        open={Boolean(shipTarget)}
+        order={shipTarget}
+        onClose={() => setShipTarget(null)}
+        onSuccess={handleShipSuccess}
+      />
     </>
   );
 }

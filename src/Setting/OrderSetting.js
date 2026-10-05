@@ -7,6 +7,8 @@ import {
   Button,
   CircularProgress,
   Divider,
+  Switch,
+  FormControlLabel,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
@@ -29,6 +31,9 @@ const numericFields = new Set([
   "codLimit",
   "extraTime",
   "foodGlobalCommission",
+  "globalShippingCharge",
+  "globalDeliveryDaysMin",
+  "globalDeliveryDaysMax",
   "ready_in_min",
   "referralAmount",
   "maxQuantity",
@@ -59,7 +64,11 @@ const OrderSetting = ({ miniSidenav }) => {
     zoneTimeZone: "Asia/Kolkata",
     ready_in_min: 0,
     foodGlobalCommission: 0,
+    globalShippingCharge: 0,
+    globalDeliveryDaysMin: 3,
+    globalDeliveryDaysMax: 5,
     referralAmount: 0,
+    shippingPlatforms: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -98,7 +107,17 @@ const OrderSetting = ({ miniSidenav }) => {
           zoneTimeZone: s.zoneTimeZone || "Asia/Kolkata",
           ready_in_min: Number(s.ready_in_min ?? 0),
           foodGlobalCommission: Number(s.foodGlobalCommission ?? 0),
+          globalShippingCharge: Number(s.globalShippingCharge ?? 0),
+          globalDeliveryDaysMin: Number(s.globalDeliveryDaysMin ?? 3),
+          globalDeliveryDaysMax: Number(s.globalDeliveryDaysMax ?? 5),
           referralAmount: Number(s.referralAmount ?? 0),
+          shippingPlatforms: Array.isArray(s.shippingPlatforms)
+            ? s.shippingPlatforms.map((p) => ({
+                name: p.name || "",
+                trackingUrlTemplate: p.trackingUrlTemplate || "",
+                status: p.status !== false,
+              }))
+            : [],
         });
         showAlert("info", "", 1);
       } else {
@@ -122,6 +141,33 @@ const OrderSetting = ({ miniSidenav }) => {
     }));
   };
 
+  // Shipping platforms (third party couriers for global orders)
+  const updatePlatform = (index, key, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      shippingPlatforms: prev.shippingPlatforms.map((p, i) =>
+        i === index ? { ...p, [key]: value } : p,
+      ),
+    }));
+  };
+
+  const addPlatform = () => {
+    setFormData((prev) => ({
+      ...prev,
+      shippingPlatforms: [
+        ...prev.shippingPlatforms,
+        { name: "", trackingUrlTemplate: "", status: true },
+      ],
+    }));
+  };
+
+  const removePlatform = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      shippingPlatforms: prev.shippingPlatforms.filter((_, i) => i !== index),
+    }));
+  };
+
   const sectionWrapperSx = {
     border: "1px solid",
     borderColor: "divider",
@@ -133,6 +179,25 @@ const OrderSetting = ({ miniSidenav }) => {
   // Submit updated settings
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const seen = new Set();
+    for (const p of formData.shippingPlatforms) {
+      const name = String(p.name || "").trim();
+      const tpl = String(p.trackingUrlTemplate || "").trim();
+      if (!name) {
+        showAlert("error", "Each shipping platform needs a name");
+        return;
+      }
+      if (seen.has(name.toLowerCase())) {
+        showAlert("error", `Duplicate shipping platform: ${name}`);
+        return;
+      }
+      seen.add(name.toLowerCase());
+      if (tpl && !tpl.includes("{trackingId}")) {
+        showAlert("error", `Tracking link of ${name} must contain {trackingId}`);
+        return;
+      }
+    }
+
     setSaving(true);
     showAlert("loading", "Saving settings...");
 
@@ -306,6 +371,129 @@ const OrderSetting = ({ miniSidenav }) => {
                       />
                     </Grid>
                   </Grid>
+                </MDBox>
+              </Grid>
+
+              <Grid item xs={12}>
+                <MDBox sx={sectionWrapperSx}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Global (All India) Delivery
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Flat shipping for global store orders (delivered by a third party). No platform
+                    fee or delivery GST is added on these orders.
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Global Delivery Charge"
+                        name="globalShippingCharge"
+                        type="number"
+                        inputProps={{ min: 0 }}
+                        fullWidth
+                        value={formData.globalShippingCharge}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Flat charge added to every global store order"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Delivery Days (Min)"
+                        name="globalDeliveryDaysMin"
+                        type="number"
+                        inputProps={{ min: 0, step: 1 }}
+                        fullWidth
+                        value={formData.globalDeliveryDaysMin}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Shown to the customer, e.g. 3"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={4}>
+                      <TextField
+                        label="Delivery Days (Max)"
+                        name="globalDeliveryDaysMax"
+                        type="number"
+                        inputProps={{ min: 0, step: 1 }}
+                        fullWidth
+                        value={formData.globalDeliveryDaysMax}
+                        onChange={handleChange}
+                        variant="outlined"
+                        helperText="Must be greater than or equal to Min, e.g. 5"
+                      />
+                    </Grid>
+                  </Grid>
+                </MDBox>
+              </Grid>
+
+              <Grid item xs={12}>
+                <MDBox sx={sectionWrapperSx}>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Shipping Platforms (Global Orders)
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Third party couriers used to ship global orders. The tracking link must
+                    contain {"{trackingId}"}, e.g.
+                    https://www.delhivery.com/track/package/{"{trackingId}"}
+                  </Typography>
+                  {formData.shippingPlatforms.map((p, index) => (
+                    <Grid container spacing={2} key={index} alignItems="center" mb={1}>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          label="Platform Name"
+                          fullWidth
+                          value={p.name}
+                          onChange={(e) => updatePlatform(index, "name", e.target.value)}
+                          variant="outlined"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={5}>
+                        <TextField
+                          label="Tracking Link Template"
+                          fullWidth
+                          value={p.trackingUrlTemplate}
+                          onChange={(e) =>
+                            updatePlatform(index, "trackingUrlTemplate", e.target.value)
+                          }
+                          variant="outlined"
+                          placeholder="https://courier.com/track/{trackingId}"
+                        />
+                      </Grid>
+                      <Grid item xs={6} sm={1.5}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={p.status !== false}
+                              onChange={(e) =>
+                                updatePlatform(index, "status", e.target.checked)
+                              }
+                            />
+                          }
+                          label="Active"
+                        />
+                      </Grid>
+                      <Grid item xs={6} sm={1.5}>
+                        <Button
+                          onClick={() => removePlatform(index)}
+                          sx={{ color: "#d32f2f !important", fontWeight: 700 }}
+                        >
+                          Remove
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  ))}
+                  <Button
+                    variant="outlined"
+                    onClick={addPlatform}
+                    sx={{
+                      color: "#1A73E8 !important",
+                      borderColor: "#1A73E8",
+                      fontWeight: 700,
+                    }}
+                  >
+                    + Add Platform
+                  </Button>
                 </MDBox>
               </Grid>
 

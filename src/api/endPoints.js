@@ -3,10 +3,10 @@ import { doc, getDoc } from "firebase/firestore";
 
 export const USE_FIREBASE_API_BASE_URL = true; // Set to true to enable Firebase-based API base URL
 
-export const DEFAULT_API_BASE_URL = "https://api.fivlia.com";
+// export const DEFAULT_API_BASE_URL = "https://api.fivlia.com";
 // export const DEFAULT_API_BASE_URL = "https://api.fivlia.in";
 // export const DEFAULT_API_BASE_URL = "http://localhost:8080";
-// export const DEFAULT_API_BASE_URL = "https://api.fivlia.co.in";
+export const DEFAULT_API_BASE_URL = "https://api.fivlia.co.in";
 
 export let API_BASE_URL = DEFAULT_API_BASE_URL;
 
@@ -147,6 +147,8 @@ export const ENDPOINTS = {
   GET_STORE: "/getStore",
   GET_DELIVERY_STATUS: "/getdeliveryStatus",
   UPDATE_ORDER_STATUS: "/orderStatus",
+  SHIP_ORDER: "/seller/order/ship",
+  UPDATE_TRACKING: "/order/tracking",
   INVOICE: "/thermal-invoice",
   DRIVER_WALLET: "/driverWallet",
 
