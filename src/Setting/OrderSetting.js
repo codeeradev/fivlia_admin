@@ -67,6 +67,7 @@ const OrderSetting = ({ miniSidenav }) => {
     globalShippingCharge: 0,
     globalDeliveryDaysMin: 3,
     globalDeliveryDaysMax: 5,
+    globalCodAllowed: false,
     referralAmount: 0,
     shippingPlatforms: [],
   });
@@ -110,6 +111,7 @@ const OrderSetting = ({ miniSidenav }) => {
           globalShippingCharge: Number(s.globalShippingCharge ?? 0),
           globalDeliveryDaysMin: Number(s.globalDeliveryDaysMin ?? 3),
           globalDeliveryDaysMax: Number(s.globalDeliveryDaysMax ?? 5),
+          globalCodAllowed: s.globalCodAllowed === true,
           referralAmount: Number(s.referralAmount ?? 0),
           shippingPlatforms: Array.isArray(s.shippingPlatforms)
             ? s.shippingPlatforms.map((p) => ({
@@ -422,6 +424,30 @@ const OrderSetting = ({ miniSidenav }) => {
                         variant="outlined"
                         helperText="Must be greater than or equal to Min, e.g. 5"
                       />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={formData.globalCodAllowed === true}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                globalCodAllowed: e.target.checked,
+                              }))
+                            }
+                          />
+                        }
+                        label="Allow Cash on Delivery (COD) for Global orders"
+                      />
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ ml: 4.5 }}
+                      >
+                        When ON, customers can choose COD on Global (All India) store
+                        orders, in any location. When OFF, only online payment is allowed.
+                      </Typography>
                     </Grid>
                   </Grid>
                 </MDBox>
