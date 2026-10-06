@@ -8,24 +8,23 @@ import {
   MenuItem,
   Button,
   Typography,
+  Alert,
 } from "@mui/material";
-import { get, put } from "api/apiClient";
-import { ENDPOINTS } from "api/endPoints";
-import { showAlert } from "components/commonFunction/alertsLoader";
+import { api } from "api/apiClient";
 
 const OTHER = "__other__";
+
+const statusOf = (order) =>
+  String(order?.orderStatus || "").trim().toLowerCase();
 
 export const isGlobalOrder = (order) => order?.serviceScope === "global";
 
 export const canShipOrder = (order) =>
   isGlobalOrder(order) &&
-  ["accepted", "ready", "ready to pickup"].includes(
-    String(order?.orderStatus || "").trim().toLowerCase(),
-  );
+  ["accepted", "ready", "ready to pickup"].includes(statusOf(order));
 
 export const canEditTracking = (order) =>
-  isGlobalOrder(order) &&
-  String(order?.orderStatus || "").trim().toLowerCase() === "shipped";
+  isGlobalOrder(order) && statusOf(order) === "shipped";
 
 const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
   const isUpdate = canEditTracking(order);
@@ -37,8 +36,8 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
   const [expectedDate, setExpectedDate] = useState("");
   const [originalDate, setOriginalDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  // load active platforms + prefill from the order
   useEffect(() => {
     if (!open || !order) return;
     const s = order.shipping || {};
@@ -51,11 +50,12 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
     setTrackingUrl(s.trackingUrl || "");
     setExpectedDate(date);
     setOriginalDate(date);
+    setError("");
 
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await get(ENDPOINTS.GET_SMS_TYPE);
+        const { data } = await api.get("/getSmsType");
         const list = data?.setting?.[0]?.shippingPlatforms || [];
         if (!cancelled) setPlatforms(list.filter((p) => p && p.status !== false));
       } catch (e) {
@@ -75,14 +75,17 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
   });
 
   const handleSubmit = async () => {
+    setError("");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Session expired. Please log out and log in again, then retry.");
+      return;
+    }
+
     const body = {};
     const chosenPlatform = platform && platform !== OTHER ? platform : "";
-
-    if (chosenPlatform) {
-      body.platform = chosenPlatform;
-    } else if (courierName.trim()) {
-      body.courierName = courierName.trim();
-    }
+    if (chosenPlatform) body.platform = chosenPlatform;
+    else if (courierName.trim()) body.courierName = courierName.trim();
     if (trackingId.trim()) body.trackingId = trackingId.trim();
     if (!chosenPlatform && trackingUrl.trim()) {
       body.trackingUrl = trackingUrl.trim();
@@ -93,33 +96,32 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
 
     if (!isUpdate) {
       if (!body.platform && !body.courierName) {
-        return showAlert("error", "Select a shipping platform or enter courier name");
+        return setError("Select a shipping platform or enter courier name");
       }
-      if (!body.trackingId) return showAlert("error", "Tracking ID is required");
+      if (!body.trackingId) return setError("Tracking ID is required");
       if (!body.expectedDeliveryDate) {
-        return showAlert("error", "Expected delivery date is required");
+        return setError("Expected delivery date is required");
       }
     } else if (!Object.keys(body).length) {
-      return showAlert("error", "Nothing to update");
+      return setError("Nothing to update");
     }
 
     setSaving(true);
     try {
       const url = isUpdate
-        ? `${ENDPOINTS.UPDATE_TRACKING}/${order._id}`
-        : `${ENDPOINTS.SHIP_ORDER}/${order._id}`;
-      const res = await put(url, body);
-      showAlert(
-        "success",
-        isUpdate ? "Tracking updated" : "Order marked as shipped",
-      );
+        ? `/order/tracking/${order._id}`
+        : `/seller/order/ship/${order._id}`;
+      const res = await api.put(url, body, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (onSuccess) onSuccess(order._id, res.data.order);
       onClose();
     } catch (err) {
-      showAlert(
-        "error",
-        err?.response?.data?.message || "Failed to save shipping details",
-      );
+      if (err?.response?.status === 401) {
+        setError("Session expired. Please log out and log in again, then retry.");
+      } else {
+        setError(err?.response?.data?.message || "Failed to save shipping details");
+      }
     } finally {
       setSaving(false);
     }
@@ -131,6 +133,12 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
         {isUpdate ? "Edit Tracking" : "Ship Order"} #{order.orderId}
       </DialogTitle>
       <DialogContent dividers>
+        {error && (
+          <Alert severity="error" sx={{ mb: 1 }}>
+            {error}
+          </Alert>
+        )}
+
         {platforms.length > 0 && (
           <TextField
             select
@@ -139,7 +147,6 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
             label="Shipping Platform"
             value={platform || ""}
             onChange={(e) => setPlatform(e.target.value)}
-            sx={{ "& .MuiInputBase-root": { height: 44 } }}
           >
             {platforms.map((p) => (
               <MenuItem key={p.name} value={p.name}>
@@ -184,10 +191,12 @@ const ShipOrderDialog = ({ open, order, onClose, onSuccess }) => {
           margin="dense"
           type="date"
           label="Expected Delivery Date"
-          InputLabelProps={{ shrink: true }}
-          inputProps={{ min: isUpdate ? undefined : today }}
           value={expectedDate}
           onChange={(e) => setExpectedDate(e.target.value)}
+          slotProps={{
+            inputLabel: { shrink: true },
+            htmlInput: { min: isUpdate ? undefined : today },
+          }}
         />
 
         {platform && platform !== OTHER && (

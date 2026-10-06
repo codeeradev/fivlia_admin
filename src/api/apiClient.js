@@ -143,4 +143,20 @@ export const patch = (endpoint, data, config = {}) => {
   return apiClient.patch(endpoint, data, finalConfig);
 };
 
+
+// Named export used as `api.get / api.put` (axios instance)
+export const api = apiClient;
+
+// Fetch-style helper (returns a native fetch Response) with auth header
+export const apiFetch = (endpoint, options = {}) => {
+  const token = getToken();
+  return fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+};
+
 export default apiClient;

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { apiFetch } from "api/apiClient";
 import MDBox from "components/MDBox";
-import { useMaterialUIController } from "context";
 import ShipOrderDialog, {
   canShipOrder,
   canEditTracking,
 } from "components/ShipOrderDialog";
+import { useMaterialUIController } from "context";
 import {
   Modal,
   Box,
@@ -294,6 +295,11 @@ function StoreOrder({ isDashboard = false }) {
         x._id === id ? { ...x, orderStatus: o.orderStatus, shipping: o.shipping } : x,
       ),
     );
+    setSelectedOrder((prev) =>
+      prev?._id === id
+        ? { ...prev, orderStatus: o.orderStatus, shipping: o.shipping }
+        : prev,
+    );
   };
 
   useEffect(() => {
@@ -305,7 +311,7 @@ function StoreOrder({ isDashboard = false }) {
           return setError("Store ID missing");
         }
 
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/orders?storeId=${storeId}`);
+        const res = await apiFetch(`/orders?storeId=${storeId}`);
         const data = await res.json();
         if (data.orders && Array.isArray(data.orders)) {
           setOrders(data.orders);
@@ -324,7 +330,7 @@ function StoreOrder({ isDashboard = false }) {
 
     const fetchDrivers = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/getDriver`);
+        const res = await apiFetch("/getDriver");
         const data = await res.json();
         if (data.Driver && Array.isArray(data.Driver)) {
           setDrivers(data.Driver);
@@ -340,7 +346,7 @@ function StoreOrder({ isDashboard = false }) {
 
     const fetchDeliveryStatuses = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/getdeliveryStatus`);
+        const res = await apiFetch("/getdeliveryStatus");
         const data = await res.json();
         if (data.Status && Array.isArray(data.Status)) {
           setDeliveryStatuses(data.Status);
@@ -456,7 +462,7 @@ function StoreOrder({ isDashboard = false }) {
 // Function to download invoice PDF
 const handleDownloadInvoice = async (orderId) => {
  try {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/thermal-invoice/${orderId}`, {
+    const res = await apiFetch(`/thermal-invoice/${orderId}`, {
       method: "GET", // Or POST, depending on route
     });
 
@@ -476,7 +482,6 @@ const handleDownloadInvoice = async (orderId) => {
     console.error("Error downloading invoice:", err);
   }
 };
-
 
   const openEditModal = (order) => {
     setSelectedOrder(order);
@@ -504,7 +509,7 @@ const handleDownloadInvoice = async (orderId) => {
       const statusInfo = deliveryStatuses.find(s => s.statusCode === newStatus);
       const statusTitle = statusInfo ? statusInfo.statusTitle : newStatus;
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/orderStatus/${selectedOrder._id}`, {
+      const res = await apiFetch(`/orderStatus/${selectedOrder._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: statusTitle }),
@@ -732,6 +737,31 @@ const handleDownloadInvoice = async (orderId) => {
                 <div style={{ marginBottom: "16px", fontSize: "14px", color: "#344767" }}>
                   <strong>Status:</strong> {selectedOrder.orderStatus || ""}
                 </div>
+                {selectedOrder.serviceScope === "global" &&
+                  selectedOrder.shipping?.trackingId && (
+                    <div style={{ marginBottom: "16px", fontSize: "14px", color: "#344767" }}>
+                      <strong>Shipping:</strong>{" "}
+                      {selectedOrder.shipping.courierName || "-"} | Tracking ID:{" "}
+                      {selectedOrder.shipping.trackingId}
+                      {selectedOrder.shipping.expectedDeliveryDate
+                        ? ` | Expected: ${String(
+                            selectedOrder.shipping.expectedDeliveryDate,
+                          ).slice(0, 10)}`
+                        : ""}
+                      {selectedOrder.shipping.trackingUrl && (
+                        <>
+                          {" "}
+                          <a
+                            href={selectedOrder.shipping.trackingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Track
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  )}
                 <div className="modal-table-container">
                   <table className="modal-table">
                     <thead>
