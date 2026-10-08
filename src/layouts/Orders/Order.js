@@ -275,9 +275,13 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
     return options;
   };
 
+  // Global-store orders are delivered by a third-party courier: no driver involved
+  const isGlobalOrder = (order) => order?.serviceScope === "global";
+
   const handleStatusChange = (orderId, newStatus) => {
     const order = orders.find((o) => o._id === orderId);
     if (
+      !isGlobalOrder(order) &&
       restrictedStatuses.includes(newStatus) &&
       !order.driver?.driverId &&
       !order.driverId
@@ -1211,6 +1215,11 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             </span>
                           </td>
                           <td className="body-cell">
+                            {isGlobalOrder(order) ? (
+                              <span style={{ color: "#7b809a", fontSize: 13 }}>
+                                Courier (3rd party)
+                              </span>
+                            ) : (
                             <select
                               className="driver-select"
                               value={
@@ -1236,9 +1245,12 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                                 </option>
                               ))}
                             </select>
+                            )}
                           </td>
                           <td className="body-cell store-cell">
-                            {order.storeId?.storeName
+                            {order.storeId?.storeName && isGlobalOrder(order)
+                              ? `${order.storeId.storeName} (Global)`
+                              : order.storeId?.storeName
                               ? `${order.storeId.storeName} (${
                                   store?.zones.map((z) => z.title).join(", ") ||
                                   "Unknown"
