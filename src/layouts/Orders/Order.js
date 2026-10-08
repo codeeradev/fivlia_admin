@@ -56,6 +56,8 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [tempOrders, setTempOrders] = useState([]);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [shipTarget, setShipTarget] = useState(null);
+  // status title when the popup is opened for global "In Processing" (courier only)
+  const [processingTitle, setProcessingTitle] = useState("");
 
   const handleShipSuccess = (id, o) => {
     if (!o) return;
@@ -280,6 +282,30 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
 
   const handleStatusChange = (orderId, newStatus) => {
     const order = orders.find((o) => o._id === orderId);
+    // Global orders: "In Processing" asks for the courier first
+    if (
+      isGlobalOrder(order) &&
+      ["in processing", "inprocessing", "processing"].includes(
+        String(newStatus || "").trim().toLowerCase(),
+      )
+    ) {
+      setProcessingTitle(newStatus);
+      setShipTarget(order);
+      return;
+    }
+    // Global orders: "Shipped" needs courier (Order Settings) + tracking id
+    if (
+      isGlobalOrder(order) &&
+      String(newStatus || "").trim().toLowerCase() === "shipped"
+    ) {
+      if (canShipOrder(order) || canEditTracking(order)) {
+        setProcessingTitle("");
+        setShipTarget(order);
+      } else {
+        showAlert("error", "Accept the order before shipping it");
+      }
+      return;
+    }
     if (
       !isGlobalOrder(order) &&
       restrictedStatuses.includes(newStatus) &&
@@ -2049,7 +2075,12 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
         <ShipOrderDialog
           open={Boolean(shipTarget)}
           order={shipTarget}
-          onClose={() => setShipTarget(null)}
+          processingStatus={processingTitle}
+          actorType="admin"
+          onClose={() => {
+            setShipTarget(null);
+            setProcessingTitle("");
+          }}
           onSuccess={handleShipSuccess}
         />
       </MDBox>

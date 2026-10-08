@@ -287,6 +287,8 @@ function StoreOrder({ isDashboard = false }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [shipTarget, setShipTarget] = useState(null);
+  // status title when the popup is opened for global "In Processing" (courier only)
+  const [processingTitle, setProcessingTitle] = useState("");
 
   const handleShipSuccess = (id, o) => {
     if (!o) return;
@@ -520,6 +522,36 @@ const handleDownloadInvoice = async (orderId) => {
       // Get the status title for the selected status code
       const statusInfo = deliveryStatuses.find(s => s.statusCode === newStatus);
       const statusTitle = statusInfo ? statusInfo.statusTitle : newStatus;
+
+      // Global orders: "In Processing" asks for the courier first
+      if (
+        selectedOrder.serviceScope === "global" &&
+        ["in processing", "inprocessing", "processing"].includes(
+          String(statusTitle || "").trim().toLowerCase(),
+        )
+      ) {
+        const target = selectedOrder;
+        closeModal();
+        setProcessingTitle(statusTitle);
+        setShipTarget(target);
+        return;
+      }
+
+      // Global orders: "Shipped" needs courier (Order Settings) + tracking id
+      if (
+        selectedOrder.serviceScope === "global" &&
+        String(statusTitle || "").trim().toLowerCase() === "shipped"
+      ) {
+        const target = selectedOrder;
+        closeModal();
+        if (canShipOrder(target) || canEditTracking(target)) {
+          setProcessingTitle("");
+          setShipTarget(target);
+        } else {
+          alert("Accept the order before shipping it");
+        }
+        return;
+      }
 
       const res = await apiFetch(`/orderStatus/${selectedOrder._id}`, {
         method: "PUT",
@@ -979,7 +1011,11 @@ const handleDownloadInvoice = async (orderId) => {
       <ShipOrderDialog
         open={Boolean(shipTarget)}
         order={shipTarget}
-        onClose={() => setShipTarget(null)}
+        processingStatus={processingTitle}
+        onClose={() => {
+          setShipTarget(null);
+          setProcessingTitle("");
+        }}
         onSuccess={handleShipSuccess}
       />
     </>
