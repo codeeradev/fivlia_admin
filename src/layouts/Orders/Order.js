@@ -31,6 +31,8 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   const [variants, setVariants] = useState({});
   const [drivers, setDrivers] = useState([]);
   const [deliveryStatuses, setDeliveryStatuses] = useState([]);
+  // [{ title, scope }] used to show only statuses valid for each order type
+  const [statusDefs, setStatusDefs] = useState([]);
   const [entriesToShow, setEntriesToShow] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -183,6 +185,15 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
           .sort();
 
         setDeliveryStatuses(unique);
+        setStatusDefs(
+          statusesData.Status
+            .map((s) => ({
+              title: (s.statusTitle || "").trim(),
+              scope: s.serviceScope || "both",
+            }))
+            .filter((s) => s.title)
+            .map((s) => ({ ...s, title: s.title[0].toUpperCase() + s.title.slice(1) })),
+        );
       }
 
       showAlert("success", "Orders loaded");
@@ -243,6 +254,25 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
         return 0;
       }),
     );
+  };
+
+  // Statuses selectable for an order: matches its type (global / zone-based).
+  // Falls back to the full list if nothing is configured; always keeps the
+  // order's current status so the dropdown never shows blank.
+  const getStatusOptions = (order) => {
+    const type = order?.serviceScope === "global" ? "global" : "city";
+    let options = statusDefs.length
+      ? [
+          ...new Set(
+            statusDefs
+              .filter((d) => d.scope === "both" || d.scope === type)
+              .map((d) => d.title),
+          ),
+        ].sort()
+      : deliveryStatuses;
+    const current = order?.orderStatus;
+    if (current && !options.includes(current)) options = [current, ...options];
+    return options;
   };
 
   const handleStatusChange = (orderId, newStatus) => {
@@ -1268,7 +1298,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                                   statusUpdating || !deliveryStatuses.length
                                 }
                               >
-                                {deliveryStatuses.map((status) => (
+                                {getStatusOptions(order).map((status) => (
                                   <option key={status} value={status}>
                                     {status}
                                   </option>

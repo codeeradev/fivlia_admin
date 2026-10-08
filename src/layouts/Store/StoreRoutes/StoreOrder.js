@@ -426,6 +426,18 @@ function StoreOrder({ isDashboard = false }) {
     }
   };
 
+  // Only statuses valid for the order type (zone-based / global); always keep the current one
+  const getStatusOptionsFor = (order) => {
+    const type = order?.serviceScope === "global" ? "global" : "city";
+    const list = deliveryStatuses.filter(
+      (s) => !s.serviceScope || s.serviceScope === "both" || s.serviceScope === type
+    );
+    const current = deliveryStatuses.find(
+      (s) => s.statusCode === order?.orderStatus || s.statusTitle === order?.orderStatus
+    );
+    return current && !list.includes(current) ? [current, ...list] : list;
+  };
+
   const getStatusInfo = (status) => {
     if (!status) return { title: "-", image: null };
     
@@ -924,7 +936,7 @@ const handleDownloadInvoice = async (orderId) => {
               <MenuItem value="" disabled>
                 <em>Select Status</em>
               </MenuItem>
-              {deliveryStatuses.map((status) => (
+              {getStatusOptionsFor(selectedOrder).map((status) => (
                 <MenuItem key={status._id} value={status.statusCode}>
                   <div className="status-menu-item">
                     <img

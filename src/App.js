@@ -68,6 +68,7 @@ import DeliveryStatus from "layouts/DeliveryStatus/DeliveryStatus";
 import Orders from "layouts/Orders/Order";
 import BulkOrders from "layouts/bulkOrders/bulkOrders";
 import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
+import ReturnOrders from "layouts/Orders/ReturnOrders";
 import StoreCategories from "layouts/Store/StoreRoutes/Categories";
 import Stock from "layouts/Store/StoreRoutes/Stock";
 import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
@@ -379,6 +380,7 @@ export default function App() {
                     <Route path="/stock" element={<Stock />} />
                     <Route path="/addstorecat" element={<AddStoreCat />} />
                     <Route path="/store-orders" element={<StoreOrder />} />
+                    <Route path="/store-returns" element={<ReturnOrders />} />
                     <Route path="/storeTransaction" element={<StoreTransaction />} />
                   </Route>
                 </Routes>

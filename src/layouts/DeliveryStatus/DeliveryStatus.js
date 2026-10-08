@@ -10,10 +10,18 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  MenuItem,
 } from "@mui/material";
 import { get, post, put } from "api/apiClient";
 import { ENDPOINTS } from "api/endPoints";
 import { showAlert } from "components/commonFunction/alertsLoader";
+
+const SCOPE_OPTIONS = [
+  { value: "both", label: "Both (Zone-based + Global)" },
+  { value: "city", label: "Zone-based (Local) only" },
+  { value: "global", label: "Global only" },
+];
+const scopeLabel = (v) => (SCOPE_OPTIONS.find((o) => o.value === v) || SCOPE_OPTIONS[0]).label;
 
 export default function StatusManagement() {
   const [controller] = useMaterialUIController();
@@ -31,6 +39,8 @@ export default function StatusManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [editImage, setEditImage] = useState(null);
+  const [newScope, setNewScope] = useState("both");
+  const [scopeFilter, setScopeFilter] = useState("all");
 
   const headerCell = {
     padding: "14px 12px",
@@ -65,6 +75,7 @@ export default function StatusManagement() {
             statusTitle: s.statusTitle || "",
             isActive: s.status || false,
             image: s.image || "",
+            serviceScope: s.serviceScope || "both",
           }))
         );
 
@@ -107,6 +118,7 @@ export default function StatusManagement() {
       formData.append("statusCode", newStatusCode);
       formData.append("statusTitle", newStatusTitle);
       formData.append("status", "true");
+      formData.append("serviceScope", newScope);
       if (newImage) formData.append("image", newImage);
 
       const res = await post(ENDPOINTS.DELIVERY_STATUS, formData);
@@ -120,6 +132,7 @@ export default function StatusManagement() {
           statusTitle: newStatusTitle,
           isActive: true,
           image: data.newStatus.image || "",
+          serviceScope: data.newStatus.serviceScope || newScope,
         },
       ]);
 
@@ -127,6 +140,7 @@ export default function StatusManagement() {
       setNewStatusCode("");
       setNewStatusTitle("");
       setNewImage(null);
+      setNewScope("both");
       showAlert("success", "Status added");
     } catch (error) {
       console.error("Add status error:", error);
@@ -138,6 +152,7 @@ export default function StatusManagement() {
     setSelectedStatus(status);
     setNewStatusCode(status.statusCode);
     setNewStatusTitle(status.statusTitle);
+    setNewScope(status.serviceScope || "both");
     setEditImage(null);
     setEditModalOpen(true);
   };
@@ -154,6 +169,7 @@ export default function StatusManagement() {
       formData.append("statusCode", newStatusCode);
       formData.append("statusTitle", newStatusTitle);
       formData.append("status", selectedStatus.isActive);
+      formData.append("serviceScope", newScope);
       if (editImage) formData.append("image", editImage);
 
       const res = await put(`${ENDPOINTS.UPDATE_DELIVERY_STATUS}/${selectedStatus.id}`, formData);
@@ -168,6 +184,7 @@ export default function StatusManagement() {
                 statusCode: newStatusCode,
                 statusTitle: newStatusTitle,
                 image: data.newStatus.image || s.image,
+                serviceScope: data.newStatus.serviceScope || newScope,
               }
             : s
         )
@@ -178,6 +195,7 @@ export default function StatusManagement() {
       setNewStatusCode("");
       setNewStatusTitle("");
       setEditImage(null);
+      setNewScope("both");
       showAlert("success", "Status updated");
     } catch (error) {
       console.error("Update status error:", error);
@@ -205,8 +223,11 @@ export default function StatusManagement() {
 
   const filteredStatuses = statuses.filter(
     (s) =>
-      s.statusCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.statusTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      (s.statusCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.statusTitle.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (scopeFilter === "all" ||
+        s.serviceScope === "both" ||
+        s.serviceScope === scopeFilter)
   );
 
   const totalPages = Math.ceil(filteredStatuses.length / entriesToShow);
@@ -225,7 +246,10 @@ export default function StatusManagement() {
           <Button
             variant="contained"
             ominantColor
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setNewScope("both");
+              setModalOpen(true);
+            }}
             style={{
               backgroundColor: "#007BFF",
               color: "white",
@@ -256,6 +280,26 @@ export default function StatusManagement() {
                   {num}
                 </option>
               ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 17 }}>Order Type </label>
+            <select
+              value={scopeFilter}
+              onChange={(e) => {
+                setScopeFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              style={{
+                fontSize: 16,
+                padding: "6px 10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            >
+              <option value="all">All</option>
+              <option value="city">Zone-based (Local)</option>
+              <option value="global">Global</option>
             </select>
           </div>
           <div style={{ width: "100%" }}>
@@ -295,6 +339,7 @@ export default function StatusManagement() {
               <th style={headerCell}>Image</th>
               <th style={headerCell}>Status Code</th>
               <th style={headerCell}>Status Title</th>
+              <th style={headerCell}>Applies To</th>
               <th style={headerCell}>Status</th>
               <th style={headerCell}>Action</th>
             </tr>
@@ -323,6 +368,7 @@ export default function StatusManagement() {
                   </td>
                   <td style={bodyCell}>{status.statusCode}</td>
                   <td style={bodyCell}>{status.statusTitle}</td>
+                  <td style={bodyCell}>{scopeLabel(status.serviceScope)}</td>
                   <td style={bodyCell}>
                     <Switch
                       checked={status.isActive}
@@ -358,7 +404,7 @@ export default function StatusManagement() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
+                <td colSpan="7" style={{ textAlign: "center", padding: "20px" }}>
                   No statuses found.
                 </td>
               </tr>
@@ -417,6 +463,20 @@ export default function StatusManagement() {
             onChange={(e) => setNewStatusTitle(e.target.value)}
             placeholder="e.g., Pending"
           />
+          <TextField
+            select
+            label="Applies To"
+            fullWidth
+            margin="normal"
+            value={newScope}
+            onChange={(e) => setNewScope(e.target.value)}
+          >
+            {SCOPE_OPTIONS.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <div style={{ marginTop: 16 }}>
             <label style={{ fontSize: 16, fontWeight: "bold" }}>Upload Image</label>
             <input
@@ -457,6 +517,20 @@ export default function StatusManagement() {
             onChange={(e) => setNewStatusTitle(e.target.value)}
             placeholder="e.g., Pending"
           />
+          <TextField
+            select
+            label="Applies To"
+            fullWidth
+            margin="normal"
+            value={newScope}
+            onChange={(e) => setNewScope(e.target.value)}
+          >
+            {SCOPE_OPTIONS.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <div style={{ marginTop: 16 }}>
             <label style={{ fontSize: 16, fontWeight: "bold" }}>Upload Image</label>
             <input

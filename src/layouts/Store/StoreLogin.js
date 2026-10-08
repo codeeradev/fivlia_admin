@@ -40,6 +40,7 @@ function StoreLogin() {
       // Save for future use
       localStorage.setItem("userType", "store");
       localStorage.setItem("storeId", data.storeId);
+      if (data.token) localStorage.setItem("token", data.token);
 
       // Redirect to dashboard
       window.location.href = "/dashboard1";

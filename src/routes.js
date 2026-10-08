@@ -39,6 +39,7 @@ import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
 import Drivers from "layouts/Drivers/Drivers";
 import DeliveryStatus from "layouts/DeliveryStatus/DeliveryStatus";
 import Orders from "layouts/Orders/Order";
+import ReturnOrders from "layouts/Orders/ReturnOrders";
 import BulkOrders from "layouts/bulkOrders/bulkOrders";
 import Notification from "layouts/Notification/Notification";
 import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
@@ -392,6 +393,15 @@ const routes = [
   },
   {
     type: "collapse",
+    name: "Return Requests",
+    key: "return-requests",
+    icon: <Icon fontSize="small">assignment_return</Icon>,
+    permission: "ORDER_VIEW",
+    route: "/return-orders",
+    component: <ReturnOrders />,
+  },
+  {
+    type: "collapse",
     name: "Bulk Orders",
     key: "bulk-orders",
     icon: <Icon fontSize="small">inventory_2</Icon>,
@@ -667,6 +677,14 @@ const StoreRoutes = [
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/store-orders",
     component: <StoreOrder />,
+  },
+  {
+    type: "collapse",
+    name: "Returns",
+    key: "store-returns",
+    icon: <Icon fontSize="small">assignment_return</Icon>,
+    route: "/store-returns",
+    component: <ReturnOrders />,
   },
   {
     type: "collapse",
