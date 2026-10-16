@@ -42,10 +42,10 @@ function StoreCategories() {
       if (!id) return; // Skip if storeId is not available
       setLoading(true); // Set loading to true
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/getStore?id=${id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/getStoreCategories?id=${id}`);
         if (response.status === 200) {
           const result = await response.json();
-          const { store, categories: apiCategories, products } = result;
+          const { categories: apiCategories } = result;
           // Ensure categories is an array
           setMainCategories(Array.isArray(apiCategories) ? apiCategories : []);
         } else {

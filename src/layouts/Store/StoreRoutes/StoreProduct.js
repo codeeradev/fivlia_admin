@@ -162,64 +162,71 @@ function StoreProduct() {
     setStoreId(id);
   }, []);
 
+  // debounce search so we don't hit the API on every keystroke
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [cities, setCities] = useState([]);
+
   useEffect(() => {
-    const getStoreDetails = async () => {
-      if (!storeId) return;
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const transformProducts = (list) =>
+    (list || []).map((product) => ({
+      ...product,
+      location: product.location || [],
+      variants: product.variants || [],
+      category: product.category || [],
+      productThumbnailUrl: product.productImageUrl?.[0] || "",
+    }));
+
+  // Only ONE page of products is loaded from the server (search/city/page are server-side)
+  useEffect(() => {
+    if (!storeId) return;
+    let cancelled = false;
+    const loadPage = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/getStore?id=${storeId}`);
-        if (response.status === 200) {
-          const result = await response.json();
-          const { store, categories, products } = result;
-
-          const transformedProducts = products.map((product) => ({
-            ...product,
-            location: product.location || [],
-            variants: product.variants || [],
-            category: product.category || [],
-            productThumbnailUrl: product.productImageUrl?.[0] || "",
-          }));
-
-          setProducts(transformedProducts);
-          setData(transformedProducts);
-        } else {
+        const params = new URLSearchParams({
+          id: storeId,
+          page: currentPage,
+          limit: entries,
+          search: debouncedSearch,
+          city: selectedCity,
+        });
+        if (currentPage === 1 && cities.length === 0) params.set("withCities", "1");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/getStoreProducts?${params.toString()}`);
+        if (!response.ok) {
           console.error("API Error: Status", response.status);
+          return;
         }
+        const result = await response.json();
+        if (cancelled) return;
+        const list = transformProducts(result.products);
+        setProducts(list);
+        setData(list);
+        setTotalItems(result.total || 0);
+        setTotalPages(result.totalPages || 1);
+        if (result.cities) setCities(result.cities);
       } catch (err) {
         console.error("Fetch Error:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    getStoreDetails();
-  }, [storeId]);
+    loadPage();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, currentPage, entries, debouncedSearch, selectedCity]);
 
-  const filteredProducts = Array.isArray(data)
-    ? data
-        .filter((item) =>
-          selectedCity
-            ? item.location?.some((loc) => loc.city?.[0]?.name === selectedCity)
-            : true
-        )
-        .filter((item) =>
-          Object.values(item).some((val) =>
-            Array.isArray(val)
-              ? val.some((v) =>
-                  typeof v === "object"
-                    ? Object.values(v).some((subVal) =>
-                        String(subVal).toLowerCase().includes(search.toLowerCase())
-                      )
-                    : String(v).toLowerCase().includes(search.toLowerCase())
-                )
-              : String(val).toLowerCase().includes(search.toLowerCase())
-          )
-        )
-    : [];
-
-  const totalItems = filteredProducts.length;
-  const totalPages = Math.ceil(totalItems / entries);
+  // data is already filtered + paginated by the server
+  const filteredProducts = data;
+  const paginatedProducts = data;
   const startIndex = (currentPage - 1) * entries;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + entries);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -247,8 +254,18 @@ function StoreProduct() {
       );
 
   const exportTable = async (format) => {
+    // fetch the full (filtered) list only when exporting
+    const params = new URLSearchParams({
+      id: storeId,
+      limit: 0,
+      search: debouncedSearch,
+      city: selectedCity,
+    });
+    const allRes = await fetch(`${process.env.REACT_APP_API_URL}/getStoreProducts?${params.toString()}`);
+    const allJson = await allRes.json();
+    const allProducts = transformProducts(allJson.products);
     const exportData = await Promise.all(
-      filteredProducts.map(async (item, index) => {
+      allProducts.map(async (item, index) => {
         return {
           "Sr. No": index + 1,
           Product: item.productName,
@@ -422,13 +439,7 @@ function StoreProduct() {
                 }}
               >
                 <option value="">All Cities</option>
-                {Array.from(
-                  new Set(
-                    data.flatMap((p) => p.location?.map((loc) => loc.city?.[0]?.name)).filter(
-                      Boolean
-                    )
-                  )
-                ).map((cityName, idx) => (
+                {cities.map((cityName, idx) => (
                   <option key={idx} value={cityName}>
                     {cityName}
                   </option>

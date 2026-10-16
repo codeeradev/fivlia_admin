@@ -226,93 +226,107 @@ function StockManagement() {
     setStoreId(id);
   }, []);
 
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [popupProducts, setPopupProducts] = useState([]); // out/low stock list (loaded on demand)
+
   useEffect(() => {
-    const getStoreDetails = async () => {
-      if (!storeId) return;
-      setLoading(true);
-      try {
-        // Fetch products
-        const productResponse = await fetch(`${process.env.REACT_APP_API_URL}/getStore?id=${storeId}`);
-        if (productResponse.status !== 200) {
-          console.error("Product API Error: Status", productResponse.status);
-          setError(`Failed to load products: Status ${productResponse.status}`);
-          setLoading(false);
-          return;
-        }
-        const productResult = await productResponse.json();
-        const products = Array.isArray(productResult) ? productResult.flatMap((store) => store.products || []) : productResult.products || [];
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
-        // Fetch stock data
-        const stockResponse = await fetch(`${process.env.REACT_APP_API_URL}/getStock?storeId=${storeId}`);
-        let stockData = [];
-        if (stockResponse.status === 200) {
-          const stockResult = await stockResponse.json();
-          stockData = stockResult.stock || [];
-        } else {
-          console.warn("Stock API Error: Status", stockResponse.status);
-        }
+  const transformProducts = (list) =>
+    (list || []).map((product) => {
+      const inventory = product.inventory || [];
+      const totalStock = inventory.reduce((sum, inv) => sum + (inv.quantity || 0), 0);
+      return {
+        ...product,
+        _id: product._id?.$oid || product._id,
+        inventory,
+        variants: product.variants || [],
+        productThumbnailUrl: product.productImageUrl?.[0] || "",
+        totalStock,
+      };
+    });
 
-        const transformedProducts = products.map((product) => {
-          const productId = product._id.$oid || product._id;
-          const productStock = stockData.filter((s) => (s.productId.$oid || s.productId) === productId);
-          
-          const inventory = (product.inventory || []).map((inv) => {
-            const stockEntry = productStock.find(
-              (s) => (s.variantId.$oid || s.variantId)?.toString() === (inv.variantId.$oid || inv.variantId)?.toString()
-            );
-            return {
-              ...inv,
-              quantity: stockEntry ? stockEntry.quantity : inv.quantity || 0,
-            };
-          });
-          const totalStock = inventory.reduce((sum, inv) => sum + (inv.quantity || 0), 0);
-          return {
-            ...product,
-            _id: productId,
-            inventory,
-            variants: product.variants || [],
-            productThumbnailUrl: product.productImageUrl?.[0] || "",
-            totalStock,
-          };
-        });
-
-        setProducts(transformedProducts);
-        setData(transformedProducts);
-        const outCount = transformedProducts.filter((p) => p.totalStock === 0).length;
-        const lowCount = transformedProducts.filter((p) => p.totalStock > 0 && p.totalStock <= 10).length;
-        setOutOfStockCount(outCount);
-        setLowStockCount(lowCount);
-
-      } catch (err) {
-        console.error("Fetch Error:", err);
-        setError("Failed to load products or stock. Please try again.");
-      } finally {
-        setLoading(false);
+  // counts for the Out of stock / Low stock boxes (tiny request)
+  const loadSummary = async (id = storeId) => {
+    if (!id) return;
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/getStoreStockSummary?id=${id}`);
+      if (res.ok) {
+        const json = await res.json();
+        setOutOfStockCount(json.outOfStock || 0);
+        setLowStockCount(json.lowStock || 0);
       }
-    };
-    getStoreDetails();
+    } catch (err) {
+      console.error("Summary Error:", err);
+    }
+  };
+
+  // ONE page of products (stock is already merged by the server)
+  const loadPage = async () => {
+    if (!storeId) return;
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({
+        id: storeId,
+        page: currentPage,
+        limit: entries,
+        search: debouncedSearch,
+      });
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/getStoreProducts?${params.toString()}`);
+      if (!res.ok) {
+        setError(`Failed to load products: Status ${res.status}`);
+        return;
+      }
+      const result = await res.json();
+      const list = transformProducts(result.products);
+      setProducts(list);
+      setData(list);
+      setTotalItems(result.total || 0);
+      setTotalPages(result.totalPages || 1);
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setError("Failed to load products or stock. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, currentPage, entries, debouncedSearch]);
+
+  useEffect(() => {
+    loadSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId]);
 
-  const filteredProducts = Array.isArray(data)
-    ? data.filter((item) =>
-        Object.values(item).some((val) =>
-          Array.isArray(val)
-            ? val.some((v) =>
-                typeof v === "object"
-                  ? Object.values(v).some((subVal) =>
-                      String(subVal).toLowerCase().includes(search.toLowerCase())
-                    )
-                  : String(v).toLowerCase().includes(search.toLowerCase())
-              )
-            : String(val).toLowerCase().includes(search.toLowerCase())
-        )
-      )
-    : [];
+  // the out/low stock popup needs the full list -> load it only when opened
+  const loadPopupProducts = async (type) => {
+    const params = new URLSearchParams({
+      id: storeId,
+      limit: 0,
+      stockFilter: type === "outOfStock" ? "out" : "low",
+    });
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/getStoreProducts?${params.toString()}`);
+      const json = await res.json();
+      setPopupProducts(transformProducts(json.products));
+    } catch (err) {
+      console.error("Popup load error:", err);
+      setPopupProducts([]);
+    }
+  };
 
-  const totalItems = filteredProducts.length;
-  const totalPages = Math.ceil(totalItems / entries);
+  // data is already filtered + paginated by the server
+  const filteredProducts = data;
+  const paginatedProducts = data;
   const startIndex = (currentPage - 1) * entries;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + entries);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -330,6 +344,7 @@ function StockManagement() {
     setPopoverAnchorEl(event.currentTarget);
     setPopoverType(type);
     setPopoverProductId(productId);
+    if (type === "outOfStock" || type === "lowStock") loadPopupProducts(type);
   };
 
   const handlePopoverClose = () => {
@@ -339,6 +354,7 @@ function StockManagement() {
     setStockUpdates({});
     setPriceUpdates({});
     setMrpUpdates({});
+    setPopupProducts([]);
   };
 
   const handleStockChange = (productId, inventoryId, newValue) => {
@@ -373,9 +389,11 @@ function StockManagement() {
 
   const handleSaveStock = async () => {
     let updatedProducts = [...products];
+    // product may come from the current page OR from the out/low stock popup
+    const lookup = [...products, ...popupProducts];
 
     for (const productId of Object.keys(stockUpdates)) {
-      const product = products.find((p) => p._id === productId);
+      const product = lookup.find((p) => p._id === productId);
       if (!product) {
         console.error(`Product ${productId} not found`);
         continue;
@@ -394,13 +412,13 @@ function StockManagement() {
         return {
           variantId: inv.variantId.$oid || inv.variantId,
           quantity: updatedQty,
-          price: updatedPrice !== undefined ? updatedPrice : (inv.price || 0),
-          mrp: updatedMrp !== undefined ? updatedMrp : (inv.mrp || 0),
+          price: updatedPrice !== undefined ? updatedPrice : (inv.price),
+          mrp: updatedMrp !== undefined ? updatedMrp : (inv.mrp),
         };
       }).filter(Boolean);
 
+
       if (stockPayload.length === 0) {
-        console.log(`No valid stock updates for product`);
         continue;
       }
 
@@ -446,19 +464,15 @@ function StockManagement() {
     setProducts(updatedProducts);
     setData(updatedProducts);
 
-    const outCount = updatedProducts.filter((p) => p.totalStock === 0).length;
-    const lowCount = updatedProducts.filter((p) => p.totalStock > 0 && p.totalStock <= 10).length;
-
-    setOutOfStockCount(outCount);
-    setLowStockCount(lowCount);
+    // counts come from the server (it knows about ALL products, not just this page)
+    loadSummary();
+    loadPage();
 
     handlePopoverClose();
   };
 
-  const popoverProducts = popoverType === "outOfStock"
-    ? filteredProducts.filter((p) => p.totalStock === 0)
-    : popoverType === "lowStock"
-    ? filteredProducts.filter((p) => p.totalStock > 0 && p.totalStock <= 10)
+  const popoverProducts = popoverType === "outOfStock" || popoverType === "lowStock"
+    ? popupProducts
     : popoverType === "editStock"
     ? filteredProducts.filter((p) => p._id === popoverProductId)
     : [];
@@ -611,7 +625,7 @@ function StockManagement() {
                               />
                               <TextField
                                 className="popover-variant-input"
-                                placeholder={`Price: ₹${variant?.sell_price ?? 0}`}
+                                placeholder={`Price: ₹${variant?.sell_price}`}
                                 label="Price"
                                 type="number"
                                 size="small"
@@ -642,11 +656,11 @@ function StockManagement() {
                               />
                               <TextField
                                 className="popover-variant-input"
-                                placeholder={`MRP: ₹${variant?.mrp ?? 0}`}
+                                placeholder={`MRP: ₹${variant?.mrp}`}
                                 label="MRP"
                                 type="number"
                                 size="small"
-                                value={mrpUpdates[product._id]?.[invId] ?? (variant?.mrp ?? 0)}
+                                value={mrpUpdates[product._id]?.[invId] ?? (variant?.mrp)}
                                 onChange={(e) => handleMrpChange(product._id, invId, e.target.value)}
                                 inputProps={{
                                   min: 0,
@@ -717,10 +731,10 @@ function StockManagement() {
                           (inv) => (inv.variantId.$oid || inv.variantId)?.toString() === (variant._id.$oid || variant._id)?.toString()
                         );
                         return {
-                          label: `${variant.attributeName}: ${variant.variantValue} (Stock: ${inv?.quantity || 0}, Price: ₹${variant?.sell_price || 0}, MRP: ₹${variant?.mrp || 0})`,
+                          label: `${variant.attributeName}: ${variant.variantValue} (Stock: ${inv?.quantity || 0}, Price: ₹${variant?.sell_price || 0}, MRP: ₹${variant?.mrp || item.mrp || 0})`,
                           quantity: inv?.quantity || 0,
                           price: variant?.sell_price || 0,
-                          mrp: variant?.mrp || 0,
+                          mrp: variant?.mrp || item.mrp || 0,
                         };
                       });
 
@@ -796,10 +810,10 @@ function StockManagement() {
                     (inv) => (inv.variantId.$oid || inv.variantId)?.toString() === (variant._id.$oid || variant._id)?.toString()
                   );
                   return {
-                    label: `${variant.attributeName}: ${variant.variantValue} (Stock: ${inv?.quantity || 0}, Price: ₹${variant?.sell_price || 0}, MRP: ₹${variant?.mrp || 0})`,
+                    label: `${variant.attributeName}: ${variant.variantValue} (Stock: ${inv?.quantity || 0}, Price: ₹${variant?.sell_price || 0}, MRP: ₹${variant?.mrp || item.mrp || 0})`,
                     quantity: inv?.quantity || 0,
                     price: variant?.sell_price || 0,
-                    mrp: variant?.mrp || 0,
+                    mrp: variant?.mrp || item.mrp || 0,
                   };
                 });
 
@@ -807,7 +821,7 @@ function StockManagement() {
                   <div key={item._id} className="product-card">
                     <div className="product-card-header">
                       <img
-                        src={item.productThumbnailUrl || "https://via.placeholder.com/60"}
+                        src={`${process.env.REACT_APP_IMAGE_LINK}${item.productThumbnailUrl || "https://via.placeholder.com/60"}`}
                         alt={item.productName}
                         style={{
                           width: 50,
