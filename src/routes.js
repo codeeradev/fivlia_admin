@@ -24,7 +24,8 @@ import BrandTable from "layouts/Brand/BrandTable";
 import AttributeTable from "layouts/Attribute/AttributeArray";
 import Tax from "layouts/Attribute/Tax";
 import Stock from "layouts/Store/StoreRoutes/Stock";
-import ProductTable from "layouts/Products/ProductTable";
+// import ProductTable from "layouts/Products/ProductTable";
+import ProductTableNew from "layouts/Products/ProductTableNew";
 import FoodProductTable from "layouts/Products/ProductTable";
 
 import User from "layouts/User/User";
@@ -326,8 +327,17 @@ const routes = [
     icon: <Icon fontSize="small">shopping_bag</Icon>,
     permission: "PRODUCT_VIEW",
     route: "/producttable",
-    component: <ProductTable />,
+    component: <ProductTableNew />,
   },
+  // {
+  //   type: "collapse",
+  //   name: "Products New",
+  //   key: "product-new",
+  //   icon: <Icon fontSize="small">shopping_bag</Icon>,
+  //   permission: "PRODUCT_VIEW",
+  //   route: "/producttable-new",
+  //   component: <ProductTableNew />,
+  // },
 
   {
     type: "collapse",
