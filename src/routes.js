@@ -8,11 +8,7 @@ import FoodCategories from "layouts/foodCategory/foodCategory";
 import BrandTable from "layouts/Brand/BrandTable";
 import AttributeTable from "layouts/Attribute/AttributeArray";
 import Tax from "layouts/Attribute/Tax";
-// REMOVED (store pages now live in the Store app): import Stock from "layouts/Store/StoreRoutes/Stock";
-// import ProductTable from "layouts/Products/ProductTable";
 import ProductTableNew from "layouts/Products/ProductTableNew";
-// import FoodProductTable from "layouts/Products/ProductTable";
-
 import User from "layouts/User/User";
 import SellerTable from "layouts/Store/sellerTable";
 import UnitsTable from "layouts/Attribute/Units";
@@ -28,9 +24,6 @@ import Orders from "layouts/Orders/Order";
 import ReturnOrders from "layouts/Orders/ReturnOrders";
 import BulkOrders from "layouts/bulkOrders/bulkOrders";
 import Notification from "layouts/Notification/Notification";
-// REMOVED (store pages now live in the Store app): import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
-// REMOVED (store pages now live in the Store app): import StoreCategories from "layouts/Store/StoreRoutes/Categories";
-// REMOVED (store pages now live in the Store app): import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
 import Wallet from "layouts/Wallet/Wallet";
 import DriversWithdrawal from "layouts/Withdrawal/driverWithdraw";
 import SellerWithdrawal from "layouts/Withdrawal/sellerWithdraw";
@@ -197,15 +190,6 @@ const routes = [
     route: "/serviceArea",
     component: <Table />,
   },
-  // {
-  //   type: "collapse",
-  //   name: "Categories",
-  //   key: "servicearea",
-  //   icon: <Icon fontSize="small">storefront</Icon>,
-  //   permission: "CATEGORY_VIEW",
-  //   route: "/categories",
-  //   component: <Categories />,
-  // },
   {
   type: "collapse",
   name: "Categories",
@@ -272,21 +256,6 @@ const routes = [
         component: <UnitsTable />,
         icon: <Icon fontSize="small">view_array</Icon>,
       },
-      //   {
-      //   name: "Item-Varients",
-      //   key: "Item-Attributes",
-      //   route: "/varients-table",
-      //   component: <VarientTabel />,
-      //   icon: <Icon fontSize="small">view_array</Icon>,
-      // },
-
-      // {
-      //   name: "Delivery-Status",
-      //   key: "delivery-status",
-      //   route: "/del-status",
-      //   component: <DeliveryStatusDropdown />,
-      //   icon: <Icon fontSize="small">view_array</Icon>,
-      // },
       {
         name: "Tax",
         key: "attribute-tax",
@@ -314,16 +283,6 @@ const routes = [
     route: "/producttable",
     component: <ProductTableNew />,
   },
-  // {
-  //   type: "collapse",
-  //   name: "Products New",
-  //   key: "product-new",
-  //   icon: <Icon fontSize="small">shopping_bag</Icon>,
-  //   permission: "PRODUCT_VIEW",
-  //   route: "/producttable-new",
-  //   component: <ProductTableNew />,
-  // },
-
   {
     type: "collapse",
     name: "Stores",
@@ -349,7 +308,6 @@ const routes = [
       },
     ],
   },
-
   {
     type: "collapse",
     name: "User",
@@ -571,125 +529,7 @@ const routes = [
     key: "log-out",
     icon: <Icon fontSize="small">logout</Icon>,
     route: "#",
-  },
-
-  // {
-  //   type: "collapse",
-  //   name: "UserData",
-  //   key: "userdata",
-  //   icon: <Icon fontSize="small">diversity_3</Icon>,
-  //   route: "/user-data",
-  //   component: <UserData />,
-  // },
-  // {
-  //   type: "collapse",
-  //   name: "Tables",
-  //   key: "tables",
-  //   icon: <Icon fontSize="small">table_view</Icon>,
-  //   route: "/tables",
-  //   component: <Tables />,
-  // },
-  // {
-  //   type: "collapse",
-  //   name: "Billing",
-  //   key: "billing",
-  //   icon: <Icon fontSize="small">receipt_long</Icon>,
-  //   route: "/billing",
-  //   component: <Billing />,
-  // },
-  // {
-  //   type: "collapse",
-  //   name: "RTL",
-  //   key: "rtl",
-  //   icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
-  //   route: "/rtl",
-  //   component: <RTL />,
-  // },
-  // {
-  //   type: "collapse",
-  //   name: "Notifications",
-  //   key: "notifications",
-  //   icon: <Icon fontSize="small">notifications</Icon>,
-  //   route: "/notifications",
-  //   component: <Notifications />,
-  // },
-  // {
-  //   type: "collapse",
-  //   name: "Profile",
-  //   key: "profile",
-  //   icon: <Icon fontSize="small">person</Icon>,
-  //   route: "/profile",
-  //   component: <Profile />,
-  // },
-
-  // {
-  //   type: "collapse",
-  //   name: "Sign Up",
-  //   key: "sign-up",
-  //   icon: <Icon fontSize="small">assignment</Icon>,
-  //   route: "/authentication/sign-up",
-  //   component: <SignUp />,
-  // },
+  }
 ];
 
-/* REMOVED: Admin "store mode" sidebar (replaced by the Store app at https://store.fivlia.com)
-const StoreRoutes = [
-  {
-    type: "collapse",
-    name: "Dashboard",
-    key: "dashboard1",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "/dashboard1",
-    component: <DashBoard />,
-  },
-  {
-    type: "collapse",
-    name: "Categories",
-    key: "categories",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "/storecat",
-    component: <StoreCategories />,
-  },
-  {
-    type: "collapse",
-    name: "Products",
-    key: "products",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "/storeproduct",
-    component: <StoreProduct />,
-  },
-  {
-    type: "collapse",
-    name: "Stock",
-    key: "stock",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "/stock",
-    component: <Stock />,
-  },
-  {
-    type: "collapse",
-    name: "Orders",
-    key: "orders",
-    icon: <Icon fontSize="small">assignment</Icon>,
-    route: "/store-orders",
-    component: <StoreOrder />,
-  },
-  {
-    type: "collapse",
-    name: "Returns",
-    key: "store-returns",
-    icon: <Icon fontSize="small">assignment_return</Icon>,
-    route: "/store-returns",
-    component: <ReturnOrders />,
-  },
-  {
-    type: "collapse",
-    name: "Log-Out",
-    key: "logout",
-    icon: <Icon fontSize="small">logout</Icon>,
-    route: "#",
-  },
-];
-*/
 export default routes;
-// REMOVED: export { StoreRoutes };

@@ -11,19 +11,14 @@ import Configurator from "examples/Configurator";
 import theme from "assets/theme";
 import themeRTL from "assets/theme/theme-rtl";
 import AddServiceArea from "layouts/servicearea/AddServiceArea";
-
 import themeDark from "assets/theme-dark";
 import themeDarkRTL from "assets/theme-dark/theme-rtl";
-
 import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
-
 import routes from "routes";
 // REMOVED: import routes, { StoreRoutes } from "routes";  (StoreRoutes sidebar no longer used)
-
 import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "context";
-
 // Images
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
@@ -49,7 +44,6 @@ import EditSubCat from "layouts/Categories/EditSubCat";
 import EditSubSubCat from "layouts/Categories/EditSubSub";
 import PrivateRoute from "Login/PrivateRoute";
 import LoginPage from "Login/Login";
-import StoreTabel from "layouts/Store/StoreTable";
 import Addtax from "layouts/Attribute/AddTax";
 import EditTax from "layouts/Attribute/EditTax";
 import Editunit from "layouts/Attribute/EditUnit";
@@ -58,22 +52,13 @@ import EditBanner from "layouts/Banner/EditBanner";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import GlobalLoader from "components/loader/GlobalLoader";
-// REMOVED (store pages now live in the Store app): import StoreLogin from "layouts/Store/StoreLogin";
-import Filter from "layouts/Attribute/Filter";
 import AddFilter from "layouts/Attribute/AddFilter";
 import AddDriver from "layouts/Drivers/AddDriver";
 import EditFilter from "layouts/Attribute/EditFilter";
-// REMOVED (store pages now live in the Store app): import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
 import Drivers from "layouts/Drivers/Drivers";
 import DeliveryStatus from "layouts/DeliveryStatus/DeliveryStatus";
 import Orders from "layouts/Orders/Order";
 import BulkOrders from "layouts/bulkOrders/bulkOrders";
-// REMOVED (store pages now live in the Store app): import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
-// REMOVED (store pages now live in the Store app): import ReturnOrders from "layouts/Orders/ReturnOrders";
-// REMOVED (store pages now live in the Store app): import StoreCategories from "layouts/Store/StoreRoutes/Categories";
-// REMOVED (store pages now live in the Store app): import Stock from "layouts/Store/StoreRoutes/Stock";
-// REMOVED (store pages now live in the Store app): import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
-// REMOVED (store pages now live in the Store app): import AddStoreCat from "layouts/Store/StoreRoutes/AddCatStore";
 import AddPageForm from "Setting/addEditPage";
 import AddBlog from "layouts/Blogs/addBlog";
 import StoreTransaction from "layouts/Store/StoreRoutes/storeTransaction";
@@ -81,8 +66,6 @@ import DriverTransaction from "layouts/Drivers/driverTransaction";
 import Sitemap from "layouts/SEO/Sitemap";
 import Schema from "layouts/SEO/Schema";
 import Etc from "layouts/SEO/Etc";
-// import Charities from "layouts/Charity/Charities";
-// import Humanity from "layouts/Charity/Humanity";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -141,16 +124,6 @@ export default function App() {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
-
-  // REMOVED: Admin no longer switches into "store mode"; "Login" opens the Store app instead.
-  // useEffect(() => {
-  //   const userType = localStorage.getItem("userType");
-  //   if (userType === "store") {
-  //     setIsStoreUser(true);
-  //   } else {
-  //     setIsStoreUser(false);
-  //   }
-  // }, []);
 
   const user = JSON.parse(localStorage.getItem("adminUser"));
   const userPermissions = user?.permissions || [];
@@ -262,7 +235,6 @@ export default function App() {
                         <Route path="/edit-banner" element={<EditBanner />} />
                         <Route path="/add-filter" element={<AddFilter />} />
                         <Route path="/edit-filter" element={<EditFilter />} />
-                        {/* REMOVED: <Route path="/store-login" element={<StoreLogin />} /> */}
                         <Route path="/edit-store" element={<AddStore />} />
                         <Route path="/add-blog" element={<AddBlog />} />
                         <Route path="/add-page" element={<AddPageForm />} />
@@ -273,13 +245,6 @@ export default function App() {
                         <Route path="/etc" element={<Etc />} />
                         <Route path="/no-access" element={<NoAccess />} />
                         <Route path="*" element={<Navigate to="/no-access" />} />
-
-                        {/* REMOVED (store pages now live in the Store app):
-                        <Route path="/dashboard1" element={<DashBoard />} />
-                        <Route path="/storecat" element={<StoreCategories />} />
-                        <Route path="/storeproduct" element={<StoreProduct />} />
-                        <Route path="/addstorecat" element={<AddStoreCat />} />
-                        */}
                         {/* KEPT: used by Admin > Store table > Transactions */}
                         <Route path="/storeTransaction" element={<StoreTransaction />} />
                       </Route>
@@ -293,13 +258,6 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
               </Routes>
             )}
-
-            {/* {pathname === "/no-access" && (
-              <Routes>
-                <Route path="/no-access" element={<NoAccess />} />
-              </Routes>
-            )} */}
-
             {layout === "vr" && <Configurator />}
             <ToastContainer position="top-right" autoClose={3000} />
             <GlobalLoader />
@@ -365,7 +323,6 @@ export default function App() {
                     <Route path="/edit-banner" element={<EditBanner />} />
                     <Route path="/add-filter" element={<AddFilter />} />
                     <Route path="/edit-filter" element={<EditFilter />} />
-                    {/* REMOVED: <Route path="/store-login" element={<StoreLogin />} /> */}
                     <Route path="/edit-store" element={<AddStore />} />
                     <Route path="/add-blog" element={<AddBlog />} />
                     <Route path="/add-page" element={<AddPageForm />} />
@@ -375,19 +332,7 @@ export default function App() {
                     <Route path="/etc" element={<Etc />} />
                     <Route path="/driverTransaction" element={<DriverTransaction />} />
                     <Route path="/no-access" element={<NoAccess />} />
-
                     <Route path="*" element={<Navigate to="/no-access" />} />
-
-                    {/* REMOVED (store pages now live in the Store app):
-                    <Route path="/dashboard1" element={<DashBoard />} />
-                    <Route path="/storecat" element={<StoreCategories />} />
-                    <Route path="/storeproduct" element={<StoreProduct />} />
-                    <Route path="/stock" element={<Stock />} />
-                    <Route path="/addstorecat" element={<AddStoreCat />} />
-                    <Route path="/store-orders" element={<StoreOrder />} />
-                    <Route path="/store-returns" element={<ReturnOrders />} />
-                    */}
-                    {/* KEPT: used by Admin > Store table > Transactions */}
                     <Route path="/storeTransaction" element={<StoreTransaction />} />
                   </Route>
                 </Routes>
@@ -399,13 +344,6 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
             </Routes>
           )}
-
-          {/* {pathname === "/no-access" && (
-            <Routes>
-              <Route path="/no-access" element={<NoAccess />} />
-            </Routes>
-          )} */}
-
           {layout === "vr" && <Configurator />}
           <ToastContainer position="top-right" autoClose={3000} />
           <GlobalLoader />
