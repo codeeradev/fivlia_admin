@@ -21,7 +21,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useNavigate } from "react-router-dom";
 import { getCities } from "components/commonApi/commonApi";
-import { put, get } from "api/apiClient";
+import { put, get, post } from "api/apiClient"; // CHANGED: added `post` (used by handleStoreLogin)
 import { ENDPOINTS } from "api/endPoints";
 import { showAlert } from "components/commonFunction/alertsLoader";
 
@@ -143,6 +143,44 @@ function StoreTabel() {
   const handleActionClose = () => {
     setActionAnchorEl(null);
     setActionStore(null);
+  };
+
+  // NEW: "Login" action now opens the live Store app (https://store.fivlia.com) instead of
+  // switching this Admin app into "store mode". Same one-time-key flow as sellerTable.js:
+  //   1) POST /generateKey (type: "admin")  2) redirect to Store app /store-login?t=adm&slr=<id>&k=<key>
+  const handleStoreLogin = async (store) => {
+    try {
+      showAlert("loading", "Generating access key...");
+      const response = await post(
+        ENDPOINTS.GENERATE_KEY,
+        { storeId: store._id, type: "admin" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": process.env.REACT_APP_INTERNAL_API_KEY,
+          },
+        }
+      );
+      const generatedKey = response?.data?.accessKey;
+      if (generatedKey) {
+        showAlert("success", "Access key generated successfully");
+        const storeAppUrl = (process.env.REACT_APP_STORE_URL || "https://store.fivlia.com").replace(
+          /\/+$/,
+          ""
+        );
+        window.location.href = `${storeAppUrl}/store-login?t=adm&slr=${encodeURIComponent(
+          store._id
+        )}&k=${encodeURIComponent(generatedKey)}`;
+      } else {
+        showAlert("error", "Failed to generate access key.");
+      }
+    } catch (error) {
+      console.error("Error generating access key:", error);
+      showAlert(
+        "error",
+        error?.response?.status === 403 ? "Access denied." : "Server error while generating key."
+      );
+    }
   };
 
   const handleStatusToggle = async (storeId, newStatus) => {
@@ -481,9 +519,11 @@ function StoreTabel() {
                         <MenuItem
                           onClick={() => {
                             handleActionClose();
-                            localStorage.setItem("userType", "store");
-                            localStorage.setItem("storeId", store._id);
-                            window.location.href = "/dashboard1";
+                            // REMOVED (old Admin "store mode" login):
+                            // localStorage.setItem("userType", "store");
+                            // localStorage.setItem("storeId", store._id);
+                            // window.location.href = "/dashboard1";
+                            handleStoreLogin(store); // NEW: opens live Store app
                           }}
                         >
                           Login

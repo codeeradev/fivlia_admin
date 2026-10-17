@@ -1,18 +1,3 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 import Table from "layouts/servicearea/ServiceTable";
 import Demo from "layouts/dashboard/Demo";
 import Icon from "@mui/material/Icon";
@@ -23,10 +8,10 @@ import FoodCategories from "layouts/foodCategory/foodCategory";
 import BrandTable from "layouts/Brand/BrandTable";
 import AttributeTable from "layouts/Attribute/AttributeArray";
 import Tax from "layouts/Attribute/Tax";
-import Stock from "layouts/Store/StoreRoutes/Stock";
+// REMOVED (store pages now live in the Store app): import Stock from "layouts/Store/StoreRoutes/Stock";
 // import ProductTable from "layouts/Products/ProductTable";
 import ProductTableNew from "layouts/Products/ProductTableNew";
-import FoodProductTable from "layouts/Products/ProductTable";
+// import FoodProductTable from "layouts/Products/ProductTable";
 
 import User from "layouts/User/User";
 import SellerTable from "layouts/Store/sellerTable";
@@ -36,16 +21,16 @@ import PagesTable from "Setting/pageTable";
 import OrderSetting from "Setting/OrderSetting";
 import StoreTabel from "layouts/Store/StoreTable";
 import Filter from "layouts/Attribute/Filter";
-import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
+// REMOVED (store pages now live in the Store app): import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
 import Drivers from "layouts/Drivers/Drivers";
 import DeliveryStatus from "layouts/DeliveryStatus/DeliveryStatus";
 import Orders from "layouts/Orders/Order";
 import ReturnOrders from "layouts/Orders/ReturnOrders";
 import BulkOrders from "layouts/bulkOrders/bulkOrders";
 import Notification from "layouts/Notification/Notification";
-import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
-import StoreCategories from "layouts/Store/StoreRoutes/Categories";
-import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
+// REMOVED (store pages now live in the Store app): import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
+// REMOVED (store pages now live in the Store app): import StoreCategories from "layouts/Store/StoreRoutes/Categories";
+// REMOVED (store pages now live in the Store app): import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
 import Wallet from "layouts/Wallet/Wallet";
 import DriversWithdrawal from "layouts/Withdrawal/driverWithdraw";
 import SellerWithdrawal from "layouts/Withdrawal/sellerWithdraw";
@@ -647,6 +632,7 @@ const routes = [
   // },
 ];
 
+/* REMOVED: Admin "store mode" sidebar (replaced by the Store app at https://store.fivlia.com)
 const StoreRoutes = [
   {
     type: "collapse",
@@ -704,5 +690,6 @@ const StoreRoutes = [
     route: "#",
   },
 ];
+*/
 export default routes;
-export { StoreRoutes };
+// REMOVED: export { StoreRoutes };

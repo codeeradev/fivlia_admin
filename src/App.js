@@ -19,7 +19,8 @@ import rtlPlugin from "stylis-plugin-rtl";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 
-import routes, { StoreRoutes } from "routes";
+import routes from "routes";
+// REMOVED: import routes, { StoreRoutes } from "routes";  (StoreRoutes sidebar no longer used)
 
 import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "context";
 
@@ -57,22 +58,22 @@ import EditBanner from "layouts/Banner/EditBanner";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import GlobalLoader from "components/loader/GlobalLoader";
-import StoreLogin from "layouts/Store/StoreLogin";
+// REMOVED (store pages now live in the Store app): import StoreLogin from "layouts/Store/StoreLogin";
 import Filter from "layouts/Attribute/Filter";
 import AddFilter from "layouts/Attribute/AddFilter";
 import AddDriver from "layouts/Drivers/AddDriver";
 import EditFilter from "layouts/Attribute/EditFilter";
-import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
+// REMOVED (store pages now live in the Store app): import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
 import Drivers from "layouts/Drivers/Drivers";
 import DeliveryStatus from "layouts/DeliveryStatus/DeliveryStatus";
 import Orders from "layouts/Orders/Order";
 import BulkOrders from "layouts/bulkOrders/bulkOrders";
-import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
-import ReturnOrders from "layouts/Orders/ReturnOrders";
-import StoreCategories from "layouts/Store/StoreRoutes/Categories";
-import Stock from "layouts/Store/StoreRoutes/Stock";
-import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
-import AddStoreCat from "layouts/Store/StoreRoutes/AddCatStore";
+// REMOVED (store pages now live in the Store app): import StoreOrder from "layouts/Store/StoreRoutes/StoreOrder";
+// REMOVED (store pages now live in the Store app): import ReturnOrders from "layouts/Orders/ReturnOrders";
+// REMOVED (store pages now live in the Store app): import StoreCategories from "layouts/Store/StoreRoutes/Categories";
+// REMOVED (store pages now live in the Store app): import Stock from "layouts/Store/StoreRoutes/Stock";
+// REMOVED (store pages now live in the Store app): import StoreProduct from "layouts/Store/StoreRoutes/StoreProduct";
+// REMOVED (store pages now live in the Store app): import AddStoreCat from "layouts/Store/StoreRoutes/AddCatStore";
 import AddPageForm from "Setting/addEditPage";
 import AddBlog from "layouts/Blogs/addBlog";
 import StoreTransaction from "layouts/Store/StoreRoutes/storeTransaction";
@@ -99,7 +100,7 @@ export default function App() {
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
 
-  const [isStoreUser, setIsStoreUser] = useState(false);
+  // REMOVED: const [isStoreUser, setIsStoreUser] = useState(false);
 
   // Cache for the rtl
   useMemo(() => {
@@ -141,14 +142,15 @@ export default function App() {
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
 
-  useEffect(() => {
-    const userType = localStorage.getItem("userType");
-    if (userType === "store") {
-      setIsStoreUser(true);
-    } else {
-      setIsStoreUser(false);
-    }
-  }, []);
+  // REMOVED: Admin no longer switches into "store mode"; "Login" opens the Store app instead.
+  // useEffect(() => {
+  //   const userType = localStorage.getItem("userType");
+  //   if (userType === "store") {
+  //     setIsStoreUser(true);
+  //   } else {
+  //     setIsStoreUser(false);
+  //   }
+  // }, []);
 
   const user = JSON.parse(localStorage.getItem("adminUser"));
   const userPermissions = user?.permissions || [];
@@ -178,7 +180,8 @@ export default function App() {
       return null;
     });
 
-  const activeRoutes = isStoreUser ? StoreRoutes : routes;
+  // REMOVED: const activeRoutes = isStoreUser ? StoreRoutes : routes;
+  const activeRoutes = routes;
   const configsButton = (
     <MDBox
       display="flex"
@@ -259,7 +262,7 @@ export default function App() {
                         <Route path="/edit-banner" element={<EditBanner />} />
                         <Route path="/add-filter" element={<AddFilter />} />
                         <Route path="/edit-filter" element={<EditFilter />} />
-                        <Route path="/store-login" element={<StoreLogin />} />
+                        {/* REMOVED: <Route path="/store-login" element={<StoreLogin />} /> */}
                         <Route path="/edit-store" element={<AddStore />} />
                         <Route path="/add-blog" element={<AddBlog />} />
                         <Route path="/add-page" element={<AddPageForm />} />
@@ -271,11 +274,13 @@ export default function App() {
                         <Route path="/no-access" element={<NoAccess />} />
                         <Route path="*" element={<Navigate to="/no-access" />} />
 
-                        {/* Store Routes */}
+                        {/* REMOVED (store pages now live in the Store app):
                         <Route path="/dashboard1" element={<DashBoard />} />
                         <Route path="/storecat" element={<StoreCategories />} />
                         <Route path="/storeproduct" element={<StoreProduct />} />
                         <Route path="/addstorecat" element={<AddStoreCat />} />
+                        */}
+                        {/* KEPT: used by Admin > Store table > Transactions */}
                         <Route path="/storeTransaction" element={<StoreTransaction />} />
                       </Route>
                     </Routes>
@@ -360,7 +365,7 @@ export default function App() {
                     <Route path="/edit-banner" element={<EditBanner />} />
                     <Route path="/add-filter" element={<AddFilter />} />
                     <Route path="/edit-filter" element={<EditFilter />} />
-                    <Route path="/store-login" element={<StoreLogin />} />
+                    {/* REMOVED: <Route path="/store-login" element={<StoreLogin />} /> */}
                     <Route path="/edit-store" element={<AddStore />} />
                     <Route path="/add-blog" element={<AddBlog />} />
                     <Route path="/add-page" element={<AddPageForm />} />
@@ -373,7 +378,7 @@ export default function App() {
 
                     <Route path="*" element={<Navigate to="/no-access" />} />
 
-                    {/* Store Routes */}
+                    {/* REMOVED (store pages now live in the Store app):
                     <Route path="/dashboard1" element={<DashBoard />} />
                     <Route path="/storecat" element={<StoreCategories />} />
                     <Route path="/storeproduct" element={<StoreProduct />} />
@@ -381,6 +386,8 @@ export default function App() {
                     <Route path="/addstorecat" element={<AddStoreCat />} />
                     <Route path="/store-orders" element={<StoreOrder />} />
                     <Route path="/store-returns" element={<ReturnOrders />} />
+                    */}
+                    {/* KEPT: used by Admin > Store table > Transactions */}
                     <Route path="/storeTransaction" element={<StoreTransaction />} />
                   </Route>
                 </Routes>
