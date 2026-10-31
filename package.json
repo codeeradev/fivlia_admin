@@ -54,8 +54,10 @@
     "yup": "1.1.1"
   },
   "scripts": {
-    "build": "node canary.js && tsc",
-    "prepare": "node canary.js"
+    "start": "react-scripts start",
+    "dev": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [
