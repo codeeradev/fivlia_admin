@@ -37,6 +37,7 @@ function Setting() {
     Owner_Number: "",
     GST_Number: "",
     Platform_Fee: 0,
+    Platform_Fee_Fixed: 0,
     Description: "",
     Delivery_Charges: 0,
     Delivery_Charges_Gst: 0,
@@ -199,6 +200,7 @@ function Setting() {
             Owner_Number: result.settings.Owner_Number || "",
             GST_Number: result.settings.GST_Number || "",
             Platform_Fee: result.settings.Platform_Fee || 0,
+            Platform_Fee_Fixed: result.settings.Platform_Fee_Fixed ?? 0,
             Description: result.settings.Description || "",
             Delivery_Charges: result.settings.Delivery_Charges || 0,
             Delivery_Charges_Gst: result.settings.Delivery_Charges_Gst || 0,
@@ -316,6 +318,7 @@ function Setting() {
         "Delivery_Charges",
         "Delivery_Charges_Gst",
         "Platform_Fee",
+        "Platform_Fee_Fixed",
         // "codLimit",
         // "minPrice",
         // "maxPrice",
@@ -589,6 +592,17 @@ function Setting() {
                   handleInputChange("Platform_Fee", e.target.value)
                 }
               />
+            </div>
+            <div className="store-input">
+              <label>Additional Platform Charge (₹)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.Platform_Fee_Fixed}
+                onChange={(e) => handleInputChange("Platform_Fee_Fixed", e.target.value)}
+              />
+              <small>Fixed charge per local-zone order only.</small>
             </div>
             <div className="store-input">
               <label>Admin Signature</label>
