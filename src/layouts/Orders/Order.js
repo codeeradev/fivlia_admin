@@ -1760,7 +1760,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                             fontSize: "14px",
                           }}
                         >
-                          Platform Fee(%):
+                          Platform Fee:
                         </td>
                         <td style={{ fontSize: "14px", padding: "16px" }}>
                           {selectedOrder.platformFee || 0}

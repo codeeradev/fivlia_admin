@@ -15,6 +15,7 @@ import UnitsTable from "layouts/Attribute/Units";
 import Setting from "Setting/Setting";
 import PagesTable from "Setting/pageTable";
 import OrderSetting from "Setting/OrderSetting";
+import GlobalOrderSetting from "Setting/GlobalOrderSetting";
 import StoreTabel from "layouts/Store/StoreTable";
 import Filter from "layouts/Attribute/Filter";
 // REMOVED (store pages now live in the Store app): import DashBoard from "layouts/Store/StoreRoutes/DashBoard";
@@ -520,6 +521,14 @@ const routes = [
         permission: "ORDER_SETTINGS_VIEW",
         component: <OrderSetting />,
         icon: <Icon fontSize="small">view_array</Icon>,
+      },
+      {
+        name: "Global Order Settings",
+        key: "global-order-settings",
+        route: "/global-order-settings",
+        permission: "ORDER_SETTINGS_VIEW",
+        component: <GlobalOrderSetting />,
+        icon: <Icon fontSize="small">public</Icon>,
       },
     ],
   },

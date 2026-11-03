@@ -881,7 +881,7 @@ const handleDownloadInvoice = async (orderId) => {
                       </tr>
                       <tr>
                         <td colSpan="6" style={{ textAlign: "right", fontWeight: 600, padding: "16px", fontSize: "14px" }}>
-                          Platform Fee(%):
+                          Platform Fee:
                         </td>
                         <td style={{ fontSize: "14px", padding: "16px" }}>{selectedOrder.platformFee || 0}</td>
                       </tr>
