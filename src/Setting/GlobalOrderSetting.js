@@ -547,13 +547,18 @@ export default function GlobalOrderSetting({ miniSidenav }) {
                       <>
                         <TableContainer
                           sx={{
+                            width: "100%",
+                            overflowX: "auto",
                             border: "1px solid",
                             borderColor: "divider",
                             borderRadius: 1,
                           }}
                         >
-                          <Table size="small">
-                            <TableHead>
+                          <Table
+                            size="small"
+                            sx={{ width: "100%", minWidth: 640, tableLayout: "fixed" }}
+                          >
+                            <TableHead sx={{ display: "table-header-group", padding: 0 }}>
                               <TableRow>
                                 <TableCell>
                                   <strong>PIN Code</strong>
