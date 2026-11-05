@@ -17,7 +17,6 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useNavigate } from "react-router-dom";
 import { showAlert } from "components/commonFunction/alertsLoader";
@@ -150,7 +149,9 @@ function SellerTable() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState("");
+  const [accountStatusFilter, setAccountStatusFilter] = useState("");
+  const [sellerCounts, setSellerCounts] = useState({ total: 0 });
 
   // Pagination
   const [entries, setEntries] = useState(100);
@@ -199,9 +200,10 @@ function SellerTable() {
   const getAllStores = async () => {
     try {
       showAlert("loading", "Loading Sellers....");
-      const result = await get(`${ENDPOINTS.GET_SELLER}?includeBanned=true`);
+      const result = await get(ENDPOINTS.GET_ADMIN_SELLERS, { authRequired: true });
       const res = result.data;
       setStores(res.sellers || []);
+      setSellerCounts(res.counts || { total: (res.sellers || []).length });
       showAlert("info", "", 1);
     } catch (err) {
       console.log(err);
@@ -234,13 +236,19 @@ function SellerTable() {
       filtered = filtered.filter((s) => s.status === isOnline);
     }
 
+    if (approvalStatusFilter !== "") {
+      filtered = filtered.filter((s) => (s.approveStatus || "unknown") === approvalStatusFilter);
+    }
+    if (accountStatusFilter !== "") {
+      filtered = filtered.filter((s) => accountStatusFilter === "active" ? s.accountActive !== false : s.accountActive === false);
+    }
     if (sellerTypeFilter !== "") {
       filtered = filtered.filter((s) => getTypeId(s) === sellerTypeFilter);
     }
 
     setFilteredStores(filtered);
     setCurrentPage(1);
-  }, [searchTerm, selectedCity, statusFilter, sellerTypeFilter, stores]);
+  }, [searchTerm, selectedCity, statusFilter, sellerTypeFilter, approvalStatusFilter, accountStatusFilter, stores]);
 
   useEffect(() => {
     handleFilter();
@@ -289,6 +297,31 @@ function SellerTable() {
     }
   };
 
+  const handleAccountActiveToggle = async (store) => {
+    const nextActive = store.accountActive === false;
+    const action = nextActive ? "reactivate" : "deactivate";
+    const confirmed = window.confirm(
+      `Are you sure you want to ${action} ${store.storeName}? The seller record and order history will be retained.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await put(
+        ENDPOINTS.SELLER_ACCOUNT_STATUS(store._id),
+        { accountActive: nextActive },
+        { authRequired: true },
+      );
+      const updatedStore = response.data?.store || { accountActive: nextActive };
+      setStores((previous) => previous.map((item) =>
+        item._id === store._id ? { ...item, ...updatedStore } : item,
+      ));
+      showAlert("success", `Seller ${nextActive ? "reactivated" : "deactivated"}`);
+    } catch (error) {
+      console.error("Error changing seller account state:", error);
+      showAlert("error", "Could not update seller account state.");
+    }
+  };
+
   const cityOptions = [
     ...new Set(stores.map((s) => s.city?.name).filter(Boolean)),
   ];
@@ -331,7 +364,9 @@ function SellerTable() {
                 Sellers List
               </span>
               <br />
-              <span style={{ fontSize: 17 }}>View and manage all stores</span>
+              <span style={{ fontSize: 17 }}>
+                All: {sellerCounts.total || 0} | Approved: {sellerCounts.approved || 0} | Banned: {sellerCounts.banned || 0} | Pending: {(sellerCounts.pending_verification || 0) + (sellerCounts.pending_admin_approval || 0)} | Rejected: {sellerCounts.rejected || 0}
+              </span>
             </div>
 
             <Button
@@ -415,6 +450,23 @@ function SellerTable() {
                 </Select>
               </FormControl>
 
+              <FormControl style={{ minWidth: "190px", marginTop: "15px" }}>
+                <InputLabel>Approval Status</InputLabel>
+                <Select value={approvalStatusFilter} onChange={(e) => setApprovalStatusFilter(e.target.value)} style={{ height: "45px" }}>
+                  <MenuItem value="">All Approval States</MenuItem>
+                  {["pending_verification", "pending_admin_approval", "approved", "banned", "rejected", "unknown"].map((state) => (
+                    <MenuItem key={state} value={state}>{state.replaceAll("_", " ")}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl style={{ minWidth: "160px", marginTop: "15px" }}>
+                <InputLabel>Account</InputLabel>
+                <Select value={accountStatusFilter} onChange={(e) => setAccountStatusFilter(e.target.value)} style={{ height: "45px" }}>
+                  <MenuItem value="">All Accounts</MenuItem>
+                  <MenuItem value="active">Active</MenuItem>
+                  <MenuItem value="inactive">Deactivated</MenuItem>
+                </Select>
+              </FormControl>
               {/* Filter by Seller Type */}
               <FormControl style={{ minWidth: "190px", marginTop: "15px" }}>
                 <InputLabel>Seller Category</InputLabel>
@@ -466,8 +518,10 @@ function SellerTable() {
                   <th style={headerCell}>City</th>
                   <th style={headerCell}>Zone(s)</th>
                   <th style={headerCell}>Products</th>
+                  <th style={headerCell}>Approval State</th>
                   <th style={headerCell}>Status</th>
                   <th style={headerCell}>Permanent Disable</th>
+                  <th style={headerCell}>Account State</th>
                   <th style={headerCell}>Action</th>
                 </tr>
               </thead>
@@ -612,6 +666,9 @@ function SellerTable() {
                           : store.zone?.length || 0}
                       </td>
                       <td style={bodyCell}>{store.Category?.length || 0}</td>
+                      <td style={{ ...bodyCell, textAlign: "center" }}>
+                        <Chip label={(store.approveStatus || "Unknown").replaceAll("_", " ")} size="small" />
+                      </td>
 
                       <td style={{ ...bodyCell, textAlign: "center" }}>
                         <Switch
@@ -626,10 +683,21 @@ function SellerTable() {
                       <td style={{ ...bodyCell, textAlign: "center" }}>
                         <Switch
                           checked={store.approveStatus === "banned"}
+                          disabled={!(["approved", "banned"].includes(store.approveStatus))}
                           onChange={(e) =>
                             handleBanToggle(store._id, e.target.checked)
                           }
                           color="error"
+                        />
+                      </td>
+
+                      <td style={{ ...bodyCell, textAlign: "center" }}>
+                        <Chip
+                          label={store.accountActive === false ? "Deactivated" : "Active"}
+                          color={store.accountActive === false ? "default" : "success"}
+                          size="small"
+                          onClick={() => handleAccountActiveToggle(store)}
+                          sx={{ cursor: "pointer" }}
                         />
                       </td>
 
@@ -863,9 +931,7 @@ function SellerTable() {
               >
                 <TextField
                   label="Owner Name"
-                  value={[selectedStore.firstName, selectedStore.lastName]
-                    .filter(Boolean)
-                    .join(" ")}
+                  value={selectedStore.ownerName || [selectedStore.firstName, selectedStore.lastName].filter(Boolean).join(" ")}
                   fullWidth
                   InputProps={{ readOnly: true }}
                 />
@@ -884,23 +950,6 @@ function SellerTable() {
                   value={selectedStore.gstNumber || ""}
                   fullWidth
                   InputProps={{ readOnly: true }}
-                />
-                <TextField
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  value={selectedStore.password || ""}
-                  fullWidth
-                  InputProps={{
-                    readOnly: true,
-                    endAdornment: (
-                      <span
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{ cursor: "pointer", marginLeft: 8 }}
-                      >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
-                      </span>
-                    ),
-                  }}
                 />
               </div>
             )}

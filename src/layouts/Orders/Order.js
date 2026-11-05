@@ -13,8 +13,8 @@ import { CSVLink } from "react-csv";
 import { io } from "socket.io-client";
 import { showAlert } from "components/commonFunction/alertsLoader";
 import { getAllZones } from "components/commonApi/commonApi";
-import { get, put } from "api/apiClient";
-import { ENDPOINTS } from "api/endPoints";
+import { apiFetch, get, put } from "api/apiClient";
+import { ENDPOINTS, getApiBaseUrl } from "api/endPoints";
 import ShipOrderDialog, {
   canShipOrder,
   canEditTracking,
@@ -388,28 +388,32 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
   };
 
   const handleInvoiceDownload = async (orderId) => {
+    let objectUrl;
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_URL}${ENDPOINTS.INVOICE}/${orderId}`,
-        {
-          method: "GET", // Or POST, depending on route
-        },
-      );
+      await getApiBaseUrl();
+      const response = await apiFetch(`${ENDPOINTS.INVOICE}/${encodeURIComponent(orderId)}`);
 
-      if (!res.ok) throw new Error("Failed to fetch PDF");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Invoice download failed (${response.status})`);
+      }
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      const blob = await response.blob();
+      objectUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
-      link.href = url;
+      link.href = objectUrl;
       link.download = `thermal_invoice_${orderId}.pdf`;
+      document.body.appendChild(link);
       link.click();
-
-      // Cleanup URL object
-      window.URL.revokeObjectURL(url);
+      link.remove();
     } catch (err) {
       console.error("Error downloading invoice:", err);
+      showAlert("error", err.message || "Unable to download the invoice. Please try again.");
+    } finally {
+      if (objectUrl) {
+        window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1000);
+      }
     }
   };
 

@@ -122,6 +122,8 @@ export const ENDPOINTS = {
 
   GET_ALL_STORE: "/getAllStore",
   EDIT_STORE: "/storeEdit",
+  GET_ADMIN_SELLERS: "/admin/sellers",
+  SELLER_ACCOUNT_STATUS: (id) => `/seller/${id}/account-status`,
   GET_TYPE: "/get-types",
   CREATE_STORE: "/createStore",
   GENERATE_KEY: "/generateKey",
