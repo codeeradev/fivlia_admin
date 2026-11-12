@@ -583,7 +583,6 @@ function SellerTable() {
                         style={bodyCell}
                         onClick={() => {
                           setSelectedStore(store);
-                          setShowPassword(false);
                           setViewModalOpen(true);
                         }}
                       >
