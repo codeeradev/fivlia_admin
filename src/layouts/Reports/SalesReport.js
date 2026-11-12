@@ -186,7 +186,7 @@ export default function SalesReport() {
     },
     {
       name: "Platform Fee",
-      selector: (row) => row.platformFeeAmount?.toFixed(2) ?? "-",
+      selector: (row) => row.platformFeeAmount == null ? "-" : String(Math.round(Number(row.platformFeeAmount) || 0)),
       minWidth: "120px",
     },
     {
@@ -211,7 +211,7 @@ export default function SalesReport() {
       GST: (row.tax).toFixed(2),
       "Delivery Charge": row.deliveryCharge,
       Amount: Number(row.totalPrice || 0).toFixed(2),
-      "Platform Fee": Number(row.platformFeeAmount || 0).toFixed(2),
+      "Platform Fee": Math.round(Number(row.platformFeeAmount) || 0),
       Commission: Number(row.commission || 0).toFixed(2),
       Profit: (row.profit).toFixed(2),
     }));

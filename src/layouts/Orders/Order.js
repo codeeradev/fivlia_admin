@@ -1767,7 +1767,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                           Platform Fee:
                         </td>
                         <td style={{ fontSize: "14px", padding: "16px" }}>
-                          {selectedOrder.platformFee || 0}
+                          {Math.round(Number(selectedOrder.platformFeeAmount ?? selectedOrder.platformFee) || 0)}
                         </td>
                       </tr>
                       {selectedOrder.offerSummary?.freeProduct && (
@@ -1821,7 +1821,7 @@ const Orders = ({ showHeader = true, isDashboard = false }) => {
                                 return sum + price;
                               }, 0) +
                               (selectedOrder.deliveryCharges || 0) +
-                              (selectedOrder.platformFee || 0)
+                              (Math.round(Number(selectedOrder.platformFeeAmount ?? selectedOrder.platformFee) || 0))
                             ).toFixed(2)}
                         </td>
                       </tr>

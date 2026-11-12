@@ -883,7 +883,7 @@ const handleDownloadInvoice = async (orderId) => {
                         <td colSpan="6" style={{ textAlign: "right", fontWeight: 600, padding: "16px", fontSize: "14px" }}>
                           Platform Fee:
                         </td>
-                        <td style={{ fontSize: "14px", padding: "16px" }}>{selectedOrder.platformFee || 0}</td>
+                        <td style={{ fontSize: "14px", padding: "16px" }}>{Math.round(Number(selectedOrder.platformFeeAmount ?? selectedOrder.platformFee) || 0)}</td>
                       </tr>
                       <tr style={{ borderTop: "2px solid #d2d6da" }}>
                         <td colSpan="6" style={{ textAlign: "right", fontWeight: 700, padding: "16px", fontSize: "15px" }}>
@@ -897,7 +897,7 @@ const handleDownloadInvoice = async (orderId) => {
                                 return sum + price;
                               }, 0) +
                               (selectedOrder.deliveryCharges || 0) +
-                              (selectedOrder.platformFee || 0)
+                              (Math.round(Number(selectedOrder.platformFeeAmount ?? selectedOrder.platformFee) || 0))
                             ).toFixed(2)
                           )}
                         </td>

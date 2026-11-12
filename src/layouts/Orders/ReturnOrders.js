@@ -57,6 +57,7 @@ const nextOf = (r) =>
   r && r.allowedNext && r.allowedNext.length ? r.allowedNext : TRANSITIONS[r?.status] || [];
 
 const money = (v) => `₹${Number(v || 0).toFixed(2)}`;
+const wholeRupee = (v) => `₹${Math.round(Number(v) || 0)}`;
 
 const fmtDate = (v) => {
   if (!v) return "-";
@@ -706,7 +707,7 @@ function ReturnOrders() {
                     </tr>
                     <tr>
                       <td colSpan="3" style={{ textAlign: "right" }}>Platform fee</td>
-                      <td className="num">{money(selected.order?.platformFee)}</td>
+                      <td className="num">{wholeRupee(selected.order?.platformFeeAmount ?? selected.order?.platformFee)}</td>
                     </tr>
                     <tr className="rt-total">
                       <td colSpan="3" style={{ textAlign: "right" }}>Order total</td>
