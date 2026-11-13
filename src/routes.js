@@ -45,6 +45,7 @@ import JobRoles from "layouts/Roles/JobRoles";
 import AdminStaff from "layouts/Roles/adminStaff";
 import Charities from "layouts/Charity/Charities";
 import Humanity from "layouts/Charity/Humanity";
+import CashfreeEasySplit from "layouts/Payments/CashfreeEasySplit";
 
 const isLoggedIn = () => {
   const username = localStorage.getItem("username");
@@ -70,6 +71,15 @@ const routes = [
     permission: "FINANCE_VIEW",
     route: "/wallet",
     component: <Wallet />,
+  },
+  {
+    type: "collapse",
+    name: "Cashfree Easy Split",
+    key: "cashfree-easy-split",
+    icon: <Icon fontSize="small">account_balance</Icon>,
+    permission: "FINANCE_VIEW",
+    route: "/cashfree-easy-split",
+    component: <CashfreeEasySplit />,
   },
   {
     type: "collapse",

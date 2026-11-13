@@ -54,6 +54,13 @@ function Setting() {
     PhonePe_test: "",
     PhonePe_live: "",
     PhonePe_secret: "",
+    Cashfree_test_clientId: "",
+    Cashfree_test_clientSecret: "",
+    Cashfree_test_secretConfigured: false,
+    Cashfree_live_clientId: "",
+    Cashfree_live_clientSecret: "",
+    Cashfree_live_secretConfigured: false,
+    Cashfree_easySplitEnabled: false,
     Map_Api: {
       google: { api_key: "", status: false },
       apple: { api_key: "", status: false },
@@ -174,9 +181,16 @@ function Setting() {
             result.settings.PaymentGateways?.PhonePe?.test || "";
           const phonepeLive =
             result.settings.PaymentGateways?.PhonePe?.live || "";
+          const cashfreeSettings = result.settings.PaymentGateways?.Cashfree || {};
+          const cashfreeTest = cashfreeSettings.test || {};
+          const cashfreeLive = cashfreeSettings.live || {};
           let activeGateway = "None";
           let activeMode = "";
-          if (razorpayTest) {
+          if (cashfreeSettings.status) {
+            activeGateway = "Cashfree";
+            activeMode = cashfreeSettings.activeMode ||
+              (cashfreeTest.clientId ? "test" : "live");
+          } else if (razorpayTest) {
             activeGateway = "Razorpay";
             activeMode = "test";
           } else if (razorpayLive) {
@@ -219,6 +233,13 @@ function Setting() {
             PhonePe_live: phonepeLive,
             PhonePe_secret:
               result.settings.PaymentGateways?.PhonePe?.secretKey || "",
+            Cashfree_test_clientId: cashfreeTest.clientId || "",
+            Cashfree_test_clientSecret: "",
+            Cashfree_test_secretConfigured: Boolean(cashfreeTest.clientSecretConfigured),
+            Cashfree_live_clientId: cashfreeLive.clientId || "",
+            Cashfree_live_clientSecret: "",
+            Cashfree_live_secretConfigured: Boolean(cashfreeLive.clientSecretConfigured),
+            Cashfree_easySplitEnabled: cashfreeSettings.easySplitEnabled === true,
             Map_Api: {
               google: {
                 api_key: mapApi.google?.api_key || "",
@@ -395,6 +416,23 @@ function Setting() {
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
+    if (
+      ["Razorpay", "PhonePe", "Cashfree"].includes(formData.activeGateway) &&
+      !formData.activeMode
+    ) {
+      showAlert("error", "Select test or live mode for the payment gateway.");
+      return;
+    }
+    if (formData.activeGateway === "Cashfree") {
+      const mode = formData.activeMode;
+      const clientId = formData[`Cashfree_${mode}_clientId`];
+      const clientSecret = formData[`Cashfree_${mode}_clientSecret`];
+      const secretAlreadyConfigured = formData[`Cashfree_${mode}_secretConfigured`];
+      if (!clientId || (!clientSecret && !secretAlreadyConfigured)) {
+        showAlert("error", "Enter the Cashfree App ID and Secret Key for the selected mode.");
+        return;
+      }
+    }
     setIsSubmitting(true);
     showAlert("loading", "Updating settings...");
 
@@ -403,44 +441,48 @@ function Setting() {
       const filteredData = { ...formData };
       delete filteredData.activeGateway;
       delete filteredData.activeMode;
+      delete filteredData.Cashfree_test_secretConfigured;
+      delete filteredData.Cashfree_live_secretConfigured;
+      delete filteredData.Cashfree_test_clientId;
+      delete filteredData.Cashfree_test_clientSecret;
+      delete filteredData.Cashfree_live_clientId;
+      delete filteredData.Cashfree_live_clientSecret;
+      delete filteredData.Cashfree_easySplitEnabled;
 
       // Step 2: Build PaymentGateways object
       filteredData.PaymentGateways = {};
 
-      if (formData.activeGateway === "Razorpay") {
-        filteredData.PaymentGateways.RazorPayKey = {
-          test: formData.RazorPayKey_test || "",
-          live: formData.RazorPayKey_live || "",
-          secretKey: formData.RazorPayKey_secret || "",
-          status: true,
-          activeMode: formData.activeMode,
-        };
-        filteredData.PaymentGateways.PhonePe = {
-          test: formData.PhonePe_test || "",
-          live: formData.PhonePe_live || "",
-          secretKey: "",
-          status: false,
-        };
-      } else if (formData.activeGateway === "PhonePe") {
-        filteredData.PaymentGateways.PhonePe = {
-          test: formData.PhonePe_test || "",
-          live: formData.PhonePe_live || "",
-          secretKey: formData.PhonePe_secret || "",
-          status: true,
-          activeMode: formData.activeMode,
-        };
-        filteredData.PaymentGateways.RazorPayKey = {
-          test: formData.RazorPayKey_test || "",
-          live: formData.RazorPayKey_live || "",
-          secretKey: "",
-          status: false,
-        };
-      } else {
-        filteredData.PaymentGateways = {
-          RazorPayKey: { test: "", live: "", secretKey: "", status: false },
-          PhonePe: { test: "", live: "", secretKey: "", status: false },
-        };
-      }
+      filteredData.PaymentGateways.RazorPayKey = {
+        test: formData.RazorPayKey_test || "",
+        live: formData.RazorPayKey_live || "",
+        secretKey: formData.RazorPayKey_secret || "",
+        status: formData.activeGateway === "Razorpay",
+        ...(formData.activeGateway === "Razorpay" ? { activeMode: formData.activeMode } : {}),
+      };
+      filteredData.PaymentGateways.PhonePe = {
+        test: formData.PhonePe_test || "",
+        live: formData.PhonePe_live || "",
+        secretKey: formData.PhonePe_secret || "",
+        status: formData.activeGateway === "PhonePe",
+        ...(formData.activeGateway === "PhonePe" ? { activeMode: formData.activeMode } : {}),
+      };
+      filteredData.PaymentGateways.Cashfree = {
+        test: {
+          clientId: formData.Cashfree_test_clientId || "",
+          ...(formData.Cashfree_test_clientSecret
+            ? { clientSecret: formData.Cashfree_test_clientSecret }
+            : {}),
+        },
+        live: {
+          clientId: formData.Cashfree_live_clientId || "",
+          ...(formData.Cashfree_live_clientSecret
+            ? { clientSecret: formData.Cashfree_live_clientSecret }
+            : {}),
+        },
+        status: formData.activeGateway === "Cashfree",
+        easySplitEnabled: formData.Cashfree_easySplitEnabled === true,
+        ...(formData.activeGateway === "Cashfree" ? { activeMode: formData.activeMode } : {}),
+      };
 
       // Step 3: Ensure Map_Api array structure
       filteredData.Map_Api = [
@@ -987,6 +1029,11 @@ function Setting() {
                   label="PhonePe"
                 />
                 <FormControlLabel
+                  value="Cashfree"
+                  control={<Radio />}
+                  label="Cashfree"
+                />
+                <FormControlLabel
                   value="None"
                   control={<Radio />}
                   label="None"
@@ -995,7 +1042,8 @@ function Setting() {
             </FormControl>
           </div>
           {(formData.activeGateway === "Razorpay" ||
-            formData.activeGateway === "PhonePe") && (
+            formData.activeGateway === "PhonePe" ||
+            formData.activeGateway === "Cashfree") && (
             <div className="store-row">
               <FormControl component="fieldset">
                 <FormLabel component="legend">Select Mode</FormLabel>
@@ -1096,6 +1144,75 @@ function Setting() {
                       handleInputChange("PhonePe_secret", e.target.value)
                     }
                   />
+                </div>
+              </div>
+            </>
+          )}
+          {formData.activeGateway === "Cashfree" && formData.activeMode && (
+            <>
+              <div className="store-row">
+                <div className="store-input">
+                  <label>{`Cashfree ${formData.activeMode === "test" ? "Sandbox" : "Live"} App ID`}</label>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    value={formData[`Cashfree_${formData.activeMode}_clientId`]}
+                    onChange={(e) =>
+                      handleInputChange(
+                        `Cashfree_${formData.activeMode}_clientId`,
+                        e.target.value,
+                      )
+                    }
+                  />
+                </div>
+              </div>
+              <div className="store-row">
+                <div className="store-input">
+                  <label>{`Cashfree ${formData.activeMode === "test" ? "Sandbox" : "Live"} Secret Key`}</label>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder={
+                      formData[`Cashfree_${formData.activeMode}_secretConfigured`]
+                        ? "Saved securely — enter a new value to replace"
+                        : "Enter Cashfree secret key"
+                    }
+                    value={formData[`Cashfree_${formData.activeMode}_clientSecret`]}
+                    onChange={(e) =>
+                      handleInputChange(
+                        `Cashfree_${formData.activeMode}_clientSecret`,
+                        e.target.value,
+                      )
+                    }
+                  />
+                  <small>
+                    Secret keys are stored by the backend and are never returned to the website.
+                  </small>
+                </div>
+              </div>
+              <div className="store-row">
+                <div className="store-input">
+                  <small>
+                    Test uses Cashfree sandbox checkout. Use sandbox App ID and Secret Key for testing.
+                  </small>
+                </div>
+              </div>
+              <div className="store-row">
+                <div className="store-input" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Switch
+                    checked={formData.Cashfree_easySplitEnabled}
+                    onChange={(event) => setFormData((prev) => ({
+                      ...prev,
+                      Cashfree_easySplitEnabled: event.target.checked,
+                    }))}
+                    inputProps={{ "aria-label": "Enable Cashfree Easy Split" }}
+                  />
+                  <div>
+                    <label style={{ margin: 0 }}>Enable Cashfree Easy Split</label>
+                    <small style={{ display: "block" }}>
+                      Requires Easy Split to be enabled for this Cashfree merchant account. Only active Cashfree vendors can receive order splits.
+                    </small>
+                  </div>
                 </div>
               </div>
             </>
